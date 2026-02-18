@@ -21,19 +21,17 @@ from playwright.async_api import async_playwright
 # ── Configuration ────────────────────────────────────────────────────────────
 URL            = "https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=0&TeeOffTimeMax=18"
 
-# Email settings — set these as environment variables (see README)
 SMTP_SERVER    = os.environ.get("SMTP_SERVER",   "smtp.gmail.com")
 SMTP_PORT      = int(os.environ.get("SMTP_PORT", "587"))
-EMAIL_SENDER   = os.environ.get("EMAIL_SENDER")    # e.g. yourname@gmail.com
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")  # Gmail App Password
-EMAIL_TO       = os.environ.get("EMAIL_TO")        # who gets the alert
+EMAIL_SENDER   = os.environ.get("EMAIL_SENDER")
+EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
+EMAIL_TO       = os.environ.get("EMAIL_TO")
 
 CACHE_FILE     = Path("last_teetimes.json")
 # ─────────────────────────────────────────────────────────────────────────────
 
 
 def next_friday() -> date:
-    """Return the date of the coming Friday. If today is Friday, returns next Friday."""
     today = date.today()
     days_ahead = (4 - today.weekday()) % 7
     if days_ahead == 0:
@@ -41,161 +39,157 @@ def next_friday() -> date:
     return today + timedelta(days=days_ahead)
 
 
-async def get_calendar_header(page) -> str:
-    """
-    Use JavaScript to find the calendar month/year header text.
-    Tries multiple strategies so it works regardless of exact HTML structure.
-    """
-    header = await page.evaluate("""
-        () => {
-            // Strategy 1: look for an element whose text matches "Month YYYY" pattern
-            const monthYearPattern = /^[A-Za-z]+ \\d{4}$/;
-            const allElements = document.querySelectorAll('*');
-            for (const el of allElements) {
-                const text = el.innerText ? el.innerText.trim() : '';
-                if (monthYearPattern.test(text) && el.children.length === 0) {
-                    return text;
-                }
-            }
-
-            // Strategy 2: look for any element with 'month' in its class
-            for (const el of document.querySelectorAll('[class*="month"], [class*="Month"]')) {
-                const text = el.innerText ? el.innerText.trim() : '';
-                if (text.length > 0 && text.length < 30) {
-                    return text;
-                }
-            }
-
-            // Strategy 3: scan all text nodes for the pattern
-            const walker = document.createTreeWalker(
-                document.body, NodeFilter.SHOW_TEXT, null, false
-            );
-            let node;
-            while ((node = walker.nextNode())) {
-                const text = node.textContent.trim();
-                if (monthYearPattern.test(text)) {
-                    return text;
-                }
-            }
-
-            return '';
-        }
-    """)
-    return (header or "").strip()
-
-
-async def click_next_month(page):
-    """Click the right arrow to advance the calendar by one month."""
-    clicked = await page.evaluate("""
-        () => {
-            // Look for a right-arrow button near the calendar header
-            const candidates = [
-                ...document.querySelectorAll(
-                    '[class*="right"], [class*="next"], [class*="arrow"], '  +
-                    '[class*="chevron"], [aria-label*="next"], [aria-label*="Next"]'
-                )
-            ];
-            for (const el of candidates) {
-                const tag = el.tagName.toLowerCase();
-                if (['button', 'a', 'span', 'div', 'i'].includes(tag)) {
-                    el.click();
-                    return true;
-                }
-            }
-            // Fallback: look for › or > character text nodes
-            const allEls = document.querySelectorAll('button, span, a, div');
-            for (const el of allEls) {
-                const t = el.innerText ? el.innerText.trim() : '';
-                if (t === '›' || t === '>' || t === '▶' || t === '→') {
-                    el.click();
-                    return true;
-                }
-            }
-            return false;
-        }
-    """)
-    return clicked
-
-
 async def select_friday_and_scrape(friday: date) -> list[dict]:
-    """
-    Open the booking page, navigate the inline calendar to the correct month,
-    click Friday's date, then scrape and return available tee time slots.
-    """
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        page = await browser.new_page()
+        # Use a real-browser user agent to avoid bot detection
+        browser = await p.chromium.launch(
+            headless=True,
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+            ]
+        )
+        context = await browser.new_context(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/122.0.0.0 Safari/537.36"
+            ),
+            viewport={"width": 1280, "height": 800},
+        )
+        # Hide webdriver flag
+        await context.add_init_script(
+            "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+        )
+
+        page = await context.new_page()
 
         print(f"  Loading page...")
-        await page.goto(URL, wait_until="networkidle", timeout=60_000)
-        await page.wait_for_timeout(2_000)  # let JS finish rendering
+        try:
+            await page.goto(URL, wait_until="networkidle", timeout=60_000)
+        except Exception as e:
+            print(f"  ⚠ goto error: {e} — continuing anyway")
 
-        # ── Step 1: Navigate calendar to the correct month ───────────────────
-        target_month_str = friday.strftime("%B %Y")  # e.g. "February 2026"
-        print(f"  Looking for month: {target_month_str}")
+        # Give extra time for JS frameworks to render
+        await page.wait_for_timeout(5_000)
+
+        # ── DEBUG: print page title and a snippet of HTML ─────────────────
+        title = await page.title()
+        print(f"  Page title: '{title}'")
+
+        body_text = await page.evaluate("() => document.body ? document.body.innerText.slice(0, 500) : 'NO BODY'")
+        print(f"  Page text preview:\n---\n{body_text}\n---")
+
+        td_count = await page.evaluate("() => document.querySelectorAll('td').length")
+        print(f"  Number of <td> elements found: {td_count}")
+
+        all_text = await page.evaluate("""
+            () => {
+                const monthYearPattern = /[A-Za-z]+ \\d{4}/;
+                const walker = document.createTreeWalker(
+                    document.body, NodeFilter.SHOW_TEXT, null, false
+                );
+                let results = [];
+                let node;
+                while ((node = walker.nextNode())) {
+                    const t = node.textContent.trim();
+                    if (t && t.length < 50) results.push(t);
+                }
+                return results.slice(0, 50).join(' | ');
+            }
+        """)
+        print(f"  Text nodes: {all_text[:500]}")
+        # ── END DEBUG ──────────────────────────────────────────────────────
+
+        # ── Navigate to correct month ──────────────────────────────────────
+        target_month_str = friday.strftime("%B %Y")
+        print(f"\n  Looking for month: {target_month_str}")
 
         for attempt in range(12):
-            header = await get_calendar_header(page)
-            print(f"  Calendar header: '{header}'")
+            header = await page.evaluate("""
+                () => {
+                    const pat = /^[A-Za-z]+ \\d{4}$/;
+                    for (const el of document.querySelectorAll('*')) {
+                        const t = (el.innerText || '').trim();
+                        if (pat.test(t) && el.children.length === 0) return t;
+                    }
+                    const walker = document.createTreeWalker(
+                        document.body, NodeFilter.SHOW_TEXT, null, false
+                    );
+                    let node;
+                    while ((node = walker.nextNode())) {
+                        const t = node.textContent.trim();
+                        if (pat.test(t)) return t;
+                    }
+                    return '';
+                }
+            """)
+            header = (header or "").strip()
+            print(f"  Calendar header attempt {attempt+1}: '{header}'")
 
             if target_month_str in header:
                 print(f"  ✓ Correct month found.")
                 break
 
             if not header:
-                print(f"  ⚠ Could not read calendar header (attempt {attempt+1}) — trying to click day directly.")
+                print(f"  Header empty — cannot navigate months, will try clicking day anyway.")
                 break
 
-            print(f"  Advancing to next month...")
-            clicked = await click_next_month(page)
-            if not clicked:
-                print(f"  ⚠ Could not find next-month button — proceeding anyway.")
-                break
-            await page.wait_for_timeout(700)
+            print(f"  Advancing month...")
+            clicked = await page.evaluate("""
+                () => {
+                    const candidates = document.querySelectorAll(
+                        '[class*="right"], [class*="next"], [class*="arrow"], button, a'
+                    );
+                    for (const el of candidates) {
+                        const t = (el.innerText || '').trim();
+                        if (t === '›' || t === '>' || t === '▶' || t === '→' ||
+                            (el.getAttribute('aria-label') || '').toLowerCase().includes('next')) {
+                            el.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+            """)
+            await page.wait_for_timeout(800)
 
-        # ── Step 2: Click the correct day number ─────────────────────────────
-        day_num = str(friday.day)  # e.g. "20"
-        print(f"  Clicking day {day_num}...")
+        # ── Click day ──────────────────────────────────────────────────────
+        day_num = str(friday.day)
+        print(f"\n  Clicking day {day_num}...")
 
         clicked = await page.evaluate(f"""
             () => {{
                 const target = '{day_num}';
                 const cells = document.querySelectorAll('td');
+                console.log('Total td cells:', cells.length);
                 for (const cell of cells) {{
-                    const text = cell.innerText ? cell.innerText.trim() : '';
+                    const text = (cell.innerText || '').trim();
                     if (text !== target) continue;
-
                     const classes = (cell.className || '').toLowerCase();
-                    // Skip disabled / greyed / other-month cells
                     if (['gray','grey','disabled','prev','next','old','muted','inactive']
                             .some(c => classes.includes(c))) continue;
-
                     cell.click();
-                    return cell.className || 'clicked';
+                    return 'clicked:' + cell.className;
                 }}
-                return null;
+                // Print all td texts for debugging
+                const allTexts = Array.from(cells).map(c => (c.innerText||'').trim()).filter(t=>t).join(',');
+                return 'not_found. td texts: ' + allTexts.slice(0,200);
             }}
         """)
+        print(f"  Click result: {clicked}")
 
-        if not clicked:
-            print(f"  ⚠ Day cell '{day_num}' not found in calendar.")
-            await browser.close()
-            return []
-
-        print(f"  ✓ Clicked day {day_num} (cell class: '{clicked}')")
-
-        # ── Step 3: Wait for results to load ─────────────────────────────────
         await page.wait_for_timeout(4_000)
 
         try:
             await page.wait_for_selector(
                 "[class*='teetime'], [class*='tee-time'], "
                 "[class*='timeslot'], [class*='booking'], "
-                ".no-results, [class*='noResult'], [class*='no-result']",
+                ".no-results, [class*='noResult']",
                 timeout=10_000
             )
         except Exception:
-            print("  ⚠ Result selector timed out — parsing whatever is rendered.")
+            print("  ⚠ Result selector timed out.")
 
         html = await page.content()
         await browser.close()
@@ -204,10 +198,6 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
 
 
 def parse_tee_times(html: str) -> list[dict]:
-    """
-    Extract tee time slots from rendered page HTML.
-    Attempts structured card parsing first, then falls back to a regex sweep.
-    """
     import re
     from html.parser import HTMLParser
 
@@ -255,12 +245,11 @@ def parse_tee_times(html: str) -> list[dict]:
 
     CardParser().feed(html)
 
-    # Fallback: regex sweep for time patterns if no structured cards matched
     if not tee_times:
         found = re.findall(r"\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b", html, re.IGNORECASE)
         unique = list(dict.fromkeys(found))
         if unique:
-            print(f"  Fallback regex found {len(unique)} time reference(s) in page.")
+            print(f"  Fallback regex found {len(unique)} time reference(s).")
             tee_times = [{"time": t} for t in unique]
 
     return tee_times
@@ -289,12 +278,10 @@ def send_email(subject: str, body: str):
         print("  ⚠ Email credentials not configured — printing alert to console:\n")
         print(f"  SUBJECT: {subject}\n\n{body}")
         return
-
     msg = MIMEText(body, "plain")
     msg["Subject"] = subject
     msg["From"]    = EMAIL_SENDER
     msg["To"]      = EMAIL_TO
-
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
         server.starttls()
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
@@ -308,7 +295,7 @@ async def main():
     print(f"  Target date : {friday.strftime('%A, %B %-d, %Y')}\n")
 
     current_slots = await select_friday_and_scrape(friday)
-    print(f"  Found {len(current_slots)} tee time slot(s).")
+    print(f"\n  Found {len(current_slots)} tee time slot(s).")
 
     if not current_slots:
         print("  Nothing to compare — no alert sent.\n")
@@ -333,7 +320,6 @@ async def main():
             lines.append(line)
         lines.append(f"\nBook here:\n{URL}")
         body = "\n".join(lines)
-
         send_email(
             subject=f"⛳ Tee Time Alert – Miami Lakes {friday.strftime('%a %b %-d')}",
             body=body
