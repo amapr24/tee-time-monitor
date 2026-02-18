@@ -41,13 +41,9 @@ def next_friday() -> date:
 
 async def select_friday_and_scrape(friday: date) -> list[dict]:
     async with async_playwright() as p:
-        # Use a real-browser user agent to avoid bot detection
         browser = await p.chromium.launch(
             headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--no-sandbox",
-            ]
+            args=["--disable-blink-features=AutomationControlled", "--no-sandbox"]
         )
         context = await browser.new_context(
             user_agent=(
@@ -57,7 +53,6 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
             ),
             viewport={"width": 1280, "height": 800},
         )
-        # Hide webdriver flag
         await context.add_init_script(
             "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
         )
@@ -65,54 +60,17 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
         page = await context.new_page()
 
         print(f"  Loading page...")
-        try:
-            await page.goto(URL, wait_until="networkidle", timeout=60_000)
-        except Exception as e:
-            print(f"  ⚠ goto error: {e} — continuing anyway")
+        await page.goto(URL, wait_until="networkidle", timeout=60_000)
+        await page.wait_for_timeout(3_000)
 
-        # Give extra time for JS frameworks to render
-        await page.wait_for_timeout(5_000)
-
-        # ── DEBUG: print page title and a snippet of HTML ─────────────────
-        title = await page.title()
-        print(f"  Page title: '{title}'")
-
-        body_text = await page.evaluate("() => document.body ? document.body.innerText.slice(0, 500) : 'NO BODY'")
-        print(f"  Page text preview:\n---\n{body_text}\n---")
-
-        td_count = await page.evaluate("() => document.querySelectorAll('td').length")
-        print(f"  Number of <td> elements found: {td_count}")
-
-        all_text = await page.evaluate("""
-            () => {
-                const monthYearPattern = /[A-Za-z]+ \\d{4}/;
-                const walker = document.createTreeWalker(
-                    document.body, NodeFilter.SHOW_TEXT, null, false
-                );
-                let results = [];
-                let node;
-                while ((node = walker.nextNode())) {
-                    const t = node.textContent.trim();
-                    if (t && t.length < 50) results.push(t);
-                }
-                return results.slice(0, 50).join(' | ');
-            }
-        """)
-        print(f"  Text nodes: {all_text[:500]}")
-        # ── END DEBUG ──────────────────────────────────────────────────────
-
-        # ── Navigate to correct month ──────────────────────────────────────
+        # ── Step 1: Navigate to the correct month ────────────────────────────
         target_month_str = friday.strftime("%B %Y")
-        print(f"\n  Looking for month: {target_month_str}")
+        print(f"  Looking for month: {target_month_str}")
 
         for attempt in range(12):
             header = await page.evaluate("""
                 () => {
                     const pat = /^[A-Za-z]+ \\d{4}$/;
-                    for (const el of document.querySelectorAll('*')) {
-                        const t = (el.innerText || '').trim();
-                        if (pat.test(t) && el.children.length === 0) return t;
-                    }
                     const walker = document.createTreeWalker(
                         document.body, NodeFilter.SHOW_TEXT, null, false
                     );
@@ -125,28 +83,29 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                 }
             """)
             header = (header or "").strip()
-            print(f"  Calendar header attempt {attempt+1}: '{header}'")
+            print(f"  Calendar header: '{header}'")
 
             if target_month_str in header:
                 print(f"  ✓ Correct month found.")
                 break
 
             if not header:
-                print(f"  Header empty — cannot navigate months, will try clicking day anyway.")
+                print(f"  Header not found, proceeding anyway.")
                 break
 
             print(f"  Advancing month...")
-            clicked = await page.evaluate("""
+            await page.evaluate("""
                 () => {
-                    const candidates = document.querySelectorAll(
-                        '[class*="right"], [class*="next"], [class*="arrow"], button, a'
-                    );
-                    for (const el of candidates) {
+                    for (const el of document.querySelectorAll('*')) {
                         const t = (el.innerText || '').trim();
-                        if (t === '›' || t === '>' || t === '▶' || t === '→' ||
-                            (el.getAttribute('aria-label') || '').toLowerCase().includes('next')) {
-                            el.click();
-                            return true;
+                        if (t === '›' || t === '>' || t === '▶' || t === '→') {
+                            el.click(); return true;
+                        }
+                    }
+                    // Try aria-label
+                    for (const el of document.querySelectorAll('[aria-label]')) {
+                        if ((el.getAttribute('aria-label') || '').toLowerCase().includes('next')) {
+                            el.click(); return true;
                         }
                     }
                     return false;
@@ -154,31 +113,55 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
             """)
             await page.wait_for_timeout(800)
 
-        # ── Click day ──────────────────────────────────────────────────────
+        # ── Step 2: Click the correct day ────────────────────────────────────
+        # The calendar uses divs, not tds. We find any element whose
+        # complete text is exactly our day number and click it.
         day_num = str(friday.day)
-        print(f"\n  Clicking day {day_num}...")
+        print(f"  Clicking day {day_num}...")
 
         clicked = await page.evaluate(f"""
             () => {{
                 const target = '{day_num}';
-                const cells = document.querySelectorAll('td');
-                console.log('Total td cells:', cells.length);
-                for (const cell of cells) {{
-                    const text = (cell.innerText || '').trim();
+
+                // Search all elements for an exact text match
+                const all = document.querySelectorAll('div, span, a, button, li');
+                for (const el of all) {{
+                    // Use innerText to get rendered text only (no children noise)
+                    const text = (el.innerText || '').trim();
                     if (text !== target) continue;
-                    const classes = (cell.className || '').toLowerCase();
+
+                    const classes = (el.className || '').toLowerCase();
+                    // Skip disabled/greyed/other-month cells
                     if (['gray','grey','disabled','prev','next','old','muted','inactive']
                             .some(c => classes.includes(c))) continue;
-                    cell.click();
-                    return 'clicked:' + cell.className;
+
+                    // Skip elements that are parents of other matching elements
+                    // (we want the innermost element with just the number)
+                    const children = el.querySelectorAll('*');
+                    let childHasText = false;
+                    for (const child of children) {{
+                        if ((child.innerText || '').trim() === target) {{
+                            childHasText = true;
+                            break;
+                        }}
+                    }}
+                    if (childHasText) continue;
+
+                    el.click();
+                    return 'clicked: ' + el.tagName + ' class=' + el.className;
                 }}
-                // Print all td texts for debugging
-                const allTexts = Array.from(cells).map(c => (c.innerText||'').trim()).filter(t=>t).join(',');
-                return 'not_found. td texts: ' + allTexts.slice(0,200);
+                return null;
             }}
         """)
-        print(f"  Click result: {clicked}")
 
+        if not clicked:
+            print(f"  ⚠ Could not find day {day_num} to click.")
+            await browser.close()
+            return []
+
+        print(f"  ✓ {clicked}")
+
+        # ── Step 3: Wait for results ─────────────────────────────────────────
         await page.wait_for_timeout(4_000)
 
         try:
@@ -189,7 +172,13 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                 timeout=10_000
             )
         except Exception:
-            print("  ⚠ Result selector timed out.")
+            print("  ⚠ Result selector timed out — parsing whatever is rendered.")
+
+        # Debug: print what's now on the page after clicking
+        body_text = await page.evaluate(
+            "() => document.body ? document.body.innerText.slice(0, 800) : ''"
+        )
+        print(f"  Page after click:\n---\n{body_text}\n---")
 
         html = await page.content()
         await browser.close()
