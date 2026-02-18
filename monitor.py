@@ -1,6 +1,6 @@
 """
 Miami Lakes Tee Time Monitor
-Checks CPS Golf for available tee times on the coming Friday
+Checks CPS Golf for available tee times on specified days
 and sends an email alert when new slots appear.
 
 Setup:
@@ -19,24 +19,77 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 # ── Configuration ────────────────────────────────────────────────────────────
-URL            = "https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=0&TeeOffTimeMax=18"
+# CUSTOMIZATION: Change these values to suit your needs
 
+# Golf course base URL (change to monitor a different course)
+BASE_URL = "https://miamilakes.cps.golf/onlineresweb/search-teetime"
+
+# Days to monitor: 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday
+# Default monitors Friday (4), Saturday (5), and Sunday (6)
+DAYS_TO_MONITOR = [4, 5, 6]
+
+# Tee time window: only alert for times between TEE_TIME_MIN and TEE_TIME_MAX (0-23)
+# 0 = midnight, 6 = 6 AM, 12 = noon, 18 = 6 PM, 23 = 11 PM
+TEE_TIME_MIN = 9      # Start of day (midnight)
+TEE_TIME_MAX = 14     # End of day (6 PM) — change to 23 for all day
+
+# Email configuration
 SMTP_SERVER    = os.environ.get("SMTP_SERVER",   "smtp.gmail.com")
 SMTP_PORT      = int(os.environ.get("SMTP_PORT", "587"))
 EMAIL_SENDER   = os.environ.get("EMAIL_SENDER")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 EMAIL_TO       = os.environ.get("EMAIL_TO")
 
+# Cache file for tracking previously seen tee times
 CACHE_FILE     = Path("last_teetimes.json")
-# ─────────────────────────────────────────────────────────────────────────────
+
+# ───────────────────────────────────────────────────���─────────────────────────
+
+# Day name mapping
+DAY_NAMES = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 
+             4: "Friday", 5: "Saturday", 6: "Sunday"}
 
 
-def next_friday() -> date:
+def get_next_occurrences(days_to_check: list[int], num_weeks: int = 4) -> list[date]:
+    """
+    Get the next occurrences of specified days.
+    
+    Args:
+        days_to_check: List of weekday numbers (0=Monday, 6=Sunday)
+        num_weeks: How many weeks ahead to check (default 4)
+    
+    Returns:
+        List of dates for the next occurrences of those days
+    """
     today = date.today()
-    days_ahead = (4 - today.weekday()) % 7
-    if days_ahead == 0:
-        days_ahead = 7
-    return today + timedelta(days=days_ahead)
+    target_dates = []
+    
+    for i in range(1, num_weeks * 7 + 1):
+        check_date = today + timedelta(days=i)
+        if check_date.weekday() in days_to_check:
+            target_dates.append(check_date)
+    
+    return target_dates
+
+
+def is_within_time_window(time_str: str) -> bool:
+    """Check if a tee time falls within the configured time window."""
+    try:
+        # Parse time string like "3:00 PM" or "9:30 AM"
+        time_part = time_str.split()[0]  # Get "3:00" from "3:00 PM"
+        am_pm = time_str.split()[1] if len(time_str.split()) > 1 else "AM"
+        
+        hour, minute = map(int, time_part.split(":"))
+        
+        # Convert to 24-hour format
+        if am_pm.upper() == "PM" and hour != 12:
+            hour += 12
+        elif am_pm.upper() == "AM" and hour == 12:
+            hour = 0
+        
+        return TEE_TIME_MIN <= hour <= TEE_TIME_MAX
+    except Exception:
+        return True  # Include if we can't parse
 
 
 def deduplicate_slots(slots: list[dict]) -> list[dict]:
@@ -55,6 +108,10 @@ def deduplicate_slots(slots: list[dict]) -> list[dict]:
         if not holes:
             continue
         
+        # Filter by time window
+        if not is_within_time_window(slot.get("time", "")):
+            continue
+        
         # Create a key from time and holes
         key = (time, holes)
         
@@ -65,7 +122,7 @@ def deduplicate_slots(slots: list[dict]) -> list[dict]:
     return deduped
 
 
-async def select_friday_and_scrape(friday: date) -> list[dict]:
+async def select_day_and_scrape(target_date: date) -> list[dict]:
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=True,
@@ -85,12 +142,15 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
 
         page = await context.new_page()
 
+        # Build full URL with time parameters
+        url = f"{BASE_URL}?TeeOffTimeMin={TEE_TIME_MIN}&TeeOffTimeMax={TEE_TIME_MAX}"
+        
         print(f"  Loading page...")
-        await page.goto(URL, wait_until="networkidle", timeout=60_000)
+        await page.goto(url, wait_until="networkidle", timeout=60_000)
         await page.wait_for_timeout(3_000)
 
         # ── Step 1: Navigate to the correct month ────────────────────────────
-        target_month_str = friday.strftime("%B %Y")
+        target_month_str = target_date.strftime("%B %Y")
         print(f"  Looking for month: {target_month_str}")
 
         for attempt in range(12):
@@ -138,7 +198,7 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
             await page.wait_for_timeout(800)
 
         # ── Step 2: Click the correct day ────────────────────────────────────
-        day_num = str(friday.day)
+        day_num = str(target_date.day)
         print(f"  Clicking day {day_num}...")
 
         clicked = await page.evaluate(f"""
@@ -175,15 +235,9 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
         await page.wait_for_timeout(4_000)
 
         # ── Step 3: Extract tee times directly from the rendered DOM ─────────
-        # The site renders times split across elements (e.g. "3:00" + "P" + "M")
-        # so we use JavaScript to read the full innerText of each booking card
-        # and reconstruct the time + details from what the user would see.
-        # This version includes deduplication to prevent duplicate entries.
         tee_times = await page.evaluate("""
             () => {
                 const results = [];
-
-                // Look for booking card containers — try several selector patterns
                 const cardSelectors = [
                     '[class*="teetime"]', '[class*="tee-time"]',
                     '[class*="timeslot"]', '[class*="time-slot"]',
@@ -203,7 +257,6 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                     }
                 }
 
-                // Deduplicate results by time + holes combination
                 const seenSlots = new Set();
 
                 if (cards.length > 0) {
@@ -211,7 +264,6 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                         const raw = (card.innerText || '').replace(/\\s+/g, ' ').trim();
                         if (!raw) continue;
 
-                        // Reconstruct time: look for pattern like "3:00 P M" -> "3:00 PM"
                         const timeMatch = raw.match(/(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/i);
                         const holeMatch = raw.match(/\\d+\\s*HOLE/i);
                         const priceMatch = raw.match(/\\$[\\d.]+/);
@@ -222,7 +274,6 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                             const time = timeBase + ' ' + ampm;
                             const holes = holeMatch ? holeMatch[0] : '';
                             
-                            // Create a unique key for this slot
                             const key = time + '|' + holes;
                             
                             if (!seenSlots.has(key)) {
@@ -237,10 +288,8 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                     }
                 }
 
-                // Fallback: scan full page text for the split-element time pattern
                 if (results.length === 0) {
                     const fullText = document.body.innerText.replace(/\\s+/g, ' ');
-                    // Match "3:00 P M" or "3:00 A M" style (split AM/PM)
                     const pattern = /(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/gi;
                     let match;
                     while ((match = pattern.exec(fullText)) !== null) {
@@ -248,7 +297,6 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                         const ampm = match[1] ? 'PM' : 'AM';
                         const time = base + ' ' + ampm;
                         
-                        // Create a unique key - fallback only uses time since we can't get holes
                         const key = time + '|';
                         
                         if (!seenSlots.has(key)) {
@@ -268,17 +316,38 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
     return tee_times
 
 
-def load_cache() -> list[dict]:
-    if CACHE_FILE.exists():
-        try:
-            return json.loads(CACHE_FILE.read_text())
-        except Exception:
-            pass
+def get_cache_key(target_date: date) -> str:
+    """Get a unique cache key for a specific date."""
+    return f"teetimes_{target_date.isoformat()}"
+
+
+def load_cache(target_date: date) -> list[dict]:
+    """Load cached tee times for a specific date."""
+    try:
+        if CACHE_FILE.exists():
+            all_cache = json.loads(CACHE_FILE.read_text())
+            return all_cache.get(get_cache_key(target_date), [])
+    except Exception:
+        pass
     return []
 
 
-def save_cache(data: list[dict]):
-    CACHE_FILE.write_text(json.dumps(data, indent=2))
+def save_cache(target_date: date, data: list[dict]):
+    """Save tee times for a specific date to cache."""
+    try:
+        # Load existing cache
+        if CACHE_FILE.exists():
+            all_cache = json.loads(CACHE_FILE.read_text())
+        else:
+            all_cache = {}
+        
+        # Update cache for this date
+        all_cache[get_cache_key(target_date)] = data
+        
+        # Save back to file
+        CACHE_FILE.write_text(json.dumps(all_cache, indent=2))
+    except Exception as e:
+        print(f"  ⚠ Error saving cache: {e}")
 
 
 def find_new_slots(old: list[dict], new: list[dict]) -> list[dict]:
@@ -302,14 +371,17 @@ def send_email(subject: str, body: str):
     print(f"  ✅ Alert email sent to {EMAIL_TO}")
 
 
-async def main():
-    friday = next_friday()
-    print(f"\n🏌️  Miami Lakes Tee Time Monitor")
-    print(f"  Target date : {friday.strftime('%A, %B %-d, %Y')}\n")
+async def check_day(target_date: date):
+    """Check tee times for a single day."""
+    day_name = DAY_NAMES.get(target_date.weekday(), "Unknown")
+    print(f"\n{'='*60}")
+    print(f"🏌️  Checking {day_name}, {target_date.strftime('%B %-d, %Y')}")
+    print(f"  Time window: {TEE_TIME_MIN:02d}:00 - {TEE_TIME_MAX:02d}:59")
+    print(f"{'='*60}\n")
 
-    current_slots = await select_friday_and_scrape(friday)
+    current_slots = await select_day_and_scrape(target_date)
     
-    # Deduplicate slots: remove any with no hole info and remove true duplicates
+    # Deduplicate slots
     current_slots = deduplicate_slots(current_slots)
     
     print(f"  Found {len(current_slots)} unique tee time slot(s).")
@@ -318,14 +390,14 @@ async def main():
         print("  Nothing to compare — no alert sent.\n")
         return
 
-    cached_slots = load_cache()
+    cached_slots = load_cache(target_date)
     new_slots    = find_new_slots(cached_slots, current_slots)
 
     if new_slots:
         print(f"  🚨 {len(new_slots)} NEW slot(s) detected!")
         lines = [
             f"New tee time(s) just opened at Miami Lakes Golf Course",
-            f"for {friday.strftime('%A, %B %-d, %Y')}:\n",
+            f"for {day_name}, {target_date.strftime('%B %-d, %Y')}:\n",
         ]
         for slot in new_slots:
             time  = slot.get("time",  "Unknown time")
@@ -335,17 +407,38 @@ async def main():
             if holes: line += f"  |  {holes}"
             if price: line += f"  |  {price}"
             lines.append(line)
-        lines.append(f"\nBook here:\n{URL}")
+        lines.append(f"\nBook here:\n{BASE_URL}")
         body = "\n".join(lines)
         send_email(
-            subject=f"⛳ Tee Time Alert – Miami Lakes {friday.strftime('%a %b %-d')}",
+            subject=f"⛳ Tee Time Alert – Miami Lakes {target_date.strftime('%a %b %-d')}",
             body=body
         )
     else:
         print("  No new slots since last check — no alert sent.")
 
-    save_cache(current_slots)
-    print("\nDone.\n")
+    save_cache(target_date, current_slots)
+
+
+async def main():
+    print(f"\n🏌️  Miami Lakes Tee Time Monitor (Multi-Day)")
+    print(f"  Monitoring: {', '.join(DAY_NAMES[d] for d in DAYS_TO_MONITOR)}")
+    
+    # Get the next occurrence of each monitored day
+    target_dates = get_next_occurrences(DAYS_TO_MONITOR, num_weeks=4)
+    
+    # Check each date (limit to next occurrence of each day)
+    unique_dates = {}
+    for d in target_dates:
+        day_num = d.weekday()
+        if day_num not in unique_dates:
+            unique_dates[day_num] = d
+    
+    for day_num in DAYS_TO_MONITOR:
+        if day_num in unique_dates:
+            await check_day(unique_dates[day_num])
+    
+    print("\n" + "="*60)
+    print("✅ All days checked. Done.\n")
 
 
 if __name__ == "__main__":
