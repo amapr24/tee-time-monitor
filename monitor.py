@@ -41,6 +41,82 @@ def next_friday() -> date:
     return today + timedelta(days=days_ahead)
 
 
+async def get_calendar_header(page) -> str:
+    """
+    Use JavaScript to find the calendar month/year header text.
+    Tries multiple strategies so it works regardless of exact HTML structure.
+    """
+    header = await page.evaluate("""
+        () => {
+            // Strategy 1: look for an element whose text matches "Month YYYY" pattern
+            const monthYearPattern = /^[A-Za-z]+ \\d{4}$/;
+            const allElements = document.querySelectorAll('*');
+            for (const el of allElements) {
+                const text = el.innerText ? el.innerText.trim() : '';
+                if (monthYearPattern.test(text) && el.children.length === 0) {
+                    return text;
+                }
+            }
+
+            // Strategy 2: look for any element with 'month' in its class
+            for (const el of document.querySelectorAll('[class*="month"], [class*="Month"]')) {
+                const text = el.innerText ? el.innerText.trim() : '';
+                if (text.length > 0 && text.length < 30) {
+                    return text;
+                }
+            }
+
+            // Strategy 3: scan all text nodes for the pattern
+            const walker = document.createTreeWalker(
+                document.body, NodeFilter.SHOW_TEXT, null, false
+            );
+            let node;
+            while ((node = walker.nextNode())) {
+                const text = node.textContent.trim();
+                if (monthYearPattern.test(text)) {
+                    return text;
+                }
+            }
+
+            return '';
+        }
+    """)
+    return (header or "").strip()
+
+
+async def click_next_month(page):
+    """Click the right arrow to advance the calendar by one month."""
+    clicked = await page.evaluate("""
+        () => {
+            // Look for a right-arrow button near the calendar header
+            const candidates = [
+                ...document.querySelectorAll(
+                    '[class*="right"], [class*="next"], [class*="arrow"], '  +
+                    '[class*="chevron"], [aria-label*="next"], [aria-label*="Next"]'
+                )
+            ];
+            for (const el of candidates) {
+                const tag = el.tagName.toLowerCase();
+                if (['button', 'a', 'span', 'div', 'i'].includes(tag)) {
+                    el.click();
+                    return true;
+                }
+            }
+            // Fallback: look for › or > character text nodes
+            const allEls = document.querySelectorAll('button, span, a, div');
+            for (const el of allEls) {
+                const t = el.innerText ? el.innerText.trim() : '';
+                if (t === '›' || t === '>' || t === '▶' || t === '→') {
+                    el.click();
+                    return true;
+                }
+            }
+            return false;
+        }
+    """)
+    return clicked
+
+
 async def select_friday_and_scrape(friday: date) -> list[dict]:
     """
     Open the booking page, navigate the inline calendar to the correct month,
@@ -52,80 +128,64 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
 
         print(f"  Loading page...")
         await page.goto(URL, wait_until="networkidle", timeout=60_000)
+        await page.wait_for_timeout(2_000)  # let JS finish rendering
 
         # ── Step 1: Navigate calendar to the correct month ───────────────────
-        # The header shows e.g. "February 2026" in bold between two arrow buttons.
-        # We click the right (›) arrow until we reach the target month.
         target_month_str = friday.strftime("%B %Y")  # e.g. "February 2026"
+        print(f"  Looking for month: {target_month_str}")
 
-        for attempt in range(12):  # never advance more than 12 months
-            # Read the current calendar header text
-            try:
-                header = await page.locator(
-                    "[class*='monthYear'], [class*='month-year'], "
-                    "[class*='calHeader'], [class*='cal-header'], "
-                    "th[colspan] b, th[colspan] strong, "
-                    ".month-header, [class*='calendarTitle']"
-                ).first.text_content(timeout=5_000)
-            except Exception:
-                # Broad fallback: any bold text sitting inside a table header
-                header = await page.locator("table th b, table th strong").first.text_content(timeout=5_000)
-
-            header = (header or "").strip()
-            print(f"  Calendar shows: '{header}'")
+        for attempt in range(12):
+            header = await get_calendar_header(page)
+            print(f"  Calendar header: '{header}'")
 
             if target_month_str in header:
-                print(f"  ✓ Correct month reached.")
+                print(f"  ✓ Correct month found.")
                 break
 
-            # Click the right-arrow next-month button
-            # From the screenshot it appears as a › character inside a clickable element
-            print(f"  Advancing month...")
-            await page.locator(
-                "[class*='rightArrow'], [class*='right-arrow'], "
-                "[class*='nextMonth'], [class*='next-month'], "
-                "button[aria-label*='next' i], "
-                "span[class*='right' i]:not([class*='left']), "
-                "a[class*='next' i], .fc-next-button, "
-                # The › character itself as a last resort
-                "th:last-child, td:last-child"
-            ).first.click()
-            await page.wait_for_timeout(600)
-        else:
-            print("  ⚠ Could not reach the target month after 12 attempts.")
+            if not header:
+                print(f"  ⚠ Could not read calendar header (attempt {attempt+1}) — trying to click day directly.")
+                break
+
+            print(f"  Advancing to next month...")
+            clicked = await click_next_month(page)
+            if not clicked:
+                print(f"  ⚠ Could not find next-month button — proceeding anyway.")
+                break
+            await page.wait_for_timeout(700)
 
         # ── Step 2: Click the correct day number ─────────────────────────────
-        # The calendar renders as a standard HTML table. Each <td> contains a
-        # day number. Past/unavailable days have a grey/disabled class.
-        # We want the <td> whose exact text is our day number and is not greyed.
         day_num = str(friday.day)  # e.g. "20"
-        print(f"  Looking for day cell: '{day_num}'...")
+        print(f"  Clicking day {day_num}...")
 
-        clicked = False
-        all_cells = page.locator("table td")
-        count = await all_cells.count()
+        clicked = await page.evaluate(f"""
+            () => {{
+                const target = '{day_num}';
+                const cells = document.querySelectorAll('td');
+                for (const cell of cells) {{
+                    const text = cell.innerText ? cell.innerText.trim() : '';
+                    if (text !== target) continue;
 
-        for i in range(count):
-            cell = all_cells.nth(i)
-            text = (await cell.text_content()).strip()
-            if text != day_num:
-                continue
-            classes = (await cell.get_attribute("class") or "").lower()
-            # Skip greyed-out, disabled, or cells belonging to prev/next months
-            if any(bad in classes for bad in ["gray", "grey", "disabled", "prev", "next", "old", "muted", "inactive"]):
-                continue
-            await cell.click()
-            clicked = True
-            print(f"  ✓ Clicked day {day_num} (cell classes: '{classes}')")
-            break
+                    const classes = (cell.className || '').toLowerCase();
+                    // Skip disabled / greyed / other-month cells
+                    if (['gray','grey','disabled','prev','next','old','muted','inactive']
+                            .some(c => classes.includes(c))) continue;
+
+                    cell.click();
+                    return cell.className || 'clicked';
+                }}
+                return null;
+            }}
+        """)
 
         if not clicked:
-            print(f"  ⚠ Day cell '{day_num}' not found — the calendar may use a different structure.")
+            print(f"  ⚠ Day cell '{day_num}' not found in calendar.")
             await browser.close()
             return []
 
+        print(f"  ✓ Clicked day {day_num} (cell class: '{clicked}')")
+
         # ── Step 3: Wait for results to load ─────────────────────────────────
-        await page.wait_for_timeout(3_000)
+        await page.wait_for_timeout(4_000)
 
         try:
             await page.wait_for_selector(
@@ -156,9 +216,9 @@ def parse_tee_times(html: str) -> list[dict]:
     class CardParser(HTMLParser):
         def __init__(self):
             super().__init__()
-            self.in_card  = False
-            self.depth    = 0
-            self.current  = {}
+            self.in_card = False
+            self.depth   = 0
+            self.current = {}
 
         def handle_starttag(self, tag, attrs):
             classes = dict(attrs).get("class", "").lower()
@@ -198,7 +258,7 @@ def parse_tee_times(html: str) -> list[dict]:
     # Fallback: regex sweep for time patterns if no structured cards matched
     if not tee_times:
         found = re.findall(r"\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b", html, re.IGNORECASE)
-        unique = list(dict.fromkeys(found))  # deduplicate, preserve order
+        unique = list(dict.fromkeys(found))
         if unique:
             print(f"  Fallback regex found {len(unique)} time reference(s) in page.")
             tee_times = [{"time": t} for t in unique]
