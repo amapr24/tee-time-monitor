@@ -83,17 +83,16 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                 }
             """)
             header = (header or "").strip()
-            print(f"  Calendar header: '{header}'")
 
             if target_month_str in header:
-                print(f"  ✓ Correct month found.")
+                print(f"  ✓ Correct month: {header}")
                 break
 
             if not header:
                 print(f"  Header not found, proceeding anyway.")
                 break
 
-            print(f"  Advancing month...")
+            print(f"  Advancing month from '{header}'...")
             await page.evaluate("""
                 () => {
                     for (const el of document.querySelectorAll('*')) {
@@ -102,7 +101,6 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                             el.click(); return true;
                         }
                     }
-                    // Try aria-label
                     for (const el of document.querySelectorAll('[aria-label]')) {
                         if ((el.getAttribute('aria-label') || '').toLowerCase().includes('next')) {
                             el.click(); return true;
@@ -114,39 +112,27 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
             await page.wait_for_timeout(800)
 
         # ── Step 2: Click the correct day ────────────────────────────────────
-        # The calendar uses divs, not tds. We find any element whose
-        # complete text is exactly our day number and click it.
         day_num = str(friday.day)
         print(f"  Clicking day {day_num}...")
 
         clicked = await page.evaluate(f"""
             () => {{
                 const target = '{day_num}';
-
-                // Search all elements for an exact text match
                 const all = document.querySelectorAll('div, span, a, button, li');
                 for (const el of all) {{
-                    // Use innerText to get rendered text only (no children noise)
                     const text = (el.innerText || '').trim();
                     if (text !== target) continue;
-
                     const classes = (el.className || '').toLowerCase();
-                    // Skip disabled/greyed/other-month cells
                     if (['gray','grey','disabled','prev','next','old','muted','inactive']
                             .some(c => classes.includes(c))) continue;
-
-                    // Skip elements that are parents of other matching elements
-                    // (we want the innermost element with just the number)
                     const children = el.querySelectorAll('*');
                     let childHasText = false;
                     for (const child of children) {{
                         if ((child.innerText || '').trim() === target) {{
-                            childHasText = true;
-                            break;
+                            childHasText = true; break;
                         }}
                     }}
                     if (childHasText) continue;
-
                     el.click();
                     return 'clicked: ' + el.tagName + ' class=' + el.className;
                 }}
@@ -160,87 +146,80 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
             return []
 
         print(f"  ✓ {clicked}")
-
-        # ── Step 3: Wait for results ─────────────────────────────────────────
         await page.wait_for_timeout(4_000)
 
-        try:
-            await page.wait_for_selector(
-                "[class*='teetime'], [class*='tee-time'], "
-                "[class*='timeslot'], [class*='booking'], "
-                ".no-results, [class*='noResult']",
-                timeout=10_000
-            )
-        except Exception:
-            print("  ⚠ Result selector timed out — parsing whatever is rendered.")
+        # ── Step 3: Extract tee times directly from the rendered DOM ─────────
+        # The site renders times split across elements (e.g. "3:00" + "P" + "M")
+        # so we use JavaScript to read the full innerText of each booking card
+        # and reconstruct the time + details from what the user would see.
+        tee_times = await page.evaluate("""
+            () => {
+                const results = [];
 
-        # Debug: print what's now on the page after clicking
-        body_text = await page.evaluate(
-            "() => document.body ? document.body.innerText.slice(0, 800) : ''"
-        )
-        print(f"  Page after click:\n---\n{body_text}\n---")
+                // Look for booking card containers — try several selector patterns
+                const cardSelectors = [
+                    '[class*="teetime"]', '[class*="tee-time"]',
+                    '[class*="timeslot"]', '[class*="time-slot"]',
+                    '[class*="booking"]', '[class*="result-item"]',
+                    '[class*="search-result"]', '[class*="tee-card"]'
+                ];
 
-        html = await page.content()
+                let cards = [];
+                for (const sel of cardSelectors) {
+                    const found = document.querySelectorAll(sel);
+                    if (found.length > 0) {
+                        cards = Array.from(found);
+                        break;
+                    }
+                }
+
+                if (cards.length > 0) {
+                    for (const card of cards) {
+                        const raw = (card.innerText || '').replace(/\\s+/g, ' ').trim();
+                        if (!raw) continue;
+
+                        // Reconstruct time: look for pattern like "3:00 P M" -> "3:00 PM"
+                        const timeMatch = raw.match(/(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/i);
+                        const holeMatch = raw.match(/\\d+\\s*HOLE/i);
+                        const priceMatch = raw.match(/\\$[\\d.]+/);
+
+                        if (timeMatch) {
+                            const timeBase = timeMatch[1] || timeMatch[2];
+                            const ampm = timeMatch[1] ? 'PM' : 'AM';
+                            results.push({
+                                time: timeBase + ' ' + ampm,
+                                holes: holeMatch ? holeMatch[0] : '',
+                                price: priceMatch ? priceMatch[0] : ''
+                            });
+                        }
+                    }
+                }
+
+                // Fallback: scan full page text for the split-element time pattern
+                if (results.length === 0) {
+                    const fullText = document.body.innerText.replace(/\\s+/g, ' ');
+                    // Match "3:00 P M" or "3:00 P M" style (split PM)
+                    const pattern = /(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/gi;
+                    let match;
+                    const seen = new Set();
+                    while ((match = pattern.exec(fullText)) !== null) {
+                        const base = match[1] || match[2];
+                        const ampm = match[1] ? 'PM' : 'AM';
+                        const key = base + ' ' + ampm;
+                        if (!seen.has(key)) {
+                            seen.add(key);
+                            results.push({ time: key, holes: '', price: '' });
+                        }
+                    }
+                }
+
+                return results;
+            }
+        """)
+
         await browser.close()
 
-    return parse_tee_times(html)
-
-
-def parse_tee_times(html: str) -> list[dict]:
-    import re
-    from html.parser import HTMLParser
-
-    tee_times = []
-
-    class CardParser(HTMLParser):
-        def __init__(self):
-            super().__init__()
-            self.in_card = False
-            self.depth   = 0
-            self.current = {}
-
-        def handle_starttag(self, tag, attrs):
-            classes = dict(attrs).get("class", "").lower()
-            if any(k in classes for k in
-                   ["teetime", "tee-time", "timeslot", "time-slot",
-                    "booking-item", "search-result-item", "result-item"]):
-                self.in_card = True
-                self.depth   = 0
-                self.current = {}
-            if self.in_card:
-                self.depth += 1
-
-        def handle_endtag(self, tag):
-            if self.in_card:
-                self.depth -= 1
-                if self.depth <= 0:
-                    self.in_card = False
-                    if "time" in self.current:
-                        tee_times.append(self.current)
-                    self.current = {}
-
-        def handle_data(self, data):
-            if not self.in_card:
-                return
-            text = data.strip()
-            if not text:
-                return
-            if re.match(r"\d{1,2}:\d{2}\s*(AM|PM)", text, re.IGNORECASE):
-                self.current["time"] = text
-            elif re.search(r"\$[\d.]+", text):
-                self.current.setdefault("price", text)
-            elif re.search(r"\d+\s*(player|spot|opening|available)", text, re.IGNORECASE):
-                self.current.setdefault("spots", text)
-
-    CardParser().feed(html)
-
-    if not tee_times:
-        found = re.findall(r"\b(\d{1,2}:\d{2}\s*(?:AM|PM))\b", html, re.IGNORECASE)
-        unique = list(dict.fromkeys(found))
-        if unique:
-            print(f"  Fallback regex found {len(unique)} time reference(s).")
-            tee_times = [{"time": t} for t in unique]
-
+    print(f"  Raw slots found: {tee_times}")
     return tee_times
 
 
@@ -301,11 +280,11 @@ async def main():
         ]
         for slot in new_slots:
             time  = slot.get("time",  "Unknown time")
+            holes = slot.get("holes", "")
             price = slot.get("price", "")
-            spots = slot.get("spots", "")
             line  = f"  • {time}"
+            if holes: line += f"  |  {holes}"
             if price: line += f"  |  {price}"
-            if spots: line += f"  |  {spots}"
             lines.append(line)
         lines.append(f"\nBook here:\n{URL}")
         body = "\n".join(lines)
