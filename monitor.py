@@ -39,6 +39,19 @@ def next_friday() -> date:
     return today + timedelta(days=days_ahead)
 
 
+def deduplicate_slots(slots: list[dict]) -> list[dict]:
+    """Remove duplicate tee time slots by time+holes combination."""
+    seen = set()
+    deduped = []
+    for slot in slots:
+        # Create a key from time and holes (ignore price for dedup)
+        key = (slot.get("time", "").strip().upper(), slot.get("holes", "").strip().upper())
+        if key not in seen:
+            seen.add(key)
+            deduped.append(slot)
+    return deduped
+
+
 async def select_friday_and_scrape(friday: date) -> list[dict]:
     async with async_playwright() as p:
         browser = await p.chromium.launch(
@@ -152,6 +165,7 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
         # The site renders times split across elements (e.g. "3:00" + "P" + "M")
         # so we use JavaScript to read the full innerText of each booking card
         # and reconstruct the time + details from what the user would see.
+        # This version includes deduplication to prevent duplicate entries.
         tee_times = await page.evaluate("""
             () => {
                 const results = [];
@@ -161,7 +175,10 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                     '[class*="teetime"]', '[class*="tee-time"]',
                     '[class*="timeslot"]', '[class*="time-slot"]',
                     '[class*="booking"]', '[class*="result-item"]',
-                    '[class*="search-result"]', '[class*="tee-card"]'
+                    '[class*="search-result"]', '[class*="tee-card"]',
+                    '[data-time]', '[data-teetime]',  // Add data attribute selectors
+                    '.timeslot-item', '.tee-time-slot',  // Add common class patterns
+                    'div[role="button"]', 'button[aria-label*="time"]'  // Add role/aria
                 ];
 
                 let cards = [];
@@ -172,6 +189,9 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                         break;
                     }
                 }
+
+                // Deduplicate results by time + holes combination
+                const seenSlots = new Set();
 
                 if (cards.length > 0) {
                     for (const card of cards) {
@@ -186,11 +206,20 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                         if (timeMatch) {
                             const timeBase = timeMatch[1] || timeMatch[2];
                             const ampm = timeMatch[1] ? 'PM' : 'AM';
-                            results.push({
-                                time: timeBase + ' ' + ampm,
-                                holes: holeMatch ? holeMatch[0] : '',
-                                price: priceMatch ? priceMatch[0] : ''
-                            });
+                            const time = timeBase + ' ' + ampm;
+                            const holes = holeMatch ? holeMatch[0] : '';
+                            
+                            // Create a unique key for this slot
+                            const key = time + '|' + holes;
+                            
+                            if (!seenSlots.has(key)) {
+                                seenSlots.add(key);
+                                results.push({
+                                    time: time,
+                                    holes: holes,
+                                    price: priceMatch ? priceMatch[0] : ''
+                                });
+                            }
                         }
                     }
                 }
@@ -198,17 +227,20 @@ async def select_friday_and_scrape(friday: date) -> list[dict]:
                 // Fallback: scan full page text for the split-element time pattern
                 if (results.length === 0) {
                     const fullText = document.body.innerText.replace(/\\s+/g, ' ');
-                    // Match "3:00 P M" or "3:00 P M" style (split PM)
+                    // Match "3:00 P M" or "3:00 A M" style (split AM/PM)
                     const pattern = /(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/gi;
                     let match;
-                    const seen = new Set();
                     while ((match = pattern.exec(fullText)) !== null) {
                         const base = match[1] || match[2];
                         const ampm = match[1] ? 'PM' : 'AM';
-                        const key = base + ' ' + ampm;
-                        if (!seen.has(key)) {
-                            seen.add(key);
-                            results.push({ time: key, holes: '', price: '' });
+                        const time = base + ' ' + ampm;
+                        
+                        // Create a unique key - fallback only uses time since we can't get holes
+                        const key = time + '|';
+                        
+                        if (!seenSlots.has(key)) {
+                            seenSlots.add(key);
+                            results.push({ time: time, holes: '', price: '' });
                         }
                     }
                 }
@@ -263,7 +295,11 @@ async def main():
     print(f"  Target date : {friday.strftime('%A, %B %-d, %Y')}\n")
 
     current_slots = await select_friday_and_scrape(friday)
-    print(f"\n  Found {len(current_slots)} tee time slot(s).")
+    
+    # Deduplicate slots to remove any duplicates from scraping
+    current_slots = deduplicate_slots(current_slots)
+    
+    print(f"\n  Found {len(current_slots)} unique tee time slot(s).")
 
     if not current_slots:
         print("  Nothing to compare — no alert sent.\n")
