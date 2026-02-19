@@ -364,15 +364,20 @@ def send_email(subject: str, body: str):
         print("  ⚠ Email credentials not configured — printing alert to console:\n")
         print(f"  SUBJECT: {subject}\n\n{body}")
         return
+    
+    # Split EMAIL_TO by comma to support multiple recipients
+    recipients = [email.strip() for email in EMAIL_TO.split(',')]
+    
     msg = MIMEText(body, "plain")
     msg["Subject"] = subject
     msg["From"]    = EMAIL_SENDER
-    msg["To"]      = EMAIL_TO
+    msg["To"]      = ", ".join(recipients)
+    
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
         server.starttls()
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-        server.sendmail(EMAIL_SENDER, [EMAIL_TO], msg.as_string())
-    print(f"  ✅ Alert email sent to {EMAIL_TO}")
+        server.sendmail(EMAIL_SENDER, recipients, msg.as_string())
+    print(f"  ✅ Alert email sent to {', '.join(recipients)}")
 
 
 async def check_day(target_date: date):
