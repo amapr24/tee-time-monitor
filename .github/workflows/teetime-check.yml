@@ -2,11 +2,12 @@ name: Check Tee Times
 
 on:
   schedule:
-    # Run every 20 minutes between 7 AM and 1 AM UTC
-    # (covers 2 AM - 8 PM EST, 1 AM - 7 PM CST)
-    - cron: '*/5 7-23 * * *'
-    - cron: '*/20 0-0 * * *'  # Midnight hour
-  
+    # 1. Every 5 mins from 12:00 PM UTC to 11:59 PM UTC (7 AM - 6:59 PM EST)
+    - cron: '*/5 12-23 * * *'
+    
+    # 2. Every 5 mins from 12:00 AM UTC to 6:00 AM UTC (7 PM - 1 AM EST)
+    - cron: '*/5 0-6 * * *'
+    
   # Allow manual trigger from GitHub UI
   workflow_dispatch:
 
