@@ -27,8 +27,8 @@ BASE_URL = "https://miamilakes.cps.golf/onlineresweb/search-teetime"
 DAYS_TO_MONITOR = [4,5,6]   # Friday only — add 5,6 for Sat/Sun
 
 # Tee time window (24h). 0=midnight, 6=6AM, 18=6PM
-TEE_TIME_MIN = 6
-TEE_TIME_MAX = 18
+TEE_TIME_MIN = 7
+TEE_TIME_MAX = 14
 
 # Email
 SMTP_SERVER    = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
