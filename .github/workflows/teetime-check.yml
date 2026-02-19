@@ -10,8 +10,8 @@ on:
     # To cover BOTH offsets without any gaps we run 11:00–00:00 UTC,
     # which equals 6 AM–7 PM EST or 7 AM–8 PM EDT. One harmless extra
     # hour on each end is better than missing runs after DST changes.
-    - cron: "*/5 11-23 * * *"   # 11:00–23:55 UTC  (covers 6AM-6:55PM EST / 7AM-7:55PM EDT)
-    - cron: "*/5 0 * * *"       # 00:00–00:55 UTC  (covers 7PM EST / 8PM EDT)
+    - cron: "*/20 11-23 * * *"   # 11:00–23:55 UTC  (covers 6AM-6:55PM EST / 7AM-7:55PM EDT)
+    - cron: "*/20 0 * * *"       # 00:00–00:55 UTC  (covers 7PM EST / 8PM EDT)
 
   workflow_dispatch:  # allows manual trigger from Actions tab
 
