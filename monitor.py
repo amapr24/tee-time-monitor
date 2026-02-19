@@ -336,10 +336,14 @@ def save_cache(target_date: date, data: list[dict]):
     """Save tee times for a specific date to cache."""
     try:
         # Load existing cache
+        all_cache = {}
         if CACHE_FILE.exists():
-            all_cache = json.loads(CACHE_FILE.read_text())
-        else:
-            all_cache = {}
+            try:
+                content = CACHE_FILE.read_text()
+                if content.strip():
+                    all_cache = json.loads(content)
+            except (json.JSONDecodeError, ValueError):
+                all_cache = {}
         
         # Update cache for this date
         all_cache[get_cache_key(target_date)] = data
