@@ -2,16 +2,13 @@ name: Check Tee Times
 
 on:
   schedule:
-    # Runs every 5 mins from 12:00 PM UTC to 11:59 PM UTC (7 AM - 6:59 PM EST)
-    - cron: '*/5 12-23 * * *'
-    # Runs every 5 mins from 12:00 AM UTC to 6:00 AM UTC (7 PM - 1 AM EST)
-    - cron: '*/5 0-6 * * *'
+    - cron: '*/5 12-23 * * *' # 7 AM - 7 PM EST
+    - cron: '*/5 0-6 * * *'   # 7 PM - 1 AM EST
   workflow_dispatch:
 
 jobs:
   check-tee-times:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,13 +23,14 @@ jobs:
           pip install playwright requests
           playwright install chromium --with-deps
       
-      - name: Cache tee times data
+      - name: Restore cache
         uses: actions/cache@v4
         with:
           path: last_teetimes.json
-          key: teetime-cache-${{ github.run_id }} # Forces refresh each time for this test
+          # FIXED: Using a static key so GitHub remembers the file between runs
+          key: teetime-cache-v1
           restore-keys: teetime-cache-
-      
+
       - name: Run monitor
         env:
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
@@ -41,12 +39,3 @@ jobs:
           PUSHOVER_USER: ${{ secrets.PUSHOVER_USER_KEY }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
         run: python monitor.py
-
-      - name: Notify on Failure
-        if: failure()
-        run: |
-          curl -s \
-            --form-string "token=${{ secrets.PUSHOVER_TOKEN }}" \
-            --form-string "user=${{ secrets.PUSHOVER_USER_KEY }}" \
-            --form-string "message=⚠️ Tee Time Monitor Failed to Run!" \
-            https://api.pushover.net/1/messages.json
