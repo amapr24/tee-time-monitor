@@ -1,44 +1,62 @@
-name: Check Tee Times
+name: Tee Time Monitor
 
 on:
   schedule:
-    # Runs every 5 mins from 7 AM to 6:59 PM EST (12:00 - 23:55 UTC)
-    - cron: '*/5 12-23 * * *'
-    # Runs every 5 mins from 7 PM to 1:00 AM EST (00:00 - 06:00 UTC)
-    - cron: '*/5 0-6 * * *'
-  workflow_dispatch:
+    # Target window: 7 AM – 7 PM ET, every 5 minutes
+    # GitHub Actions cron runs in UTC. Miami observes:
+    #   EST (Nov–Mar):  UTC-5  →  7 AM ET = 12:00 UTC,  7 PM ET = 00:00 UTC
+    #   EDT (Mar–Nov):  UTC-4  →  7 AM ET = 11:00 UTC,  7 PM ET = 23:00 UTC
+    #
+    # To cover BOTH offsets without any gaps we run 11:00–00:00 UTC,
+    # which equals 6 AM–7 PM EST or 7 AM–8 PM EDT. One harmless extra
+    # hour on each end is better than missing runs after DST changes.
+    - cron: "*/5 11-23 * * *"   # 11:00–23:55 UTC  (covers 6AM-6:55PM EST / 7AM-7:55PM EDT)
+    - cron: "*/5 0 * * *"       # 00:00–00:55 UTC  (covers 7PM EST / 8PM EDT)
+
+  workflow_dispatch:  # allows manual trigger from Actions tab
 
 jobs:
   check-tee-times:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      
+          python-version: "3.12"
+
       - name: Install dependencies
         run: |
           pip install playwright requests
           playwright install chromium --with-deps
-      
-      - name: Restore cache
-        uses: actions/cache@v4
+
+      # ── Cache strategy ────────────────────────────────────────────────────
+      # Restore using a prefix so we always get the most recent cache entry.
+      # Save with a unique key (run_id) so GitHub actually writes the update.
+      # A static key like "teetime-cache-v1" silently stops updating after
+      # the very first run because GitHub won't overwrite an existing key.
+      - name: Restore tee time cache
+        uses: actions/cache/restore@v4
         with:
           path: last_teetimes.json
-          # FIXED: Using a static key so cache is shared between runs.
-          # Change 'v1' to 'v2' if you ever want to force a reset.
-          key: teetime-cache-v1
-          restore-keys: teetime-cache-
+          key: teetime-cache-${{ github.run_id }}   # won't match — intentional
+          restore-keys: teetime-cache-               # grabs the latest saved entry
 
       - name: Run monitor
         env:
-          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_SENDER:   ${{ secrets.EMAIL_SENDER }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER_KEY }}
+          EMAIL_TO:       ${{ secrets.EMAIL_TO }}
+          PUSHOVER_USER:  ${{ secrets.PUSHOVER_USER }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
         run: python monitor.py
+
+      - name: Save updated cache
+        uses: actions/cache/save@v4
+        if: always()   # save even if the script finds 0 slots
+        with:
+          path: last_teetimes.json
+          key: teetime-cache-${{ github.run_id }}
