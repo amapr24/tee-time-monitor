@@ -4,7 +4,7 @@ on:
   schedule:
     # Run every 20 minutes between 7 AM and 1 AM UTC
     # (covers 2 AM - 8 PM EST, 1 AM - 7 PM CST)
-    - cron: '*/3 7-23 * * *'
+    - cron: '*/5 7-23 * * *'
     - cron: '*/20 0-0 * * *'  # Midnight hour
   
   # Allow manual trigger from GitHub UI
