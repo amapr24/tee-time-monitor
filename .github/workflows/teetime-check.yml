@@ -1,0 +1,43 @@
+name: Check Tee Times
+
+on:
+  schedule:
+    # Run every 20 minutes between 7 AM and 1 AM UTC
+    # (covers 2 AM - 8 PM EST, 1 AM - 7 PM CST)
+    - cron: '*/20 7-23 * * *'
+    - cron: '*/20 0-0 * * *'  # Midnight hour
+  
+  # Allow manual trigger from GitHub UI
+  workflow_dispatch:
+
+jobs:
+  check-tee-times:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          pip install playwright
+          playwright install chromium --with-deps
+      
+      - name: Cache tee times data
+        uses: actions/cache@v4
+        with:
+          path: last_teetimes.json
+          key: teetime-cache-${{ hashFiles('monitor.py') }}
+          restore-keys: teetime-cache-
+      
+      - name: Run monitor
+        env:
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python monitor.py
