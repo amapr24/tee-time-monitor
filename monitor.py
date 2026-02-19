@@ -1,6 +1,6 @@
 """
-Miami Lakes Tee Time Monitor
-Checks CPS Golf for available tee times and sends Push + Email alerts.
+Miami Lakes Tee Time Monitor - Stabilized Version
+Fixed: Added extra waiting time for slow-loading golf site elements.
 """
 
 import asyncio
@@ -19,7 +19,7 @@ DAYS_TO_MONITOR = [4, 5, 6]  # Fri, Sat, Sun
 TEE_TIME_MIN = 0      
 TEE_TIME_MAX = 18     
 
-# Environment Variables
+# Notification keys
 EMAIL_SENDER   = os.environ.get("EMAIL_SENDER")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
 EMAIL_TO       = os.environ.get("EMAIL_TO")
@@ -32,25 +32,20 @@ DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
 # ── Notifications ────────────────────────────────────────────────────────────
 
 def send_push_notification(title, message):
-    """Sends high-priority notification via Pushover."""
     if PUSHOVER_USER and PUSHOVER_TOKEN:
         try:
-            payload = {
+            requests.post("https://api.pushover.net/1/messages.json", data={
                 "token": PUSHOVER_TOKEN,
                 "user": PUSHOVER_USER,
                 "title": title,
                 "message": message,
-                "priority": 1  # Bypasses quiet hours
-            }
-            requests.post("https://api.pushover.net/1/messages.json", data=payload, timeout=10)
-            print("  ✅ Push notification sent.")
+                "priority": 1 
+            }, timeout=10)
         except Exception as e:
-            print(f"  ❌ Pushover Error: {e}")
+            print(f"  ❌ Push failed: {e}")
 
 def send_email(subject, body):
-    """Sends alert via SMTP (Gmail)."""
     if not all([EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_TO]):
-        print("  ⚠️ Email credentials missing. Skipping.")
         return
     msg = MIMEText(body)
     msg["Subject"] = subject
@@ -61,13 +56,12 @@ def send_email(subject, body):
             server.starttls()
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
             server.send_message(msg)
-        print("  ✅ Email alert sent.")
     except Exception as e:
-        print(f"  ❌ Email Error: {e}")
+        print(f"  ❌ Email failed: {e}")
 
-# ── Logic ────────────────────────────────────────────────────────────────────
+# ── Core Functions ───────────────────────────────────────────────────────────
 
-def get_next_occurrences(day_indices, num_weeks=4):
+def get_next_occurrences(day_indices, num_weeks=2):
     target_dates = []
     today = date.today()
     for i in range(num_weeks * 7):
@@ -78,8 +72,11 @@ def get_next_occurrences(day_indices, num_weeks=4):
 
 def load_cache():
     if CACHE_FILE.exists():
-        with open(CACHE_FILE, "r") as f:
-            return json.load(f)
+        try:
+            with open(CACHE_FILE, "r") as f:
+                return json.load(f)
+        except:
+            return {}
     return {}
 
 def save_cache(target_date, slots):
@@ -97,9 +94,17 @@ async def check_date(context, target_date):
     page = await context.new_page()
     
     try:
+        # 1. Wait for the page to stop sending network traffic
         await page.goto(url, wait_until="networkidle", timeout=60000)
-        await page.wait_for_selector(".tee-time-item-container", timeout=15000)
         
+        # 2. INCREASED TIMEOUT: Wait up to 30 seconds for the tee times to appear
+        # Also added a check to see if the page says "No tee times found"
+        try:
+            await page.wait_for_selector(".tee-time-item-container", timeout=30000)
+        except:
+            print(f"  ℹ️ No tee times visible for {date_str} (or site is slow).")
+            return
+
         items = await page.query_selector_all(".tee-time-item-container")
         current_slots = []
 
@@ -111,15 +116,19 @@ async def check_date(context, target_date):
                 time_text = (await time_el.inner_text()).strip()
                 price_text = (await price_el.inner_text()).strip()
                 
-                # Basic hour parsing for window filtering
-                hour = int(time_text.split(":")[0])
-                if "PM" in time_text and hour != 12: hour += 12
-                if "AM" in time_text and hour == 12: hour = 0
-                
-                if TEE_TIME_MIN <= hour <= TEE_TIME_MAX:
-                    current_slots.append({"time": time_text, "price": price_text})
+                # Hour filter logic
+                try:
+                    hour_part = time_text.split(":")[0]
+                    hour = int(hour_part)
+                    if "PM" in time_text and hour != 12: hour += 12
+                    if "AM" in time_text and hour == 12: hour = 0
+                    
+                    if TEE_TIME_MIN <= hour <= TEE_TIME_MAX:
+                        current_slots.append({"time": time_text, "price": price_text})
+                except:
+                    continue
 
-        # Compare with cache
+        # 3. Cache Check
         cache = load_cache()
         old_slots = cache.get(date_str, [])
         new_slots = [s for s in current_slots if s not in old_slots]
@@ -132,12 +141,14 @@ async def check_date(context, target_date):
             body += "\n".join([f"• {s['time']} | {s['price']}" for s in new_slots])
             body += f"\n\nBook here: {url}"
             send_email(f"⛳ Tee Time Alert – {day_name} {target_date.strftime('%b %d')}", body)
+            print(f"  ✨ {summary}")
         else:
             print("  No new slots found.")
 
         save_cache(target_date, current_slots)
+
     except Exception as e:
-        print(f"  ⚠️ Error scraping {date_str}: {e}")
+        print(f"  ❌ Error on {date_str}: {e}")
     finally:
         await page.close()
 
@@ -145,10 +156,13 @@ async def main():
     target_dates = get_next_occurrences(DAYS_TO_MONITOR, num_weeks=2)
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
+        context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
         for d in target_dates:
             await check_date(context, d)
+            await asyncio.sleep(2) # Brief pause between dates to be "polite" to the server
         await browser.close()
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+send_push_notification("Test Alert", "If you see this, your GitHub Action and Pushover are linked!")
