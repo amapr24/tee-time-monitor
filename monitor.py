@@ -30,8 +30,8 @@ DAYS_TO_MONITOR = [4, 5, 6]
 
 # Tee time window: only alert for times between TEE_TIME_MIN and TEE_TIME_MAX (0-23)
 # 0 = midnight, 6 = 6 AM, 12 = noon, 18 = 6 PM, 23 = 11 PM
-TEE_TIME_MIN = 9      # Start of day (midnight)
-TEE_TIME_MAX = 14     # End of day (6 PM) — change to 23 for all day
+TEE_TIME_MIN = 0      # Start of day (midnight)
+TEE_TIME_MAX = 18     # End of day (6 PM) — change to 23 for all day
 
 # Email configuration
 SMTP_SERVER    = os.environ.get("SMTP_SERVER",   "smtp.gmail.com")
