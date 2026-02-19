@@ -12,7 +12,7 @@ from playwright.async_api import async_playwright
 BASE_URL = "https://miamilakes.cps.golf/onlineresweb/search-teetime"
 DAYS_TO_MONITOR = [4, 5, 6]  # Fri, Sat, Sun
 TEE_TIME_MIN = 0      
-TEE_TIME_MAX = 18     
+TEE_TIME_MAX = 23     # 11 PM: Let's see everything to be safe
 
 EMAIL_SENDER   = os.environ.get("EMAIL_SENDER")
 EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
@@ -40,7 +40,9 @@ def send_email(subject, body):
 
 def load_cache():
     if CACHE_FILE.exists():
-        with open(CACHE_FILE, "r") as f: return json.load(f)
+        try:
+            with open(CACHE_FILE, "r") as f: return json.load(f)
+        except: return {}
     return {}
 
 def save_cache(target_date, slots):
@@ -54,20 +56,24 @@ async def check_date(context, target_date):
     page = await context.new_page()
     
     try:
-        # Navigate and click SEARCH (This is what the site needs to wake up)
-        await page.goto(f"{BASE_URL}?searchDate={date_str}")
-        await page.wait_for_load_state("networkidle")
+        # 1. Navigate and wait for the base page to load
+        await page.goto(f"{BASE_URL}?searchDate={date_str}", wait_until="domcontentloaded")
+        await asyncio.sleep(5) # Give it 5 seconds to load the scripts
         
-        search_button = page.get_by_role("button", name="Search")
-        if await search_button.is_visible():
-            await search_button.click()
-        
-        # Wait for results to load
-        await page.wait_for_selector(".tee-time-item-container", timeout=15000)
+        # 2. Click Search using the exact text-based selector from your original
+        try:
+            await page.click('button:has-text("Search")', timeout=5000)
+            print("  🖱️ Clicked Search button...")
+        except:
+            print("  ⚠️ Search button not found or already clicked.")
+
+        # 3. Wait up to 20 seconds for the tee times to appear
+        await page.wait_for_selector(".tee-time-item-container", timeout=20000)
         
         items = await page.query_selector_all(".tee-time-item-container")
-        current_slots = []
+        print(f"  👀 Found {len(items)} total items on page.")
 
+        current_slots = []
         for item in items:
             time_el = await item.query_selector(".tee-time-time")
             price_el = await item.query_selector(".tee-time-price-amount")
@@ -75,6 +81,7 @@ async def check_date(context, target_date):
                 time_text = (await time_el.inner_text()).strip()
                 price_text = (await price_el.inner_text()).strip()
                 
+                # Hour filter
                 hour = int(time_text.split(":")[0])
                 if "PM" in time_text and hour != 12: hour += 12
                 if "AM" in time_text and hour == 12: hour = 0
@@ -82,7 +89,7 @@ async def check_date(context, target_date):
                 if TEE_TIME_MIN <= hour <= TEE_TIME_MAX:
                     current_slots.append({"time": time_text, "price": price_text})
 
-        # Cache Logic
+        # Cache Comparison
         cache = load_cache()
         old_slots = cache.get(date_str, [])
         new_slots = [s for s in current_slots if s not in old_slots]
@@ -90,22 +97,22 @@ async def check_date(context, target_date):
         if new_slots:
             msg = f"Found {len(new_slots)} new slots for {date_str}!"
             send_push_notification("⛳ New Tee Time!", msg)
-            print(f"  ✨ {msg}")
+            send_email(f"⛳ Alert: {date_str}", f"{msg}\n\n" + "\n".join([f"{s['time']} @ {s['price']}" for s in new_slots]))
+            print(f"  ✨ SUCCESS: {msg}")
         else:
-            print(f"  No new slots. (Total visible: {len(current_slots)})")
+            print(f"  Done. {len(current_slots)} slots match your window (0 new).")
 
         save_cache(target_date, current_slots)
-    except:
-        print(f"  ⚠️ No times found for {date_str}.")
+    except Exception as e:
+        print(f"  ❌ Error: Could not find tee time containers. (Details: {str(e)[:50]}...)")
     finally:
         await page.close()
 
 async def main():
-    # RESTORED: Checking only the next upcoming Fri, Sat, Sun
     today = date.today()
     target_dates = []
     found_days = set()
-    for i in range(14): # Look ahead 2 weeks
+    for i in range(14):
         d = today + timedelta(days=i)
         if d.weekday() in DAYS_TO_MONITOR and d.weekday() not in found_days:
             target_dates.append(d)
@@ -113,9 +120,14 @@ async def main():
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context()
+        # Use a real-looking user agent to prevent blocking
+        context = await browser.new_context(
+            viewport={'width': 1280, 'height': 720},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        )
         for d in target_dates:
             await check_date(context, d)
+            await asyncio.sleep(2)
         await browser.close()
 
 if __name__ == "__main__":
