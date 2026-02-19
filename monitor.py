@@ -335,21 +335,28 @@ def load_cache(target_date: date) -> list[dict]:
 def save_cache(target_date: date, data: list[dict]):
     """Save tee times for a specific date to cache."""
     try:
-        # Load existing cache
+        # Load existing cache or start fresh
         all_cache = {}
         if CACHE_FILE.exists():
             try:
-                content = CACHE_FILE.read_text()
-                if content.strip():
+                content = CACHE_FILE.read_text().strip()
+                if content:
                     all_cache = json.loads(content)
-            except (json.JSONDecodeError, ValueError):
+                    # If it's the old format (list), convert it
+                    if isinstance(all_cache, list):
+                        all_cache = {}
+            except Exception:
                 all_cache = {}
         
         # Update cache for this date
-        all_cache[get_cache_key(target_date)] = data
+        key = get_cache_key(target_date)
+        all_cache[key] = data
         
-        # Save back to file
-        CACHE_FILE.write_text(json.dumps(all_cache, indent=2))
+        # Save back to file with proper formatting
+        with open(CACHE_FILE, 'w') as f:
+            json.dump(all_cache, f, indent=2)
+        
+        print(f"  ✅ Cache saved for {target_date.strftime('%A, %B %-d')}")
     except Exception as e:
         print(f"  ⚠ Error saving cache: {e}")
 
