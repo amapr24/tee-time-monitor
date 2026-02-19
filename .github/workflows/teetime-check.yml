@@ -2,8 +2,10 @@ name: Check Tee Times
 
 on:
   schedule:
-    - cron: '*/5 12-23 * * *' # 7 AM - 7 PM EST
-    - cron: '*/5 0-6 * * *'   # 7 PM - 1 AM EST
+    # Runs every 5 mins from 7 AM to 6:59 PM EST (12:00 - 23:55 UTC)
+    - cron: '*/5 12-23 * * *'
+    # Runs every 5 mins from 7 PM to 1:00 AM EST (00:00 - 06:00 UTC)
+    - cron: '*/5 0-6 * * *'
   workflow_dispatch:
 
 jobs:
@@ -27,7 +29,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: last_teetimes.json
-          # FIXED: Using a static key so GitHub remembers the file between runs
+          # FIXED: Using a static key so cache is shared between runs.
+          # Change 'v1' to 'v2' if you ever want to force a reset.
           key: teetime-cache-v1
           restore-keys: teetime-cache-
 
