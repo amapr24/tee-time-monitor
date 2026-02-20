@@ -55,21 +55,28 @@ DAY_NAMES = {
 
 def get_next_occurrences(days_to_check: list[int]) -> dict[int, date]:
     """
-    Always return Fri/Sat/Sun as a matched weekend block.
-    Find the next upcoming Friday in Eastern Time, then pin Saturday
-    and Sunday to that same weekend so all three move together.
+    Always return Fri/Sat/Sun as a matched weekend block in Eastern Time.
+    - If today is Fri/Sat/Sun: monitor THIS weekend
+    - If today is Mon-Thu: monitor the NEXT upcoming weekend
     """
-    today = datetime.now(ET).date()  # use Eastern Time, not UTC
+    today = datetime.now(ET).date()
+    weekday = today.weekday()  # 0=Mon ... 4=Fri 5=Sat 6=Sun
 
-    days_until_friday = (4 - today.weekday()) % 7
-    if days_until_friday == 0:
-        days_until_friday = 7   # if today IS Friday, go to next Friday
-    next_friday = today + timedelta(days=days_until_friday)
+    if weekday == 4:
+        anchor_friday = today                        # today is Friday
+    elif weekday == 5:
+        anchor_friday = today - timedelta(days=1)    # today is Saturday
+    elif weekday == 6:
+        anchor_friday = today - timedelta(days=2)    # today is Sunday
+    else:
+        # Mon-Thu: find the next Friday
+        days_until_friday = (4 - weekday) % 7
+        anchor_friday = today + timedelta(days=days_until_friday)
 
     weekend = {
-        4: next_friday,
-        5: next_friday + timedelta(days=1),
-        6: next_friday + timedelta(days=2),
+        4: anchor_friday,
+        5: anchor_friday + timedelta(days=1),
+        6: anchor_friday + timedelta(days=2),
     }
     return {d: weekend[d] for d in days_to_check if d in weekend}
 
