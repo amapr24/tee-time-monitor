@@ -396,7 +396,7 @@ async def check_day(target_date: date):
 
         # Compact push notification (Pushover messages have a 1024 char limit)
         slot_list   = ", ".join(s.get("time", "?") for s in new_slots)
-        push_msg    = f"{len(new_slots)} new slot(s) on {date_label}:\n{slot_list}\n\nhttps://miamilakes.cps.golf/onlineresweb/search-teetime"
+        push_msg    = f"{len(new_slots)} new slot(s) on {date_label}:\n{slot_list}\n\nmiamilakes.cps.golf"
 
         notify(subject, body, push_msg)
     else:
