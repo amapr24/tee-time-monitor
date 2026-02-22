@@ -47,7 +47,7 @@ COURSES = [
         "name":           "Miami Lakes",
         "type":           "cpsgolf",
         "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
-        "tee_time_min":   7,
+        "tee_time_min":   8,
         "tee_time_max":   14,
         "cache_file":     "cache_miami_lakes.json",
         "skip_past_dates": False,
@@ -58,11 +58,22 @@ COURSES = [
         "url":            "https://www.chronogolf.com/club/normandy-shores-golf-course",
         "holes":          18,
         "group_size":     4,
-        "tee_time_min":   0,
-        "tee_time_max":   18,
+        "tee_time_min":   8,
+        "tee_time_max":   14,
         "cache_file":     "cache_normandy.json",
         "skip_past_dates": True,
     },
+    {
+        "name":           "Miami Shores",
+        "type":           "chronogolf",
+        "url":            "https://www.chronogolf.com/club/miami-shores-country-club",
+        "holes":          18,
+        "group_size":     4,
+        "tee_time_min":   8,
+        "tee_time_max":   14,
+        "cache_file":     "cache_miami_shores.json",
+        "skip_past_dates": True,
+    }
 ]
 
 # ── Constants ─────────────────────────────────────────────────────────────────
