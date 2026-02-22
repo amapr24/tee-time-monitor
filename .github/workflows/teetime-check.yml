@@ -1,19 +1,7 @@
 name: Tee Time Monitor
 
 on:
-  schedule:
-    # Target window: 7 AM – 7 PM ET, every 5 minutes
-    # GitHub Actions cron runs in UTC. Miami observes:
-    #   EST (Nov–Mar):  UTC-5  →  7 AM ET = 12:00 UTC,  7 PM ET = 00:00 UTC
-    #   EDT (Mar–Nov):  UTC-4  →  7 AM ET = 11:00 UTC,  7 PM ET = 23:00 UTC
-    #
-    # To cover BOTH offsets without any gaps we run 11:00–00:00 UTC,
-    # which equals 6 AM–7 PM EST or 7 AM–8 PM EDT. One harmless extra
-    # hour on each end is better than missing runs after DST changes.
-    - cron: "*/59 11-23 * * *"   # 11:00–23:55 UTC  (covers 6AM-6:55PM EST / 7AM-7:55PM EDT)
-    - cron: "*/59 0 * * *"       # 00:00–00:55 UTC  (covers 7PM EST / 8PM EDT)
-
-  workflow_dispatch:  # allows manual trigger from Actions tab
+  workflow_dispatch:  # triggered externally by cron-job.org
 
 jobs:
   check-tee-times:
@@ -42,8 +30,9 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: |
-            last_teetimes.json
-            last_teetimes_normandy.json
+            cache_miami_lakes.json
+            cache_normandy.json
+            cache_miami_shores.json
           key: teetime-cache-${{ github.run_id }}   # won't match — intentional
           restore-keys: teetime-cache-               # grabs the latest saved entry
 
@@ -55,14 +44,14 @@ jobs:
           PUSHOVER_USER:  ${{ secrets.PUSHOVER_USER }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
         run: |
-          python monitor_miami_lakes.py
-          python monitor_normandy.py
+          python monitor.py
 
       - name: Save updated cache
         uses: actions/cache/save@v4
         if: always()   # save even if the script finds 0 slots
         with:
           path: |
-            last_teetimes.json
-            last_teetimes_normandy.json
+            cache_miami_lakes.json
+            cache_normandy.json
+            cache_miami_shores.json
           key: teetime-cache-${{ github.run_id }}
