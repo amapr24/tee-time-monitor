@@ -44,7 +44,7 @@ jobs:
           PUSHOVER_USER:  ${{ secrets.PUSHOVER_USER }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
         run: |
-          python monitor.py
+          python monitor_all.py
 
       - name: Save updated cache
         uses: actions/cache/save@v4
