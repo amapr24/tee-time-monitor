@@ -97,7 +97,7 @@ def get_upcoming_weekend_dates() -> list[date]:
     today = datetime.now(ET).date()
     return [
         today + timedelta(days=i)
-        for i in range(10)
+        for i in range(6)
         if (today + timedelta(days=i)).weekday() in (4, 5, 6)
     ]
 
@@ -472,7 +472,7 @@ async def scrape_chronogolf(course: dict, target_date: date) -> list[dict]:
         """)
 
         if not tee_times:
-            snippet = await page.evaluate("() => document.body.innerText.slice(0, 2000)")
+            snippet = await page.evaluate("() => document.body.innerText.slice(0, 500)")
             print(f"  DEBUG page text:\n{snippet}\n")
 
         await browser.close()
