@@ -430,7 +430,7 @@ async def scrape_chronogolf(course: dict, target_date: date) -> list[dict]:
                         const raw = (card.innerText || '').replace(/\\s+/g, ' ').trim();
                         if (!raw || raw.length < 3) continue;
                         const timeMatch12 = raw.match(/(\\d{1,2}:\\d{2})\\s*(AM|PM)/i);
-                        const timeMatch24 = raw.match(/\\b([01]?\\d|2[0-3]):(00|15|30|45)\\b/);
+                        const timeMatch24 = raw.match(/\\b([01]?\\d|2[0-3]):(\\d{2})\\b/);
                         const holeMatch   = raw.match(/(\\d+)\\s*hole/i);
                         const priceMatch  = raw.match(/\\$[\\d,.]+/);
                         let time = '';
