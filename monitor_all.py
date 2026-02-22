@@ -48,7 +48,7 @@ COURSES = [
         "type":           "cpsgolf",
         "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
         "tee_time_min":   8,
-        "tee_time_max":   15,
+        "tee_time_max":   14,
         "cache_file":     "cache_miami_lakes.json",
         "skip_past_dates": False,
     },
@@ -59,7 +59,7 @@ COURSES = [
         "holes":          18,
         "group_size":     4,
         "tee_time_min":   8,
-        "tee_time_max":   15,
+        "tee_time_max":   14,
         "cache_file":     "cache_normandy.json",
         "skip_past_dates": True,
     },
@@ -70,7 +70,7 @@ COURSES = [
         "holes":          18,
         "group_size":     4,
         "tee_time_min":   8,
-        "tee_time_max":   15,
+        "tee_time_max":   14,
         "cache_file":     "cache_miami_shores.json",
         "skip_past_dates": True,
     }
@@ -469,7 +469,7 @@ async def scrape_chronogolf(course: dict, target_date: date) -> list[dict]:
         """)
 
         if not tee_times:
-            snippet = await page.evaluate("() => document.body.innerText.slice(0, 500)")
+            snippet = await page.evaluate("() => document.body.innerText.slice(0, 200)")
             print(f"  DEBUG page text:\n{snippet}\n")
 
         await browser.close()
