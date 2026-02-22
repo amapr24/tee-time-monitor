@@ -122,12 +122,9 @@ def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
     out  = []
     for slot in slots:
         t = slot.get("time", "").strip().upper()
-        h = slot.get("holes", "").strip().upper()
-        if not h:
-            continue
         if not is_within_window(slot.get("time", ""), t_min, t_max):
             continue
-        key = (t, h)
+        key = (t,)
         if key not in seen:
             seen.add(key)
             out.append(slot)
