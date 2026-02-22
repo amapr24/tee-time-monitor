@@ -1,5 +1,5 @@
 """
-Normandy Shores Golf Course - Tee Time Monitor
+Miami Shores Golf Course - Tee Time Monitor
 Uses Chronogolf platform (chronogolf.com)
 Date goes directly in the URL -- no calendar interaction needed.
 
@@ -22,8 +22,8 @@ from playwright.async_api import async_playwright
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 
-COURSE_NAME = "Normandy Shores"
-BASE_URL    = "https://www.chronogolf.com/club/normandy-shores-golf-course"
+COURSE_NAME = "Miami Shores"
+BASE_URL    = "https://www.chronogolf.com/club/miami-shores-country-club"
 
 # URL parameters
 HOLES      = 18
@@ -48,7 +48,7 @@ PUSHOVER_USER  = os.environ.get("PUSHOVER_USER")
 PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
 
 # Separate cache file so it doesn't collide with Miami Lakes
-CACHE_FILE = Path("last_teetimes_normandy.json")
+CACHE_FILE = Path("last_teetimes_shores.json")
 ET         = ZoneInfo("America/New_York")
 
 DAY_NAMES = {
@@ -348,7 +348,7 @@ async def scrape_chronogolf(target_date: date) -> list[dict]:
 # ── Cache ─────────────────────────────────────────────────────────────────────
 
 def cache_key(d: date) -> str:
-    return f"normandy_{d.isoformat()}"
+    return f"shores_{d.isoformat()}"
 
 
 def load_cache(d: date) -> list[dict]:
