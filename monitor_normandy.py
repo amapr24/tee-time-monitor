@@ -33,8 +33,8 @@ GROUP_SIZE = 4
 DAYS_TO_MONITOR = [4, 5, 6]   # 4=Friday, 5=Saturday, 6=Sunday
 
 # Tee time window (24h). 0=midnight, 6=6AM, 18=6PM
-TEE_TIME_MIN = 0
-TEE_TIME_MAX = 18
+TEE_TIME_MIN = 8
+TEE_TIME_MAX = 14
 
 # Email
 SMTP_SERVER    = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
@@ -59,31 +59,19 @@ DAY_NAMES = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def get_next_occurrences(days_to_check: list[int]) -> dict[int, date]:
+def get_upcoming_weekend_dates() -> list[date]:
     """
-    Always return Fri/Sat/Sun as a matched weekend block in Eastern Time.
-    - If today is Fri/Sat/Sun: monitor THIS weekend
-    - If today is Mon-Thu: monitor the NEXT upcoming weekend
+    Return all Fri/Sat/Sun from today through the next 9 days (Eastern Time).
+    Covers remaining days of this weekend + the full next weekend.
+    Never returns past dates so Chronogolf never gets stale date requests.
     """
     today = datetime.now(ET).date()
-    weekday = today.weekday()
-
-    if weekday == 4:
-        anchor_friday = today
-    elif weekday == 5:
-        anchor_friday = today - timedelta(days=1)
-    elif weekday == 6:
-        anchor_friday = today - timedelta(days=2)
-    else:
-        days_until_friday = (4 - weekday) % 7
-        anchor_friday = today + timedelta(days=days_until_friday)
-
-    weekend = {
-        4: anchor_friday,
-        5: anchor_friday + timedelta(days=1),
-        6: anchor_friday + timedelta(days=2),
-    }
-    return {d: weekend[d] for d in days_to_check if d in weekend}
+    dates = []
+    for i in range(6):
+        d = today + timedelta(days=i)
+        if d.weekday() in (4, 5, 6):
+            dates.append(d)
+    return dates
 
 
 def build_url(target_date: date) -> str:
@@ -401,6 +389,12 @@ async def check_day(target_date: date):
     print(f"  Time window: {TEE_TIME_MIN:02d}:00 - {TEE_TIME_MAX:02d}:59")
     print(f"{'='*60}\n")
 
+    # Chronogolf silently redirects past dates to today -- skip them entirely
+    today_et = datetime.now(ET).date()
+    if target_date < today_et:
+        print(f"  Skipping past date {target_date} to avoid Chronogolf redirect.")
+        return
+
     current_slots = deduplicate_slots(await scrape_chronogolf(target_date))
     print(f"  Found {len(current_slots)} unique slot(s) after dedup.")
 
@@ -447,13 +441,12 @@ async def check_day(target_date: date):
 
 async def main():
     print(f"\n{COURSE_NAME} Tee Time Monitor")
-    print(f"  Monitoring: {', '.join(DAY_NAMES[d] for d in DAYS_TO_MONITOR)}\n")
+    print(f"  Monitoring: Friday, Saturday, Sunday (rolling 9-day window)\n")
 
-    dates = get_next_occurrences(DAYS_TO_MONITOR)
+    dates = get_upcoming_weekend_dates()
 
-    for day_num in DAYS_TO_MONITOR:
-        if day_num in dates:
-            await check_day(dates[day_num])
+    for d in dates:
+        await check_day(d)
 
     print("\n" + "="*60)
     print("Done.\n")
