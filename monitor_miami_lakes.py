@@ -53,32 +53,19 @@ DAY_NAMES = {
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def get_next_occurrences(days_to_check: list[int]) -> dict[int, date]:
+def get_upcoming_weekend_dates() -> list[date]:
     """
-    Always return Fri/Sat/Sun as a matched weekend block in Eastern Time.
-    - If today is Fri/Sat/Sun: monitor THIS weekend
-    - If today is Mon-Thu: monitor the NEXT upcoming weekend
+    Return all Fri/Sat/Sun from today through the next 9 days (Eastern Time).
+    Covers remaining days of this weekend + the full next weekend.
+    Never returns past dates so we never request stale data.
     """
     today = datetime.now(ET).date()
-    weekday = today.weekday()  # 0=Mon ... 4=Fri 5=Sat 6=Sun
-
-    if weekday == 4:
-        anchor_friday = today                        # today is Friday
-    elif weekday == 5:
-        anchor_friday = today - timedelta(days=1)    # today is Saturday
-    elif weekday == 6:
-        anchor_friday = today - timedelta(days=2)    # today is Sunday
-    else:
-        # Mon-Thu: find the next Friday
-        days_until_friday = (4 - weekday) % 7
-        anchor_friday = today + timedelta(days=days_until_friday)
-
-    weekend = {
-        4: anchor_friday,
-        5: anchor_friday + timedelta(days=1),
-        6: anchor_friday + timedelta(days=2),
-    }
-    return {d: weekend[d] for d in days_to_check if d in weekend}
+    dates = []
+    for i in range(6):  # today through 9 days ahead
+        d = today + timedelta(days=i)
+        if d.weekday() in (4, 5, 6):  # Fri=4, Sat=5, Sun=6
+            dates.append(d)
+    return dates
 
 
 def is_within_time_window(time_str: str) -> bool:
@@ -431,13 +418,12 @@ async def check_day(target_date: date):
 
 async def main():
     print(f"\nMiami Lakes Tee Time Monitor")
-    print(f"  Monitoring: {', '.join(DAY_NAMES[d] for d in DAYS_TO_MONITOR)}\n")
+    print(f"  Monitoring: Friday, Saturday, Sunday (rolling 9-day window)\n")
 
-    dates = get_next_occurrences(DAYS_TO_MONITOR)
+    dates = get_upcoming_weekend_dates()
 
-    for day_num in DAYS_TO_MONITOR:
-        if day_num in dates:
-            await check_day(dates[day_num])
+    for d in dates:
+        await check_day(d)
 
     print("\n" + "="*60)
     print("Done.\n")
