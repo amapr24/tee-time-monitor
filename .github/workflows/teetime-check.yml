@@ -52,7 +52,7 @@ jobs:
           EMAIL_TO:       ${{ secrets.EMAIL_TO }}
           PUSHOVER_USER:  ${{ secrets.PUSHOVER_USER }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
-        run: python monitor.py
+        run: python miami-lakes-monitor.py
 
       - name: Save updated cache
         uses: actions/cache/save@v4
