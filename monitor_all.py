@@ -527,6 +527,12 @@ async def check_day(course: dict, target_date: date):
         print(f"  Skipping past date to avoid redirect.\n")
         return
 
+    # Skip today if we're already past the monitoring window
+    now_et = datetime.now(ET)
+    if target_date == now_et.date() and now_et.hour >= t_max:
+        print(f"  Skipping today -- already past {t_max:02d}:00 ET.\n")
+        return
+  
     # Scrape based on site type
     if course["type"] == "cpsgolf":
         raw = await scrape_cpsgolf(course, target_date)
