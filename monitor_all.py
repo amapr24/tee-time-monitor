@@ -132,25 +132,28 @@ def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
 
 # ── Notifications ──────────────────────────────────────────────────────────────
 
-def send_pushover(title: str, message: str):
+def send_pushover(title: str, message: str, screenshot: bytes = None):
     if not all([PUSHOVER_USER, PUSHOVER_TOKEN]):
         print("  Pushover credentials not set -- skipping.")
         return
     try:
+        payload = {
+            "token":    PUSHOVER_TOKEN,
+            "user":     PUSHOVER_USER,
+            "title":    title,
+            "message":  message,
+            "sound":    "cashregister",
+            "priority": 1,
+        }
+        files = {"attachment": ("screenshot.png", screenshot, "image/png")} if screenshot else None
         resp = requests.post(
             "https://api.pushover.net/1/messages.json",
-            data={
-                "token":    PUSHOVER_TOKEN,
-                "user":     PUSHOVER_USER,
-                "title":    title,
-                "message":  message,
-                "sound":    "cashregister",
-                "priority": 1,
-            },
-            timeout=10,
+            data=payload,
+            files=files,
+            timeout=20,
         )
         if resp.status_code == 200:
-            print("  Pushover notification sent.")
+            print(f"  Pushover notification sent {'(with screenshot)' if screenshot else ''}.")
         else:
             print(f"  Pushover error {resp.status_code}: {resp.text}")
     except Exception as e:
@@ -176,9 +179,9 @@ def send_email(subject: str, body: str):
         print(f"  Email error: {e}")
 
 
-def notify(subject: str, body: str, push_msg: str):
+def notify(subject: str, body: str, push_msg: str, screenshot: bytes = None):
     send_email(subject, body)
-    send_pushover(subject, push_msg)
+    send_pushover(subject, push_msg, screenshot)
 
 # ── Browser launch helper (shared) ────────────────────────────────────────────
 
@@ -295,7 +298,7 @@ async def scrape_cpsgolf(course: dict, target_date: date) -> list[dict]:
         if not clicked:
             print(f"  Could not find day {day_num}.")
             await browser.close()
-            return []
+            return [], None
 
         print(f"  {clicked}")
         await page.wait_for_timeout(4_000)
@@ -357,10 +360,11 @@ async def scrape_cpsgolf(course: dict, target_date: date) -> list[dict]:
             }
         """)
 
+        screenshot = await page.screenshot(full_page=False)
         await browser.close()
 
     print(f"  Raw slots found: {len(tee_times)}")
-    return tee_times
+    return tee_times, screenshot
 
 # ── Scraper: Chronogolf (date in URL) ─────────────────────────────────────────
 
@@ -472,10 +476,11 @@ async def scrape_chronogolf(course: dict, target_date: date) -> list[dict]:
             snippet = await page.evaluate("() => document.body.innerText.slice(0, 200)")
             print(f"  DEBUG page text:\n{snippet}\n")
 
+        screenshot = await page.screenshot(full_page=False)
         await browser.close()
 
     print(f"  Raw slots found: {len(tee_times)}")
-    return tee_times
+    return tee_times, screenshot
 
 # ── Cache ──────────────────────────────────────────────────────────────────────
 
@@ -535,9 +540,9 @@ async def check_day(course: dict, target_date: date):
   
     # Scrape based on site type
     if course["type"] == "cpsgolf":
-        raw = await scrape_cpsgolf(course, target_date)
+        raw, screenshot = await scrape_cpsgolf(course, target_date)
     elif course["type"] == "chronogolf":
-        raw = await scrape_chronogolf(course, target_date)
+        raw, screenshot = await scrape_chronogolf(course, target_date)
     else:
         print(f"  Unknown site type: {course['type']}")
         return
@@ -580,7 +585,7 @@ async def check_day(course: dict, target_date: date):
         slot_list = ", ".join(s.get("time", "?") for s in new_slots)
         push_msg  = f"{len(new_slots)} new slot(s) on {date_label}:\n{slot_list}\n\nBook: {book_url}"
 
-        notify(subject, body, push_msg)
+        notify(subject, body, push_msg, screenshot)
     else:
         print("  No new slots since last check.")
 
