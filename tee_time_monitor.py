@@ -642,12 +642,26 @@ def generate_html():
             })
         course_data.append({"course": course, "days": days})
 
-    # Build course cards HTML
-    cards_html = ""
+    # Build schedule grid HTML — headers row + one row per date
+    # This ensures date rows align across all course columns
+    num_courses = len(course_data)
+
+    # Header cells
+    header_cells = ""
     for cd in course_data:
         course = cd["course"]
-        days_html = ""
-        for day in cd["days"]:
+        header_cells += f"""
+        <div class="card-header">
+          <div class="course-name">{course["name"]}</div>
+          <span class="window-tag">⏱ {course["tee_time_min"]}:00 AM – Sunset minus 4hrs</span>
+        </div>"""
+
+    # Date rows — one row per date, one cell per course
+    date_rows = ""
+    num_dates = len(course_data[0]["days"]) if course_data else 0
+    for i in range(num_dates):
+        for cd in course_data:
+            day = cd["days"][i]
             if day["slots"]:
                 times_html = "".join(
                     f'<span class="slot">{s.get("time","?")}'
@@ -658,23 +672,20 @@ def generate_html():
             else:
                 day_body = '<p class="no-times">No times available</p>'
 
-            days_html += f"""
-            <div class="day-block">
-              <div class="day-header">
-                <span class="day-name">{day["label"]}</span>
-                <a class="book-btn" href="{day["book_url"]}" target="_blank">Book →</a>
-              </div>
-              {day_body}
-            </div>"""
-
-        cards_html += f"""
-        <div class="course-card">
-          <div class="card-header">
-            <div class="course-name">{course["name"]}</div>
-            <span class="window-tag">⏱ {course["tee_time_min"]}:00 AM – Sunset minus 4hrs</span>
+            date_rows += f"""
+        <div class="day-block">
+          <div class="day-header">
+            <span class="day-name">{day["label"]}</span>
+            <a class="book-btn" href="{day["book_url"]}" target="_blank">Book →</a>
           </div>
-          {days_html}
+          {day_body}
         </div>"""
+
+    cards_html = f"""
+    <div class="schedule-grid" style="--ncols: {num_courses}">
+      {header_cells}
+      {date_rows}
+    </div>"""
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -735,7 +746,7 @@ def generate_html():
     /* ── Header ── */
     header {{
       background: var(--green-deep);
-      padding: 56px 24px 48px;
+      padding: 48px 40px;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -758,14 +769,20 @@ def generate_html():
       background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
       background-size: 24px 24px;
     }}
-    .hole-flag {{
-      font-size: 3.5rem;
-      display: block;
-      margin-bottom: 8px;
+    .header-inner {{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
       position: relative;
+    }}
+    .header-flag, .header-golfer {{
+      font-size: 3rem;
+      flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
     }}
+    .header-golfer {{ animation-direction: reverse; }}
     @keyframes flagwave {{
       0%, 100% {{ transform: rotate(-3deg); }}
       50%       {{ transform: rotate(3deg); }}
@@ -803,30 +820,16 @@ def generate_html():
     }}
     .updated-bar strong {{ color: var(--white); font-weight: 500; }}
 
-    /* ── Main grid ── */
-    main {{
+    /* ── Schedule grid ── */
+    .schedule-grid {{
       max-width: 1100px;
       margin: 32px auto 0;
       padding: 0 20px 20px;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      align-items: start;
+      grid-template-columns: repeat(var(--ncols, 3), 1fr);
     }}
 
-    /* ── Course card ── */
-    .course-card {{
-      background: var(--white);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
-      transition: transform 0.2s, box-shadow 0.2s;
-      border: 1px solid rgba(13,43,26,0.06);
-    }}
-    .course-card:hover {{
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(13,43,26,0.18), 0 2px 8px rgba(13,43,26,0.1);
-    }}
+    /* ── Course card header ── */
     .card-header {{
       background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
       padding: 20px 20px 0;
@@ -840,6 +843,12 @@ def generate_html():
       top: 12px;
       font-size: 2.5rem;
       opacity: 0.15;
+    }}
+    /* Add subtle border between columns */
+    .card-header:not(:first-child),
+    .day-block:nth-child(3n+2),
+    .day-block:nth-child(3n+3) {{
+      border-left: 1px solid rgba(13,43,26,0.08);
     }}
     .course-name {{
       font-family: 'Bebas Neue', sans-serif;
@@ -861,8 +870,8 @@ def generate_html():
     .day-block {{
       padding: 14px 20px;
       border-bottom: 1px solid #edf5f0;
+      background: var(--white);
     }}
-    .day-block:last-child {{ border-bottom: none; }}
     .day-header {{
       display: flex;
       align-items: center;
@@ -904,6 +913,8 @@ def generate_html():
       border-radius: 6px;
       font-variant-numeric: tabular-nums;
       border: 1px solid rgba(46,139,79,0.2);
+      min-width: 82px;
+      text-align: center;
     }}
     .no-times {{
       font-size: 0.82rem;
@@ -1020,18 +1031,23 @@ def generate_html():
   </div>
 
   <header>
-    <span class="hole-flag">⛳</span>
-    <h1>TEE TIME<br><em>WATCH</em></h1>
-    <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
+    <div class="header-inner">
+      <span class="header-flag">⛳</span>
+      <div>
+        <h1>TEE TIME<br><em>WATCH</em></h1>
+        <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
+      </div>
+      <span class="header-golfer">🏌️</span>
+    </div>
   </header>
 
   <div class="updated-bar">
     Checked every 5 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong>
   </div>
 
-  <main>
+  <div class="schedule-wrapper">
     {cards_html}
-  </main>
+  </div>
 
   <div class="callout-strip">
     <div class="callout-quote">FORE!<span>heads up</span></div>
@@ -1048,7 +1064,7 @@ def generate_html():
   </div>
 
   <footer>
-    <span class="footer-fore">⛳ ⛳ ⛳</span>
+    <span class="footer-fore">⛳ 🏌️ ⛳</span>
     Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
   </footer>
 
