@@ -907,7 +907,7 @@ def generate_html():
     <div class="gold-line"></div>
   </header>
   <div class="updated-bar">
-    Checked every 5 minutes · Last run: <strong>{now_str}</strong>
+    Checked every 15 minutes · Last run: <strong>{now_str}</strong>
   </div>
   <main>
     {cards_html}
