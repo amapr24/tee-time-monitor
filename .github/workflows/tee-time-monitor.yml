@@ -21,7 +21,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install playwright requests
+          pip install playwright requests astral
           playwright install chromium --with-deps
 
       # ── Cache strategy ────────────────────────────────────────────────────
