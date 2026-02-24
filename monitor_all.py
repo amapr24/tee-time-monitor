@@ -1,5 +1,5 @@
 """
-Tee Time Monitor -- Miami Lakes & Normandy Shores
+Tee Time Monitor -- Miami Lakes, Normandy & Miami Shores 
 Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
