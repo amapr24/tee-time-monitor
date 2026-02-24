@@ -876,7 +876,7 @@ def generate_html():
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 10px;
+      margin-bottom: 15px;
     }}
     .day-name {{
       font-size: 0.75rem;
