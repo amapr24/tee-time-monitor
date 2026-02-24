@@ -143,7 +143,7 @@ def send_pushover(title: str, message: str, screenshot: bytes = None):
             "title":    title,
             "message":  message,
             "sound":    "cashregister",
-            "priority": 1,
+            "priority": 0,
         }
         files = {"attachment": ("screenshot.png", screenshot, "image/png")} if screenshot else None
         resp = requests.post(
