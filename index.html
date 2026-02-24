@@ -231,7 +231,7 @@
     <div class="gold-line"></div>
   </header>
   <div class="updated-bar">
-    Checked every 5 minutes · Last run: <strong>10:09 AM ET, Tuesday February 24, 2026</strong>
+    Checked every 5 minutes · Last run: <strong>10:45 AM ET, Tuesday February 24, 2026</strong>
   </div>
   <main>
     
@@ -244,7 +244,7 @@
                 <span class="day-name">Friday, Feb 27</span>
                 <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=14" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">12:12 PM</span></div>
+              <p class="no-times">No times available</p>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -284,7 +284,7 @@
                 <span class="day-name">Sunday, Mar 1</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-01&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">1:40 PM</span><span class="slot">1:48 PM</span><span class="slot">1:56 PM</span><span class="slot">2:04 PM</span><span class="slot">2:20 PM</span><span class="slot">2:28 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">1:48 PM</span><span class="slot">1:56 PM</span><span class="slot">2:04 PM</span><span class="slot">2:20 PM</span><span class="slot">2:28 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -310,14 +310,13 @@
                 <span class="day-name">Sunday, Mar 1</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-01&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">12:06 PM</span><span class="slot">12:14 PM</span><span class="slot">12:22 PM</span><span class="slot">12:30 PM</span><span class="slot">12:38 PM</span><span class="slot">12:46 PM</span><span class="slot">12:54 PM</span><span class="slot">1:02 PM</span><span class="slot">1:10 PM</span><span class="slot">1:18 PM</span><span class="slot">1:26 PM</span><span class="slot">1:50 PM</span><span class="slot">1:58 PM</span><span class="slot">2:22 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+              <div class="slots"><span class="slot">12:06 PM</span><span class="slot">12:14 PM</span><span class="slot">12:22 PM</span><span class="slot">12:30 PM</span><span class="slot">12:38 PM</span><span class="slot">12:46 PM</span><span class="slot">12:54 PM</span><span class="slot">1:02 PM</span><span class="slot">1:10 PM</span><span class="slot">1:18 PM</span><span class="slot">1:26 PM</span><span class="slot">1:50 PM</span><span class="slot">1:58 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
             </div>
         </div>
   </main>
   <div class="check-now-wrap">
     <button class="check-now-btn" onclick="triggerCheck()">⛳ Check Now</button>
-    <button class="check-now-btn" onclick="location.reload()" style="margin-left:10px;">↺ Refresh</button>
-    <div class="trigger-msg" id="trigger-msg"></div>
+    <button class="check-now-btn" onclick="this.textContent='↺ Reloading…'; location.reload()" style="margin-left:10px;">↺ Refresh</button>    <div class="trigger-msg" id="trigger-msg"></div>
   </div>
   <footer>
     Monitoring 3 courses · Fri–Sun · Times shown in ET
