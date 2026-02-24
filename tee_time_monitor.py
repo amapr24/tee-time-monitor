@@ -917,7 +917,7 @@ def generate_html():
     <button class="check-now-btn" onclick="this.textContent='↺ Reloading…'; location.reload()" style="margin-left:10px;">↺ Refresh</button>    <div class="trigger-msg" id="trigger-msg"></div>
   </div>
   <footer>
-    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET
+    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
   </footer>
   <script>
     async function triggerCheck() {{
