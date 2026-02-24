@@ -653,6 +653,7 @@ def generate_html():
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="300">
   <title>Tee Time Watch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
@@ -887,6 +888,7 @@ def generate_html():
   </main>
   <div class="check-now-wrap">
     <button class="check-now-btn" onclick="triggerCheck()">⛳ Check Now</button>
+    <button class="check-now-btn" onclick="location.reload()" style="margin-left:10px;">↺ Refresh</button>
     <div class="trigger-msg" id="trigger-msg"></div>
   </div>
   <footer>
