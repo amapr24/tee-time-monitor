@@ -570,14 +570,14 @@ async def check_day(course: dict, target_date: date):
     current_slots = deduplicate_slots(raw, t_min, t_max)
     print(f"  Found {len(current_slots)} unique slot(s) after dedup.")
 
+    cached_slots = load_cache(cache_file, target_date)
+    new_slots    = find_new_slots(cached_slots, current_slots)
+
     save_cache(cache_file, target_date, current_slots)
 
     if not current_slots:
         print("  No slots found -- skipping.\n")
         return
-
-    cached_slots = load_cache(cache_file, target_date)
-    new_slots    = find_new_slots(cached_slots, current_slots)
 
     if new_slots:
         print(f"  {len(new_slots)} NEW slot(s)!")
