@@ -670,7 +670,7 @@ def generate_html():
         cards_html += f"""
         <div class="course-card">
           <h2 class="course-name">{course["name"]}</h2>
-          <div class="window-tag">{course["tee_time_min"]}:00 – sunset minus 5hrs</div>
+          <div class="window-tag">{course["tee_time_min"]}:00 – sunset minus 4hrs</div>
           {days_html}
         </div>"""
 
