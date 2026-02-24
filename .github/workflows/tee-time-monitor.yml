@@ -3,6 +3,9 @@ name: Tee Time Monitor
 on:
   workflow_dispatch:  # triggered externally by cron-job.org
 
+permissions:
+  contents: write   # needed to commit index.html back to repo
+
 jobs:
   check-tee-times:
     runs-on: ubuntu-latest
@@ -55,3 +58,12 @@ jobs:
             cache_normandy.json
             cache_miami_shores.json
           key: teetime-cache-${{ github.run_id }}
+
+      - name: Commit and push index.html
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "Update tee times [skip ci]"
+          git push
