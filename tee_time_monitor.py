@@ -1,5 +1,5 @@
 """
-Tee Time Monitor -- Miami Lakes, Normandy & Miami Shores 
+Tee Time Monitor -- Miami Lakes, Normandy & Miami Shores
 Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
@@ -132,28 +132,25 @@ def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
 
 # ── Notifications ──────────────────────────────────────────────────────────────
 
-def send_pushover(title: str, message: str, screenshot: bytes = None):
+def send_pushover(title: str, message: str):
     if not all([PUSHOVER_USER, PUSHOVER_TOKEN]):
         print("  Pushover credentials not set -- skipping.")
         return
     try:
-        payload = {
-            "token":    PUSHOVER_TOKEN,
-            "user":     PUSHOVER_USER,
-            "title":    title,
-            "message":  message,
-            "sound":    "cashregister",
-            "priority": 0,
-        }
-        files = {"attachment": ("screenshot.png", screenshot, "image/png")} if screenshot else None
         resp = requests.post(
             "https://api.pushover.net/1/messages.json",
-            data=payload,
-            files=files,
-            timeout=20,
+            data={
+                "token":    PUSHOVER_TOKEN,
+                "user":     PUSHOVER_USER,
+                "title":    title,
+                "message":  message,
+                "sound":    "cashregister",
+                "priority": 0,
+            },
+            timeout=10,
         )
         if resp.status_code == 200:
-            print(f"  Pushover notification sent {'(with screenshot)' if screenshot else ''}.")
+            print("  Pushover notification sent.")
         else:
             print(f"  Pushover error {resp.status_code}: {resp.text}")
     except Exception as e:
@@ -179,9 +176,9 @@ def send_email(subject: str, body: str):
         print(f"  Email error: {e}")
 
 
-def notify(subject: str, body: str, push_msg: str, screenshot: bytes = None):
+def notify(subject: str, body: str, push_msg: str):
     send_email(subject, body)
-    send_pushover(subject, push_msg, screenshot)
+    send_pushover(subject, push_msg)
 
 # ── Browser launch helper (shared) ────────────────────────────────────────────
 
@@ -298,7 +295,7 @@ async def scrape_cpsgolf(course: dict, target_date: date) -> list[dict]:
         if not clicked:
             print(f"  Could not find day {day_num}.")
             await browser.close()
-            return [], None
+            return []
 
         print(f"  {clicked}")
         await page.wait_for_timeout(4_000)
@@ -360,11 +357,10 @@ async def scrape_cpsgolf(course: dict, target_date: date) -> list[dict]:
             }
         """)
 
-        screenshot = await page.screenshot(full_page=False)
         await browser.close()
 
     print(f"  Raw slots found: {len(tee_times)}")
-    return tee_times, screenshot
+    return tee_times
 
 # ── Scraper: Chronogolf (date in URL) ─────────────────────────────────────────
 
@@ -476,11 +472,10 @@ async def scrape_chronogolf(course: dict, target_date: date) -> list[dict]:
             snippet = await page.evaluate("() => document.body.innerText.slice(0, 200)")
             print(f"  DEBUG page text:\n{snippet}\n")
 
-        screenshot = await page.screenshot(full_page=False)
         await browser.close()
 
     print(f"  Raw slots found: {len(tee_times)}")
-    return tee_times, screenshot
+    return tee_times
 
 # ── Cache ──────────────────────────────────────────────────────────────────────
 
@@ -540,9 +535,9 @@ async def check_day(course: dict, target_date: date):
   
     # Scrape based on site type
     if course["type"] == "cpsgolf":
-        raw, screenshot = await scrape_cpsgolf(course, target_date)
+        raw = await scrape_cpsgolf(course, target_date)
     elif course["type"] == "chronogolf":
-        raw, screenshot = await scrape_chronogolf(course, target_date)
+        raw = await scrape_chronogolf(course, target_date)
     else:
         print(f"  Unknown site type: {course['type']}")
         return
@@ -585,11 +580,293 @@ async def check_day(course: dict, target_date: date):
         slot_list = ", ".join(s.get("time", "?") for s in new_slots)
         push_msg  = f"{len(new_slots)} new slot(s) on {date_label}:\n{slot_list}\n\nBook: {book_url}"
 
-        notify(subject, body, push_msg, screenshot)
+        notify(subject, body, push_msg)
     else:
         print("  No new slots since last check.")
 
     save_cache(cache_file, target_date, current_slots)
+
+# ── HTML generator ────────────────────────────────────────────────────────────
+
+def generate_html():
+    dates = get_upcoming_weekend_dates()
+    now_str = datetime.now(ET).strftime("%-I:%M %p ET, %A %B %-d, %Y")
+
+    # Build data structure: course -> date -> slots
+    course_data = []
+    for course in COURSES:
+        cache_file = CACHE_DIR / course["cache_file"]
+        days = []
+        for d in dates:
+            slots = load_cache(cache_file, d)
+            # Build booking URL
+            if course["type"] == "cpsgolf":
+                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={course['tee_time_max']}"
+            else:
+                book_url = (
+                    f"{course['url']}?date={d.isoformat()}"
+                    f"&step=teetimes&holes={course.get('holes', 18)}"
+                    f"&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
+                )
+            days.append({
+                "date":     d,
+                "label":    d.strftime("%A, %b %-d"),
+                "slots":    slots,
+                "book_url": book_url,
+            })
+        course_data.append({"course": course, "days": days})
+
+    # Build course cards HTML
+    cards_html = ""
+    for cd in course_data:
+        course = cd["course"]
+        days_html = ""
+        for day in cd["days"]:
+            if day["slots"]:
+                times_html = "".join(
+                    f'<span class="slot">{s.get("time","?")}'
+                    f'{(" · " + s["price"]) if s.get("price") else ""}</span>'
+                    for s in day["slots"]
+                )
+                day_body = f'<div class="slots">{times_html}</div>'
+            else:
+                day_body = '<p class="no-times">No times available</p>'
+
+            days_html += f"""
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">{day["label"]}</span>
+                <a class="book-btn" href="{day["book_url"]}" target="_blank">Book →</a>
+              </div>
+              {day_body}
+            </div>"""
+
+        cards_html += f"""
+        <div class="course-card">
+          <h2 class="course-name">{course["name"]}</h2>
+          <div class="window-tag">{course["tee_time_min"]}:00 – {course["tee_time_max"]}:00</div>
+          {days_html}
+        </div>"""
+
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tee Time Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
+    :root {{
+      --green-deep:   #1b3d2a;
+      --green-mid:    #2d6a45;
+      --green-light:  #4a9465;
+      --green-pale:   #e8f2ec;
+      --white:        #ffffff;
+      --cream:        #f7f5f0;
+      --gold:         #c9a84c;
+      --text-dark:    #1a2e20;
+      --text-mid:     #4a6355;
+      --text-light:   #7a9485;
+    }}
+
+    body {{
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }}
+
+    /* ── Header ── */
+    header {{
+      background: var(--green-deep);
+      padding: 48px 24px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }}
+    header::before {{
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(74,148,101,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(74,148,101,0.10) 0%, transparent 60%);
+    }}
+    .flag-icon {{
+      font-size: 2rem;
+      margin-bottom: 12px;
+      display: block;
+      position: relative;
+    }}
+    h1 {{
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      position: relative;
+    }}
+    .subtitle {{
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.55);
+      margin-top: 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      position: relative;
+    }}
+    .gold-line {{
+      width: 48px;
+      height: 2px;
+      background: var(--gold);
+      margin: 16px auto 0;
+      position: relative;
+    }}
+
+    /* ── Last updated bar ── */
+    .updated-bar {{
+      background: var(--green-mid);
+      text-align: center;
+      padding: 10px 24px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.04em;
+    }}
+    .updated-bar strong {{
+      color: var(--white);
+      font-weight: 500;
+    }}
+
+    /* ── Main grid ── */
+    main {{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }}
+
+    /* ── Course card ── */
+    .course-card {{
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(27,61,42,0.08), 0 1px 3px rgba(27,61,42,0.05);
+      transition: box-shadow 0.2s;
+    }}
+    .course-card:hover {{
+      box-shadow: 0 8px 32px rgba(27,61,42,0.13), 0 2px 6px rgba(27,61,42,0.07);
+    }}
+    .course-name {{
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--white);
+      background: var(--green-deep);
+      padding: 20px 20px 14px;
+      letter-spacing: -0.01em;
+    }}
+    .window-tag {{
+      background: var(--green-mid);
+      color: rgba(255,255,255,0.75);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 20px 10px;
+    }}
+
+    /* ── Day block ── */
+    .day-block {{
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--green-pale);
+    }}
+    .day-block:last-child {{ border-bottom: none; }}
+
+    .day-header {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }}
+    .day-name {{
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-mid);
+    }}
+    .book-btn {{
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--green-mid);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1.5px solid var(--green-light);
+      border-radius: 20px;
+      transition: all 0.15s;
+    }}
+    .book-btn:hover {{
+      background: var(--green-deep);
+      border-color: var(--green-deep);
+      color: var(--white);
+    }}
+
+    /* ── Slots ── */
+    .slots {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }}
+    .slot {{
+      background: var(--green-pale);
+      color: var(--green-deep);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+    }}
+    .no-times {{
+      font-size: 0.82rem;
+      color: var(--text-light);
+      font-style: italic;
+    }}
+
+    /* ── Footer ── */
+    footer {{
+      text-align: center;
+      padding: 24px;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }}
+    footer a {{ color: var(--green-mid); text-decoration: none; }}
+  </style>
+</head>
+<body>
+  <header>
+    <span class="flag-icon">⛳</span>
+    <h1>Tee Time Watch</h1>
+    <p class="subtitle">Miami Area Golf · Weekend Availability</p>
+    <div class="gold-line"></div>
+  </header>
+  <div class="updated-bar">
+    Checked every 5 minutes · Last run: <strong>{now_str}</strong>
+  </div>
+  <main>
+    {cards_html}
+  </main>
+  <footer>
+    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET
+  </footer>
+</body>
+</html>"""
+
+    Path("index.html").write_text(html)
+    print("  index.html generated.")
+
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
@@ -608,6 +885,8 @@ async def main():
             await check_day(course, d)
 
     print("\n" + "="*60)
+    print("Generating index.html...")
+    generate_html()
     print("Done.\n")
 
 
