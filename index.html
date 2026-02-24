@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tee Time Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-deep:   #1b3d2a;
+      --green-mid:    #2d6a45;
+      --green-light:  #4a9465;
+      --green-pale:   #e8f2ec;
+      --white:        #ffffff;
+      --cream:        #f7f5f0;
+      --gold:         #c9a84c;
+      --text-dark:    #1a2e20;
+      --text-mid:     #4a6355;
+      --text-light:   #7a9485;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--green-deep);
+      padding: 48px 24px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(74,148,101,0.15) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(74,148,101,0.10) 0%, transparent 60%);
+    }
+    .flag-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      display: block;
+      position: relative;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -0.01em;
+      position: relative;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.55);
+      margin-top: 8px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      position: relative;
+    }
+    .gold-line {
+      width: 48px;
+      height: 2px;
+      background: var(--gold);
+      margin: 16px auto 0;
+      position: relative;
+    }
+
+    /* ── Last updated bar ── */
+    .updated-bar {
+      background: var(--green-mid);
+      text-align: center;
+      padding: 10px 24px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.04em;
+    }
+    .updated-bar strong {
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    /* ── Main grid ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 20px 60px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    /* ── Course card ── */
+    .course-card {
+      background: var(--white);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(27,61,42,0.08), 0 1px 3px rgba(27,61,42,0.05);
+      transition: box-shadow 0.2s;
+    }
+    .course-card:hover {
+      box-shadow: 0 8px 32px rgba(27,61,42,0.13), 0 2px 6px rgba(27,61,42,0.07);
+    }
+    .course-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--white);
+      background: var(--green-deep);
+      padding: 20px 20px 14px;
+      letter-spacing: -0.01em;
+    }
+    .window-tag {
+      background: var(--green-mid);
+      color: rgba(255,255,255,0.75);
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 20px 10px;
+    }
+
+    /* ── Day block ── */
+    .day-block {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--green-pale);
+    }
+    .day-block:last-child { border-bottom: none; }
+
+    .day-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .day-name {
+      font-size: 0.82rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-mid);
+    }
+    .book-btn {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--green-mid);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1.5px solid var(--green-light);
+      border-radius: 20px;
+      transition: all 0.15s;
+    }
+    .book-btn:hover {
+      background: var(--green-deep);
+      border-color: var(--green-deep);
+      color: var(--white);
+    }
+
+    /* ── Slots ── */
+    .slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .slot {
+      background: var(--green-pale);
+      color: var(--green-deep);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .no-times {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+    footer a { color: var(--green-mid); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="flag-icon">⛳</span>
+    <h1>Tee Time Watch</h1>
+    <p class="subtitle">Miami Area Golf · Weekend Availability</p>
+    <div class="gold-line"></div>
+  </header>
+  <div class="updated-bar">
+    Checked every 5 minutes · Last run: <strong>11:34 PM ET, Monday February 23, 2026</strong>
+  </div>
+  <main>
+    
+        <div class="course-card">
+          <h2 class="course-name">Miami Lakes</h2>
+          <div class="window-tag">8:00 – 14:00</div>
+          
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Friday, Feb 27</span>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=14" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">2:52 PM</span></div>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Saturday, Feb 28</span>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=14" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">2:28 PM</span><span class="slot">2:36 PM</span><span class="slot">2:52 PM</span></div>
+            </div>
+        </div>
+        <div class="course-card">
+          <h2 class="course-name">Normandy Shores</h2>
+          <div class="window-tag">8:00 – 14:00</div>
+          
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Friday, Feb 27</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-02-27&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">2:52 PM</span></div>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Saturday, Feb 28</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-02-28&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">2:52 PM</span></div>
+            </div>
+        </div>
+        <div class="course-card">
+          <h2 class="course-name">Miami Shores</h2>
+          <div class="window-tag">8:00 – 14:00</div>
+          
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Friday, Feb 27</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-02-27&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Saturday, Feb 28</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-02-28&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">2:22 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+            </div>
+        </div>
+  </main>
+  <footer>
+    Monitoring 3 courses · Fri–Sun · Times shown in ET
+  </footer>
+</body>
+</html>
