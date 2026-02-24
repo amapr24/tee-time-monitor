@@ -15,7 +15,7 @@ export default async function handler(req, res) {
 
   try {
     const response = await fetch(
-      "https://api.github.com/repos/amapr24/teetime-monitor/actions/workflows/tee-time-monitor.yml/dispatches",
+      "https://api.github.com/repos/amapr24/tee-time-monitor/actions/workflows/tee-time-monitor.yml/dispatches",
       {
         method: "POST",
         headers: {
