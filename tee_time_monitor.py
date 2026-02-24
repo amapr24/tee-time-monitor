@@ -1,5 +1,5 @@
 """
-Tee Time Monitor -- Miami Lakes & Normandy Shores
+Tee Time Monitor -- Miami Lakes, Normandy & Miami Shores
 Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
@@ -145,7 +145,7 @@ def send_pushover(title: str, message: str):
                 "title":    title,
                 "message":  message,
                 "sound":    "cashregister",
-                "priority": 1,
+                "priority": 0,
             },
             timeout=10,
         )
@@ -545,6 +545,8 @@ async def check_day(course: dict, target_date: date):
     current_slots = deduplicate_slots(raw, t_min, t_max)
     print(f"  Found {len(current_slots)} unique slot(s) after dedup.")
 
+    save_cache(cache_file, target_date, current_slots)
+
     if not current_slots:
         print("  No slots found -- skipping.\n")
         return
@@ -583,8 +585,6 @@ async def check_day(course: dict, target_date: date):
         notify(subject, body, push_msg)
     else:
         print("  No new slots since last check.")
-
-    save_cache(cache_file, target_date, current_slots)
 
 # ── HTML generator ────────────────────────────────────────────────────────────
 
