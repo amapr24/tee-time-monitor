@@ -1,5 +1,5 @@
 """
-Tee Time Monitor -- Miami Lakes, Normandy & Miami Shores
+Tee Time Monitor -- Miami Lakes & Normandy Shores
 Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
@@ -145,7 +145,7 @@ def send_pushover(title: str, message: str):
                 "title":    title,
                 "message":  message,
                 "sound":    "cashregister",
-                "priority": 0,
+                "priority": 1,
             },
             timeout=10,
         )
@@ -545,8 +545,6 @@ async def check_day(course: dict, target_date: date):
     current_slots = deduplicate_slots(raw, t_min, t_max)
     print(f"  Found {len(current_slots)} unique slot(s) after dedup.")
 
-    save_cache(cache_file, target_date, current_slots)
-
     if not current_slots:
         print("  No slots found -- skipping.\n")
         return
@@ -585,6 +583,8 @@ async def check_day(course: dict, target_date: date):
         notify(subject, body, push_msg)
     else:
         print("  No new slots since last check.")
+
+    save_cache(cache_file, target_date, current_slots)
 
 # ── HTML generator ────────────────────────────────────────────────────────────
 
@@ -835,6 +835,33 @@ def generate_html():
       font-style: italic;
     }}
 
+    /* ── Check Now button ── */
+    .check-now-wrap {{
+      text-align: center;
+      padding: 8px 24px 24px;
+    }}
+    .check-now-btn {{
+      background: var(--gold);
+      color: var(--green-deep);
+      border: none;
+      padding: 12px 32px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }}
+    .check-now-btn:hover {{ background: #b8962e; }}
+    .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; }}
+    .trigger-msg {{
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: var(--text-mid);
+      min-height: 1.2em;
+    }}
+
     /* ── Footer ── */
     footer {{
       text-align: center;
@@ -858,9 +885,38 @@ def generate_html():
   <main>
     {cards_html}
   </main>
+  <div class="check-now-wrap">
+    <button class="check-now-btn" onclick="triggerCheck()">⛳ Check Now</button>
+    <div class="trigger-msg" id="trigger-msg"></div>
+  </div>
   <footer>
     Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET
   </footer>
+  <script>
+    async function triggerCheck() {{
+      const btn = document.querySelector('.check-now-btn');
+      const msg = document.getElementById('trigger-msg');
+      btn.disabled = true;
+      btn.textContent = 'Triggering…';
+      msg.textContent = '';
+      try {{
+        const resp = await fetch('/api/trigger', {{ method: 'POST' }});
+        const data = await resp.json();
+        if (resp.ok) {{
+          btn.textContent = '✓ Check triggered!';
+          msg.textContent = 'Results will update in ~2 minutes.';
+        }} else {{
+          btn.textContent = '⛳ Check Now';
+          btn.disabled = false;
+          msg.textContent = 'Error: ' + (data.error || 'unknown');
+        }}
+      }} catch (e) {{
+        btn.textContent = '⛳ Check Now';
+        btn.disabled = false;
+        msg.textContent = 'Network error — try again.';
+      }}
+    }}
+  </script>
 </body>
 </html>"""
 
