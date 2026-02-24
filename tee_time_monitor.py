@@ -937,7 +937,7 @@ def generate_html():
       align-items: center;
       justify-content: center;
       gap: 16px;
-      max-width: 1100px;
+      max-width: 1060px;
       margin-left: auto;
       margin-right: auto;
     }}
@@ -947,6 +947,7 @@ def generate_html():
       color: var(--gold);
       letter-spacing: 0.1em;
       text-align: center;
+      flex: 1;
     }}
     .callout-quote span {{
       color: rgba(255,255,255,0.4);
@@ -968,15 +969,20 @@ def generate_html():
     .check-now-wrap {{
       text-align: center;
       padding: 36px 24px 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }}
     .check-now-btn {{
       background: var(--gold);
       color: var(--green-deep);
       border: none;
-      padding: 14px 0;
-      width: 200px;
+      padding: 12px 0;
+      width: 160px;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
+      font-size: 1rem;
       letter-spacing: 0.12em;
       border-radius: 40px;
       cursor: pointer;
@@ -986,7 +992,8 @@ def generate_html():
     .check-now-btn:hover {{ background: var(--gold-dark); transform: translateY(-2px); }}
     .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; transform: none; }}
     .trigger-msg {{
-      margin-top: 10px;
+      width: 100%;
+      text-align: center;
       font-size: 0.8rem;
       color: var(--text-mid);
       min-height: 1.2em;
@@ -1064,7 +1071,9 @@ def generate_html():
 
   <div class="check-now-wrap">
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
-    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()" style="margin-left:10px;">REFRESH ↺</button>
+    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
+  </div>
+  <div style="text-align:center; margin-top:8px;">
     <div class="trigger-msg" id="trigger-msg"></div>
   </div>
 
