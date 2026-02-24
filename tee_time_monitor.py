@@ -888,8 +888,7 @@ def generate_html():
   </main>
   <div class="check-now-wrap">
     <button class="check-now-btn" onclick="triggerCheck()">⛳ Check Now</button>
-    <button class="check-now-btn" onclick="location.reload()" style="margin-left:10px;">↺ Refresh</button>
-    <div class="trigger-msg" id="trigger-msg"></div>
+    <button class="check-now-btn" onclick="this.textContent='↺ Reloading…'; location.reload()" style="margin-left:10px;">↺ Refresh</button>    <div class="trigger-msg" id="trigger-msg"></div>
   </div>
   <footer>
     Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET
