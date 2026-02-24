@@ -102,10 +102,10 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
         s = sun(MIAMI.observer, date=target_date, tzinfo=ET)
         sunset_hour   = s["sunset"].hour
         sunset_minute = s["sunset"].minute
-        cutoff_hour   = sunset_hour - 5
-        if sunset_minute < 30:
-            cutoff_hour -= 1
-        cutoff_hour = max(cutoff_hour, 6)
+        cutoff_hour   = sunset_hour - 4
+        #if sunset_minute < 30:
+            #cutoff_hour -= 1
+        #cutoff_hour = max(cutoff_hour, 6)
         print(f"  Sunset: {s['sunset'].strftime('%-I:%M %p ET')} → cutoff: {cutoff_hour:02d}:00")
         return cutoff_hour
     except Exception as e:
