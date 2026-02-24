@@ -811,6 +811,7 @@ def generate_html():
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
+      align-items: start;
     }}
 
     /* ── Course card ── */
@@ -878,15 +879,15 @@ def generate_html():
     .book-btn {{
       font-size: 0.72rem;
       font-weight: 600;
-      color: var(--white);
-      background: var(--green-light);
+      color: var(--green-deep);
+      background: var(--gold);
       text-decoration: none;
       padding: 5px 12px;
       border-radius: 20px;
       transition: all 0.15s;
       letter-spacing: 0.04em;
     }}
-    .book-btn:hover {{ background: var(--green-deep); }}
+    .book-btn:hover {{ background: var(--gold-dark); }}
 
     /* ── Slots ── */
     .slots {{
@@ -956,7 +957,8 @@ def generate_html():
       background: var(--gold);
       color: var(--green-deep);
       border: none;
-      padding: 14px 36px;
+      padding: 14px 0;
+      width: 200px;
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.1rem;
       letter-spacing: 0.12em;
