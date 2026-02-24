@@ -286,25 +286,26 @@
       background: rgba(255,255,255,0.15);
       flex-shrink: 0;
     }
-
-    /* ── Check Now buttons ── */
+    
+/* ── Check Now buttons ── */
     .check-now-wrap {
       text-align: center;
       padding: 36px 24px 16px;
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 12px;
+      gap: 16px;
       flex-wrap: wrap;
     }
     .check-now-btn {
       background: var(--gold);
       color: var(--green-deep);
       border: none;
-      padding: 12px 0;
-      width: 160px;
+      padding: 14px 0;
+      width: 200px;
+      flex-shrink: 0;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
+      font-size: 1.1rem;
       letter-spacing: 0.12em;
       border-radius: 40px;
       cursor: pointer;
@@ -313,6 +314,18 @@
     }
     .check-now-btn:hover { background: var(--gold-dark); transform: translateY(-2px); }
     .check-now-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    
+    @media (max-width: 600px) {
+      .check-now-wrap {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .check-now-btn {
+        width: 100%;
+        max-width: 280px;
+      }
+    }
+
     .trigger-msg {
       width: 100%;
       text-align: center;
@@ -351,7 +364,7 @@
       <span>BOOK BEFORE THEY'RE GONE 🏌️</span>
       <span>DON'T THREE PUTT ⛳</span>
       <span>WEEKEND AVAILABILITY 🏌️</span>
-      <span>AVOID THE THREE PUTT ⛳</span>
+      <span>AVOID THREE PUTTS! ⛳</span>
       <span>JUST BOOK THE TEE TIME 🏌️</span>
       <span>FORE! ⛳</span>
       <span>TEE TIME WATCH 🏌️</span>
@@ -359,7 +372,7 @@
       <span>BOOK BEFORE THEY'RE GONE 🏌️</span>
       <span>DON'T THREE PUTT ⛳</span>
       <span>WEEKEND AVAILABILITY 🏌️</span>
-      <span>AVOID THE THREE PUTT ⛳</span>
+      <span>AVOID THREE PUTTS! ⛳</span>
       <span>JUST BOOK THE TEE TIME 🏌️</span>
     </div>
   </div>
@@ -376,7 +389,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 5 minutes &nbsp;·&nbsp; Last run: <strong>6:25 PM ET, Tuesday February 24, 2026</strong>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>6:55 PM ET, Tuesday February 24, 2026</strong>
   </div>
 
   <main>
