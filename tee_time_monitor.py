@@ -20,6 +20,8 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import requests
+from astral import LocationInfo
+from astral.sun import sun
 from playwright.async_api import async_playwright
 
 # ── Email / Pushover credentials (from GitHub secrets) ────────────────────────
@@ -86,6 +88,29 @@ DAY_NAMES = {
 }
 
 CACHE_DIR = Path(".")   # cache files live in the repo root alongside the script
+
+# ── Sunset helper ──────────────────────────────────────────────────────────────
+
+MIAMI = LocationInfo("Miami", "USA", "America/New_York", 25.7617, -80.1918)
+
+def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
+    """
+    Returns the latest hour (24h int) to start a round, defined as
+    5 hours before sunset in Miami. Falls back to fallback_hour if astral fails.
+    """
+    try:
+        s = sun(MIAMI.observer, date=target_date, tzinfo=ET)
+        sunset_hour   = s["sunset"].hour
+        sunset_minute = s["sunset"].minute
+        cutoff_hour   = sunset_hour - 5
+        if sunset_minute < 30:
+            cutoff_hour -= 1
+        cutoff_hour = max(cutoff_hour, 6)
+        print(f"  Sunset: {s['sunset'].strftime('%-I:%M %p ET')} → cutoff: {cutoff_hour:02d}:00")
+        return cutoff_hour
+    except Exception as e:
+        print(f"  Sunset calc failed ({e}) -- using fallback {fallback_hour:02d}:00")
+        return fallback_hour
 
 # ── Date helpers ───────────────────────────────────────────────────────────────
 
@@ -513,7 +538,7 @@ def find_new_slots(old: list[dict], new: list[dict]) -> list[dict]:
 async def check_day(course: dict, target_date: date):
     name       = course["name"]
     t_min      = course["tee_time_min"]
-    t_max      = course["tee_time_max"]
+    t_max      = get_sunset_cutoff(target_date, course["tee_time_max"])
     cache_file = CACHE_DIR / course["cache_file"]
     day_name   = DAY_NAMES.get(target_date.weekday(), "Unknown")
 
@@ -598,10 +623,11 @@ def generate_html():
         cache_file = CACHE_DIR / course["cache_file"]
         days = []
         for d in dates:
+            t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             slots = load_cache(cache_file, d)
             # Build booking URL
             if course["type"] == "cpsgolf":
-                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={course['tee_time_max']}"
+                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
             else:
                 book_url = (
                     f"{course['url']}?date={d.isoformat()}"
@@ -644,7 +670,7 @@ def generate_html():
         cards_html += f"""
         <div class="course-card">
           <h2 class="course-name">{course["name"]}</h2>
-          <div class="window-tag">{course["tee_time_min"]}:00 – {course["tee_time_max"]}:00</div>
+          <div class="window-tag">{course["tee_time_min"]}:00 – sunset minus 5hrs</div>
           {days_html}
         </div>"""
 
