@@ -649,8 +649,20 @@ def generate_html():
         days_html = ""
         for day in cd["days"]:
             if day["slots"]:
+                def slot_class(time_str):
+                    try:
+                        parts = time_str.strip().split()
+                        h, _ = map(int, parts[0].split(":"))
+                        ampm = parts[1].upper() if len(parts) > 1 else "AM"
+                        if ampm == "PM" and h != 12: h += 12
+                        elif ampm == "AM" and h == 12: h = 0
+                        if h < 9:  return "slot slot-early"
+                        if h < 12: return "slot slot-prime"
+                        return "slot slot-afternoon"
+                    except Exception:
+                        return "slot slot-prime"
                 times_html = "".join(
-                    f'<span class="slot">{s.get("time","?")}'
+                    f'<span class="{slot_class(s.get("time",""))}">{s.get("time","?")}'
                     f'{(" · " + s["price"]) if s.get("price") else ""}</span>'
                     for s in day["slots"]
                 )
@@ -910,16 +922,31 @@ def generate_html():
       gap: 6px;
     }}
     .slot {{
-      background: var(--green-pale);
-      color: var(--green-deep);
       font-size: 0.82rem;
       font-weight: 600;
       padding: 5px 12px;
       border-radius: 6px;
       font-variant-numeric: tabular-nums;
-      border: 1px solid rgba(46,139,79,0.2);
       min-width: 82px;
       text-align: center;
+    }}
+    /* Early morning: before 9 AM — gold */
+    .slot-early {{
+      background: #fef3d0;
+      color: #8a6000;
+      border: 1px solid rgba(232,185,74,0.4);
+    }}
+    /* Prime time: 9 AM–12 PM — green */
+    .slot-prime {{
+      background: var(--green-pale);
+      color: var(--green-deep);
+      border: 1px solid rgba(46,139,79,0.2);
+    }}
+    /* Afternoon: 12 PM+ — muted teal */
+    .slot-afternoon {{
+      background: #e8f4f0;
+      color: #2a5a4a;
+      border: 1px solid rgba(42,90,74,0.2);
     }}
     .no-times {{
       font-size: 0.82rem;
@@ -1012,6 +1039,39 @@ def generate_html():
       min-height: 1.2em;
     }}
 
+    /* ── Minutes ago ── */
+    .mins-ago {{
+      font-size: 0.72rem;
+      color: var(--gold);
+      margin-left: 6px;
+      font-weight: 500;
+    }}
+
+    /* ── Toast ── */
+    .toast {{
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green-deep);
+      color: var(--white);
+      padding: 12px 28px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--gold);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      z-index: 999;
+      white-space: nowrap;
+    }}
+    .toast.show {{
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }}
+
     /* ── Footer ── */
     footer {{
       text-align: center;
@@ -1067,7 +1127,7 @@ def generate_html():
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong>
+    Checked every 5 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
@@ -1086,38 +1146,61 @@ def generate_html():
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
   </div>
-  <div style="text-align:center; margin-top:8px;">
-    <div class="trigger-msg" id="trigger-msg"></div>
-  </div>
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
     Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
   </footer>
 
+  <div class="toast" id="toast"></div>
+
   <script>
+    // ── Minutes ago counter ──
+    (function() {{
+      const el = document.getElementById('mins-ago');
+      if (!el) return;
+      const strong = document.querySelector('.updated-bar strong');
+      if (!strong) return;
+      const lastRun = new Date(strong.textContent);
+      if (isNaN(lastRun)) return;
+      function update() {{
+        const mins = Math.floor((Date.now() - lastRun) / 60000);
+        if (mins < 1)      el.textContent = ' · just now';
+        else if (mins < 60) el.textContent = ' · ' + mins + ' min' + (mins === 1 ? '' : 's') + ' ago';
+        else               el.textContent = ' · ' + Math.floor(mins/60) + 'h ago';
+      }}
+      update();
+      setInterval(update, 30000);
+    }})();
+
+    // ── Toast helper ──
+    function showToast(msg, duration = 3500) {{
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), duration);
+    }}
+
+    // ── Check Now ──
     async function triggerCheck() {{
       const btn = document.querySelector('.check-now-btn');
-      const msg = document.getElementById('trigger-msg');
       btn.disabled = true;
-      btn.textContent = 'TRIGGERING…';
-      msg.textContent = '';
+      btn.textContent = 'TRIGGERING… ⛳';
       try {{
         const resp = await fetch('/api/trigger', {{ method: 'POST' }});
         const data = await resp.json();
         if (resp.ok) {{
-          btn.textContent = '✓ CHECK TRIGGERED!';
-          msg.textContent = 'Results will update in ~2 minutes.';
-        }} else {{
+          showToast('✓ Check triggered! Results update in ~2 mins.');
           btn.textContent = 'CHECK NOW ⛳';
-          btn.disabled = false;
-          msg.textContent = 'Error: ' + (data.error || 'unknown');
+        }} else {{
+          showToast('Error: ' + (data.error || 'unknown'));
+          btn.textContent = 'CHECK NOW ⛳';
         }}
       }} catch (e) {{
+        showToast('Network error — try again.');
         btn.textContent = 'CHECK NOW ⛳';
-        btn.disabled = false;
-        msg.textContent = 'Network error — try again.';
       }}
+      btn.disabled = false;
     }}
   </script>
 
@@ -1130,19 +1213,25 @@ def generate_html():
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
+async def check_course(course: dict, dates: list):
+    """Check all dates for a single course sequentially."""
+    print(f"\n{'#'*60}")
+    print(f"  {course['name']}")
+    print(f"{'#'*60}")
+    for d in dates:
+        await check_day(course, d)
+
+
 async def main():
     dates = get_upcoming_weekend_dates()
 
     print(f"\nTee Time Monitor")
     print(f"  Courses: {', '.join(c['name'] for c in COURSES)}")
-    print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}\n")
+    print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}")
+    print(f"  Mode:    Concurrent (courses run in parallel)\n")
 
-    for course in COURSES:
-        print(f"\n{'#'*60}")
-        print(f"  {course['name']}")
-        print(f"{'#'*60}")
-        for d in dates:
-            await check_day(course, d)
+    # Run all courses concurrently, dates sequential within each course
+    await asyncio.gather(*[check_course(course, dates) for course in COURSES])
 
     print("\n" + "="*60)
     print("Generating index.html...")
