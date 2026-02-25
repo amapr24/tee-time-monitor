@@ -232,16 +232,31 @@
       gap: 6px;
     }
     .slot {
-      background: var(--green-pale);
-      color: var(--green-deep);
       font-size: 0.82rem;
       font-weight: 600;
       padding: 5px 12px;
       border-radius: 6px;
       font-variant-numeric: tabular-nums;
-      border: 1px solid rgba(46,139,79,0.2);
       min-width: 82px;
       text-align: center;
+    }
+    /* Early morning: before 9 AM — gold */
+    .slot-early {
+      background: #fef3d0;
+      color: #8a6000;
+      border: 1px solid rgba(232,185,74,0.4);
+    }
+    /* Prime time: 9 AM–12 PM — green */
+    .slot-prime {
+      background: var(--green-pale);
+      color: var(--green-deep);
+      border: 1px solid rgba(46,139,79,0.2);
+    }
+    /* Afternoon: 12 PM+ — muted teal */
+    .slot-afternoon {
+      background: #e8f4f0;
+      color: #2a5a4a;
+      border: 1px solid rgba(42,90,74,0.2);
     }
     .no-times {
       font-size: 0.82rem;
@@ -334,6 +349,39 @@
       min-height: 1.2em;
     }
 
+    /* ── Minutes ago ── */
+    .mins-ago {
+      font-size: 0.72rem;
+      color: var(--gold);
+      margin-left: 6px;
+      font-weight: 500;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green-deep);
+      color: var(--white);
+      padding: 12px 28px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--gold);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
     /* ── Footer ── */
     footer {
       text-align: center;
@@ -389,7 +437,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>11:04 PM ET, Tuesday February 24, 2026</strong>
+    Checked every 5 minutes &nbsp;·&nbsp; Last run: <strong>11:29 PM ET, Tuesday February 24, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
@@ -440,14 +488,14 @@
                 <span class="day-name">Saturday, Feb 28</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-02-28&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:20 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot slot-afternoon">2:20 PM</span><span class="slot slot-afternoon">2:52 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
                 <span class="day-name">Sunday, Mar 1</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-01&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:20 PM</span><span class="slot">2:28 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot slot-afternoon">2:20 PM</span><span class="slot slot-afternoon">2:28 PM</span><span class="slot slot-afternoon">2:36 PM</span><span class="slot slot-afternoon">2:44 PM</span><span class="slot slot-afternoon">2:52 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -468,14 +516,14 @@
                 <span class="day-name">Saturday, Feb 28</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-02-28&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+              <div class="slots"><span class="slot slot-afternoon">2:46 PM</span><span class="slot slot-afternoon">2:54 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
                 <span class="day-name">Sunday, Mar 1</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-01&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">1:10 PM</span><span class="slot">1:18 PM</span><span class="slot">1:26 PM</span><span class="slot">1:50 PM</span><span class="slot">1:58 PM</span><span class="slot">2:14 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+              <div class="slots"><span class="slot slot-afternoon">1:10 PM</span><span class="slot slot-afternoon">1:18 PM</span><span class="slot slot-afternoon">1:26 PM</span><span class="slot slot-afternoon">1:50 PM</span><span class="slot slot-afternoon">1:58 PM</span><span class="slot slot-afternoon">2:14 PM</span><span class="slot slot-afternoon">2:38 PM</span><span class="slot slot-afternoon">2:46 PM</span><span class="slot slot-afternoon">2:54 PM</span></div>
             </div>
         </div>
   </main>
@@ -492,38 +540,61 @@
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
   </div>
-  <div style="text-align:center; margin-top:8px;">
-    <div class="trigger-msg" id="trigger-msg"></div>
-  </div>
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
     Monitoring 3 courses · Fri–Sun · Times shown in ET · © 2026 Tee Time Watch
   </footer>
 
+  <div class="toast" id="toast"></div>
+
   <script>
+    // ── Minutes ago counter ──
+    (function() {
+      const el = document.getElementById('mins-ago');
+      if (!el) return;
+      const strong = document.querySelector('.updated-bar strong');
+      if (!strong) return;
+      const lastRun = new Date(strong.textContent);
+      if (isNaN(lastRun)) return;
+      function update() {
+        const mins = Math.floor((Date.now() - lastRun) / 60000);
+        if (mins < 1)      el.textContent = ' · just now';
+        else if (mins < 60) el.textContent = ' · ' + mins + ' min' + (mins === 1 ? '' : 's') + ' ago';
+        else               el.textContent = ' · ' + Math.floor(mins/60) + 'h ago';
+      }
+      update();
+      setInterval(update, 30000);
+    })();
+
+    // ── Toast helper ──
+    function showToast(msg, duration = 3500) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), duration);
+    }
+
+    // ── Check Now ──
     async function triggerCheck() {
       const btn = document.querySelector('.check-now-btn');
-      const msg = document.getElementById('trigger-msg');
       btn.disabled = true;
-      btn.textContent = 'TRIGGERING…';
-      msg.textContent = '';
+      btn.textContent = 'TRIGGERING… ⛳';
       try {
         const resp = await fetch('/api/trigger', { method: 'POST' });
         const data = await resp.json();
         if (resp.ok) {
-          btn.textContent = '✓ CHECK TRIGGERED!';
-          msg.textContent = 'Results will update in ~2 minutes.';
-        } else {
+          showToast('✓ Check triggered! Results update in ~2 mins.');
           btn.textContent = 'CHECK NOW ⛳';
-          btn.disabled = false;
-          msg.textContent = 'Error: ' + (data.error || 'unknown');
+        } else {
+          showToast('Error: ' + (data.error || 'unknown'));
+          btn.textContent = 'CHECK NOW ⛳';
         }
       } catch (e) {
+        showToast('Network error — try again.');
         btn.textContent = 'CHECK NOW ⛳';
-        btn.disabled = false;
-        msg.textContent = 'Network error — try again.';
       }
+      btn.disabled = false;
     }
   </script>
 
