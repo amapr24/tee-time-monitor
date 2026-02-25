@@ -47,6 +47,8 @@ PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
 COURSES = [
     {
         "name":           "Miami Lakes",
+        "address":        "6801 Miami Lakes Dr, Miami Lakes",
+        "phone":          "(305) 558-4653",
         "type":           "cpsgolf",
         "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
         "tee_time_min":   8,
@@ -56,6 +58,8 @@ COURSES = [
     },
     {
         "name":           "Normandy Shores",
+        "address":        "2401 Biarritz Dr, Miami Beach",
+        "phone":          "(305) 868-6502",
         "type":           "chronogolf",
         "url":            "https://www.chronogolf.com/club/normandy-shores-golf-course",
         "holes":          18,
@@ -67,6 +71,8 @@ COURSES = [
     },
     {
         "name":           "Miami Shores",
+        "address":        "10000 Biscayne Blvd, Miami Shores",
+        "phone":          "(305) 795-2369",
         "type":           "chronogolf",
         "url":            "https://www.chronogolf.com/club/miami-shores-country-club",
         "holes":          18,
@@ -616,6 +622,7 @@ async def check_day(course: dict, target_date: date):
 def generate_html():
     dates = get_upcoming_weekend_dates()
     now_str = datetime.now(ET).strftime("%-I:%M %p ET, %A %B %-d, %Y")
+    now_ts  = int(datetime.now(ET).timestamp())
 
     # Build data structure: course -> date -> slots
     course_data = []
@@ -667,11 +674,16 @@ def generate_html():
               {day_body}
             </div>"""
 
+        # Compute a representative cutoff for the card header (use first date)
+        repr_cutoff = get_sunset_cutoff(cd["days"][0]["date"], course["tee_time_max"]) if cd["days"] else course["tee_time_max"]
+        cutoff_ampm = f"{repr_cutoff % 12 or 12}:00 {'AM' if repr_cutoff < 12 else 'PM'}"
+
         cards_html += f"""
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
-            <span class="window-tag">⏱ {course["tee_time_min"]}:00 AM – Sunset minus 4hrs</span>
+            <div class="course-meta">{course.get("address","")}</div>
+            <div class="course-meta">{""}</div>
           </div>
           {days_html}
         </div>"""
@@ -735,7 +747,7 @@ def generate_html():
     /* ── Header ── */
     header {{
       background: var(--green-deep);
-      padding: 48px 40px;
+      padding: 48px 30px;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -762,11 +774,11 @@ def generate_html():
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 24px;
+      gap: 18px;
       position: relative;
     }}
     .header-flag, .header-golfer {{
-      font-size: 3rem;
+      font-size: 6rem;
       flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
@@ -842,7 +854,7 @@ def generate_html():
     /* ── Course card header ── */
     .card-header {{
       background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
-      padding: 20px 20px 0;
+      padding: 20px 24px 0;
       position: relative;
       overflow: hidden;
     }}
@@ -861,12 +873,18 @@ def generate_html():
       letter-spacing: 0.06em;
       line-height: 1;
     }}
+    .course-meta {{
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.04em;
+      margin-top: 4px;
+    }}
     .window-tag {{
       color: var(--gold);
       font-size: 0.7rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: 6px 0 14px;
+      padding: 6px 0 8px;
       display: block;
     }}
 
@@ -1012,6 +1030,39 @@ def generate_html():
       min-height: 1.2em;
     }}
 
+    /* ── Minutes ago ── */
+    .mins-ago {{
+      font-size: 0.72rem;
+      color: var(--gold);
+      margin-left: 6px;
+      font-weight: 500;
+    }}
+
+    /* ── Toast ── */
+    .toast {{
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green-deep);
+      color: var(--white);
+      padding: 12px 28px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--gold);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      z-index: 999;
+      white-space: nowrap;
+    }}
+    .toast.show {{
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }}
+
     /* ── Footer ── */
     footer {{
       text-align: center;
@@ -1061,13 +1112,14 @@ def generate_html():
       <div>
         <h1>TEE TIME<br><em>WATCH</em></h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
+        <span class="window-tag">⏱ {course["tee_time_min"]}:00 AM – {cutoff_ampm} (SUNSET MINUS ~4HRS)</span>
       </div>
       <span class="header-golfer">🏌️</span>
     </div>
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
@@ -1095,29 +1147,50 @@ def generate_html():
     Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
   </footer>
 
+  <div class="toast" id="toast"></div>
+
   <script>
+    // ── Minutes ago counter ──
+    (function() {{
+      const el = document.getElementById('mins-ago');
+      if (!el) return;
+      const lastRun = new Date({now_ts} * 1000);
+      function update() {{
+        const mins = Math.floor((Date.now() - lastRun) / 60000);
+        if (mins < 1)       el.textContent = ' · just now';
+        else if (mins < 60) el.textContent = ' · ' + mins + ' min' + (mins === 1 ? '' : 's') + ' ago';
+        else                el.textContent = ' · ' + Math.floor(mins/60) + 'h ago';
+      }}
+      update();
+      setInterval(update, 30000);
+    }})();
+
+    // ── Toast helper ──
+    function showToast(msg, duration = 3500) {{
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), duration);
+    }}
+
+    // ── Check Now ──
     async function triggerCheck() {{
       const btn = document.querySelector('.check-now-btn');
-      const msg = document.getElementById('trigger-msg');
       btn.disabled = true;
-      btn.textContent = 'TRIGGERING…';
-      msg.textContent = '';
+      btn.textContent = 'TRIGGERING… ⛳';
       try {{
         const resp = await fetch('/api/trigger', {{ method: 'POST' }});
         const data = await resp.json();
         if (resp.ok) {{
-          btn.textContent = '✓ CHECK TRIGGERED!';
-          msg.textContent = 'Results will update in ~2 minutes.';
+          showToast('✓ Check triggered! Results update in ~2 mins.');
         }} else {{
-          btn.textContent = 'CHECK NOW ⛳';
-          btn.disabled = false;
-          msg.textContent = 'Error: ' + (data.error || 'unknown');
+          showToast('Error: ' + (data.error || 'unknown'));
         }}
       }} catch (e) {{
-        btn.textContent = 'CHECK NOW ⛳';
-        btn.disabled = false;
-        msg.textContent = 'Network error — try again.';
+        showToast('Network error — try again.');
       }}
+      btn.textContent = 'CHECK NOW ⛳';
+      btn.disabled = false;
     }}
   </script>
 

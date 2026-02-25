@@ -67,4 +67,4 @@ jobs:
           git add index.html
           git diff --staged --quiet || git commit -m "Update tee times [skip ci]"
           git pull --rebase
-          git push dev
+          git push origin dev
