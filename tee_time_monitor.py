@@ -47,6 +47,8 @@ PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
 COURSES = [
     {
         "name":           "Miami Lakes",
+        "address":        "6801 Miami Lakes Dr, Miami Lakes",
+        "phone":          "(305) 558-4653",
         "type":           "cpsgolf",
         "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
         "tee_time_min":   8,
@@ -56,6 +58,8 @@ COURSES = [
     },
     {
         "name":           "Normandy Shores",
+        "address":        "2401 Biarritz Dr, Miami Beach",
+        "phone":          "(305) 868-6502",
         "type":           "chronogolf",
         "url":            "https://www.chronogolf.com/club/normandy-shores-golf-course",
         "holes":          18,
@@ -67,6 +71,8 @@ COURSES = [
     },
     {
         "name":           "Miami Shores",
+        "address":        "10000 Biscayne Blvd, Miami Shores",
+        "phone":          "(305) 795-2369",
         "type":           "chronogolf",
         "url":            "https://www.chronogolf.com/club/miami-shores-country-club",
         "holes":          18,
@@ -668,11 +674,15 @@ def generate_html():
               {day_body}
             </div>"""
 
+        # Compute a representative cutoff for the card header (use first date)
+        repr_cutoff = get_sunset_cutoff(cd["days"][0]["date"], course["tee_time_max"]) if cd["days"] else course["tee_time_max"]
+        cutoff_ampm = f"{repr_cutoff % 12 or 12}:00 {'AM' if repr_cutoff < 12 else 'PM'}"
+
         cards_html += f"""
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
-            <span class="window-tag">⏱ {course["tee_time_min"]}:00 AM – Sunset minus 4hrs</span>
+            <div class="course-meta">{course.get("address","")}&nbsp;&nbsp;·&nbsp;&nbsp;{course.get("phone","")}</div>
           </div>
           {days_html}
         </div>"""
@@ -861,6 +871,12 @@ def generate_html():
       color: var(--white);
       letter-spacing: 0.06em;
       line-height: 1;
+    }}
+    .course-meta {{
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.04em;
+      margin-top: 4px;
     }}
     .window-tag {{
       color: var(--gold);
@@ -1068,10 +1084,6 @@ def generate_html():
 </head>
 <body>
 
-<div style="background:#c0392b; color:#fff; text-align:center; padding:8px; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.2em; position:sticky; top:0; z-index:1000;">
-  ⚠ DEV BRANCH — NOT LIVE ⚠
-</div>
-
   <div class="ticker">
     <div class="ticker-inner">
       <span>FORE! ⛳</span>
@@ -1099,13 +1111,14 @@ def generate_html():
       <div>
         <h1>TEE TIME<br><em>WATCH</em></h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
+        <span class="window-tag">⏱ {course["tee_time_min"]}:00 AM – {cutoff_ampm} (SUNSET MINUS ~4HRS)</span>
       </div>
       <span class="header-golfer">🏌️</span>
     </div>
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 5 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
