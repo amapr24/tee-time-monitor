@@ -1,0 +1,70 @@
+name: Tee Time Monitor
+
+on:
+  workflow_dispatch:  # triggered externally by cron-job.org
+
+permissions:
+  contents: write   # needed to commit index.html back to repo
+
+jobs:
+  check-tee-times:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install playwright requests astral
+          playwright install chromium --with-deps
+
+      # ── Cache strategy ────────────────────────────────────────────────────
+      # Restore using a prefix so we always get the most recent cache entry.
+      # Save with a unique key (run_id) so GitHub actually writes the update.
+      # A static key like "teetime-cache-v1" silently stops updating after
+      # the very first run because GitHub won't overwrite an existing key.
+      - name: Restore tee time cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            cache_miami_lakes.json
+            cache_normandy.json
+            cache_miami_shores.json
+          key: teetime-cache-${{ github.run_id }}   # won't match — intentional
+          restore-keys: teetime-cache-               # grabs the latest saved entry
+
+      - name: Run monitor
+        env:
+          EMAIL_SENDER:   ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_TO:       ${{ secrets.EMAIL_TO }}
+          PUSHOVER_USER:  ${{ secrets.PUSHOVER_USER }}
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+        run: |
+          python tee_time_monitor.py
+
+      - name: Save updated cache
+        uses: actions/cache/save@v4
+        if: always()   # save even if the script finds 0 slots
+        with:
+          path: |
+            cache_miami_lakes.json
+            cache_normandy.json
+            cache_miami_shores.json
+          key: teetime-cache-${{ github.run_id }}
+
+      - name: Commit and push index.html
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --staged --quiet || git commit -m "Update tee times [skip ci]"
+          git pull --rebase
+          git push
