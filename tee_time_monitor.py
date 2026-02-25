@@ -694,7 +694,7 @@ def generate_html():
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="300">
-  <title>Tee Time Watch Dev</title>
+  <title>Tee Time Watch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
@@ -1094,6 +1094,10 @@ def generate_html():
 </head>
 <body>
 
+<div style="background:#c0392b; color:#fff; text-align:center; padding:8px; font-family:'Bebas Neue',sans-serif; font-size:1.1rem; letter-spacing:0.2em; position:sticky; top:0; z-index:1000;">
+  ⚠ DEV BRANCH — NOT LIVE ⚠
+</div>
+
   <div class="ticker">
     <div class="ticker-inner">
       <span>FORE! ⛳</span>
@@ -1119,7 +1123,7 @@ def generate_html():
     <div class="header-inner">
       <span class="header-flag">⛳</span>
       <div>
-        <h1>TEE TIME<br><em>WATCH DEV</em></h1>
+        <h1>TEE TIME<br><em>Watch</em></h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
       </div>
       <span class="header-golfer">🏌️</span>
@@ -1149,7 +1153,7 @@ def generate_html():
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
-    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch Dev
+    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
   </footer>
 
   <div class="toast" id="toast"></div>
