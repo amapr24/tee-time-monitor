@@ -694,7 +694,7 @@ def generate_html():
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="300">
-  <title>Tee Time Watch</title>
+  <title>Tee Time Watch Dev</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
@@ -1149,7 +1149,7 @@ def generate_html():
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
-    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
+    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch Dev
   </footer>
 
   <div class="toast" id="toast"></div>
