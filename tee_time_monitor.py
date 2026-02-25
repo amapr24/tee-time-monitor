@@ -747,7 +747,7 @@ def generate_html():
     /* ── Header ── */
     header {{
       background: var(--green-deep);
-      padding: 20px 30px 10px 30px; /* TIGHTENED TOP/BOTTOM */
+      padding: 30px 30px 20px 30px; /* TIGHTENED TOP/BOTTOM */
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -756,7 +756,7 @@ def generate_html():
       content: '';
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      height: 8px;
+      height: 12px;
       background: repeating-linear-gradient(
         90deg,
         var(--fairway) 0px, var(--fairway) 8px,
@@ -803,7 +803,7 @@ def generate_html():
     .subtitle {{
       font-size: 0.8rem;
       color: rgba(255,255,255,0.5);
-      margin-top: 4px; /* TIGHTENED */
+      margin-top: 8px; /* TIGHTENED */
       letter-spacing: 0.2em;
       text-transform: uppercase;
     }}
