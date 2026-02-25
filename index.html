@@ -422,14 +422,14 @@
         <div>
           <h1>TEE TIME<br><em>WATCH</em></h1>
           <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
-          <span class="window-tag">⏱ 8:00 AM – 3:00 PM (SUNSET MINUS ~4HRS)</span>
+          <span class="window-tag">⏱ 8:00 AM – 3:00 PM (SUNSET: 6:21 PM)</span>
         </div>
         <span class="header-golfer">🏌️</span>
       </div>
-    </header>
+  </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>6:19 PM ET, Wednesday February 25, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>6:32 PM ET, Wednesday February 25, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
@@ -438,6 +438,7 @@
           <div class="card-header">
             <div class="course-name">Miami Lakes</div>
             <div class="course-meta">6801 Miami Lakes Dr, Miami Lakes</div>
+            <div class="course-meta">(305) 558-4653</div>
             <div class="course-meta"></div>
           </div>
           
@@ -467,6 +468,7 @@
           <div class="card-header">
             <div class="course-name">Normandy Shores</div>
             <div class="course-meta">2401 Biarritz Dr, Miami Beach</div>
+            <div class="course-meta">(305) 868-6502</div>
             <div class="course-meta"></div>
           </div>
           
@@ -496,6 +498,7 @@
           <div class="card-header">
             <div class="course-name">Miami Shores</div>
             <div class="course-meta">10000 Biscayne Blvd, Miami Shores</div>
+            <div class="course-meta">(305) 795-2369</div>
             <div class="course-meta"></div>
           </div>
           
@@ -551,7 +554,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772061570 * 1000);
+      const lastRun = new Date(1772062379 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
