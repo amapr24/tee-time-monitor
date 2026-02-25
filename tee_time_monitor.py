@@ -683,7 +683,7 @@ def generate_html():
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
             <div class="course-meta">{course.get("address","")}</div>
-            <div class="course-meta">{course.get("phone","")}</div>
+            <div class="course-meta">{""}</div>
           </div>
           {days_html}
         </div>"""
@@ -747,7 +747,7 @@ def generate_html():
     /* ── Header ── */
     header {{
       background: var(--green-deep);
-      padding: 48px 40px;
+      padding: 48px 30px;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -854,7 +854,7 @@ def generate_html():
     /* ── Course card header ── */
     .card-header {{
       background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
-      padding: 20px 20px 0;
+      padding: 20px 24px 0;
       position: relative;
       overflow: hidden;
     }}
@@ -881,7 +881,7 @@ def generate_html():
     }}
     .window-tag {{
       color: var(--gold);
-      font-size: 0.8rem;
+      font-size: 0.7rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       padding: 6px 0 8px;
