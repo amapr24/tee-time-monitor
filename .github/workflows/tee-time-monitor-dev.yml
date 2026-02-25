@@ -1,4 +1,4 @@
-name: Tee Time Monitor
+name: Tee Time Monitor Dev
 
 on:
   workflow_dispatch:  # triggered externally by cron-job.org
@@ -67,4 +67,4 @@ jobs:
           git add index.html
           git diff --staged --quiet || git commit -m "Update tee times [skip ci]"
           git pull --rebase
-          git push
+          git push dev
