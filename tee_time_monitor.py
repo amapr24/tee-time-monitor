@@ -682,7 +682,8 @@ def generate_html():
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
-            <div class="course-meta">{course.get("address","")}&nbsp;&nbsp;·&nbsp;&nbsp;{course.get("phone","")}</div>
+            <div class="course-meta">{course.get("address","")}</div>
+            <div class="course-meta">{course.get("phone","")}</div>
           </div>
           {days_html}
         </div>"""
@@ -773,11 +774,11 @@ def generate_html():
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 24px;
+      gap: 18px;
       position: relative;
     }}
     .header-flag, .header-golfer {{
-      font-size: 3rem;
+      font-size: 6rem;
       flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
@@ -880,10 +881,10 @@ def generate_html():
     }}
     .window-tag {{
       color: var(--gold);
-      font-size: 0.7rem;
+      font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: 6px 0 14px;
+      padding: 6px 0 8px;
       display: block;
     }}
 
@@ -1118,7 +1119,7 @@ def generate_html():
   </header>
 
   <div class="updated-bar">
-    Checked every 5 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
