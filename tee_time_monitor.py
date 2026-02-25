@@ -648,21 +648,18 @@ def generate_html():
                 "book_url": book_url,
             })
         course_data.append({"course": course, "days": days})
-
-    # Compute a representative cutoff for the header (using the first available date)
-    first_course = COURSES[0]
-    first_date = dates[0]
-    
-    # This is your current threshold (e.g., 14)
-    repr_cutoff = get_sunset_cutoff(first_date, first_course["tee_time_max"])
-    
-    # Calculate the end boundary (e.g., 14 + 1 = 15, which is 3:00 PM)
-    end_hour = repr_cutoff + 1
-    
-    # Format the end boundary for the AM/PM display
-    end_ampm = f"{end_hour % 12 or 12}:00 {'AM' if end_hour < 12 else 'PM'}"
-    start_ampm = f"{first_course['tee_time_min'] % 12 or 12}:00 AM"
   
+    # Grab sunset info for the first date to use in the header
+    first_date = dates[0]
+    s = sun(MIAMI.observer, date=first_date, tzinfo=ET)
+    actual_sunset = s["sunset"].strftime("%-I:%M %p") # e.g., "6:14 PM"
+    
+    # Calculate display boundaries
+    repr_cutoff = get_sunset_cutoff(first_date, COURSES[0]["tee_time_max"])
+    end_hour = repr_cutoff + 1
+    end_ampm = f"{end_hour % 12 or 12}:00 {'AM' if end_hour < 12 else 'PM'}"
+    start_ampm = f"{COURSES[0]['tee_time_min'] % 12 or 12}:00 AM"
+
     # Build course cards HTML
     cards_html = ""
     for cd in course_data:
@@ -697,6 +694,7 @@ def generate_html():
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
             <div class="course-meta">{course.get("address","")}</div>
+            <div class="course-meta">{course.get("phone","")}</div>
             <div class="course-meta">{""}</div>
           </div>
           {days_html}
@@ -1126,11 +1124,11 @@ def generate_html():
         <div>
           <h1>TEE TIME<br><em>WATCH</em></h1>
           <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
-          <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET MINUS ~4HRS)</span>
+          <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
         </div>
         <span class="header-golfer">🏌️</span>
       </div>
-    </header>
+  </header>
 
   <div class="updated-bar">
     Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
