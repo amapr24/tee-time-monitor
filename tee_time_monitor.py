@@ -648,6 +648,17 @@ def generate_html():
                 "book_url": book_url,
             })
         course_data.append({"course": course, "days": days})
+  
+    # Grab sunset info for the first date to use in the header
+    first_date = dates[0]
+    s = sun(MIAMI.observer, date=first_date, tzinfo=ET)
+    actual_sunset = s["sunset"].strftime("%-I:%M %p") # e.g., "6:14 PM"
+    
+    # Calculate display boundaries
+    repr_cutoff = get_sunset_cutoff(first_date, COURSES[0]["tee_time_max"])
+    end_hour = repr_cutoff + 1
+    end_ampm = f"{end_hour % 12 or 12}:00 {'AM' if end_hour < 12 else 'PM'}"
+    start_ampm = f"{COURSES[0]['tee_time_min'] % 12 or 12}:00 AM"
 
     # Build course cards HTML
     cards_html = ""
@@ -683,6 +694,7 @@ def generate_html():
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
             <div class="course-meta">{course.get("address","")}</div>
+            <div class="course-meta">{course.get("phone","")}</div>
             <div class="course-meta">{""}</div>
           </div>
           {days_html}
@@ -1107,15 +1119,15 @@ def generate_html():
   </div>
 
   <header>
-    <div class="header-inner">
-      <span class="header-flag">⛳</span>
-      <div>
-        <h1>TEE TIME<br><em>WATCH</em></h1>
-        <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
-        <span class="window-tag">⏱ {course["tee_time_min"]}:00 AM – {cutoff_ampm} (SUNSET MINUS ~4HRS)</span>
+      <div class="header-inner">
+        <span class="header-flag">⛳</span>
+        <div>
+          <h1>TEE TIME<br><em>WATCH</em></h1>
+          <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
+          <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
+        </div>
+        <span class="header-golfer">🏌️</span>
       </div>
-      <span class="header-golfer">🏌️</span>
-    </div>
   </header>
 
   <div class="updated-bar">
