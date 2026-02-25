@@ -747,7 +747,7 @@ def generate_html():
     /* ── Header ── */
     header {{
       background: var(--green-deep);
-      padding: 48px 30px;
+      padding: 20px 30px 10px 30px; /* TIGHTENED TOP/BOTTOM */
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -756,7 +756,7 @@ def generate_html():
       content: '';
       position: absolute;
       bottom: 0; left: 0; right: 0;
-      height: 12px;
+      height: 8px;
       background: repeating-linear-gradient(
         90deg,
         var(--fairway) 0px, var(--fairway) 8px,
@@ -803,10 +803,9 @@ def generate_html():
     .subtitle {{
       font-size: 0.8rem;
       color: rgba(255,255,255,0.5);
-      margin-top: 12px;
+      margin-top: 4px; /* TIGHTENED */
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      position: relative;
     }}
 
     /* ── Updated bar ── */
@@ -880,12 +879,12 @@ def generate_html():
       margin-top: 4px;
     }}
     .window-tag {{
-      color: var(--gold);
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 6px 0 8px;
       display: block;
+      color: var(--gold);
+      font-size: 0.75rem;
+      margin-top: 6px;    /* SPACE ABOVE TAG */
+      margin-bottom: 12px; /* SPACE BELOW TAG UNTIL GREEN BAR */
+      font-weight: bold;
     }}
 
     /* ── Day block ── */
@@ -1116,7 +1115,7 @@ def generate_html():
       </div>
       <span class="header-golfer">🏌️</span>
     </div>
-  </header>
+</header>
 
   <div class="updated-bar">
     Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
