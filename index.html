@@ -84,11 +84,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 24px;
+      gap: 18px;
       position: relative;
     }
     .header-flag, .header-golfer {
-      font-size: 3rem;
+      font-size: 6rem;
       flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
@@ -191,10 +191,10 @@
     }
     .window-tag {
       color: var(--gold);
-      font-size: 0.7rem;
+      font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: 6px 0 14px;
+      padding: 6px 0 8px;
       display: block;
     }
 
@@ -429,7 +429,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 5 minutes &nbsp;·&nbsp; Last run: <strong>9:03 AM ET, Wednesday February 25, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>9:27 AM ET, Wednesday February 25, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
@@ -437,7 +437,8 @@
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">Miami Lakes</div>
-            <div class="course-meta">6801 Miami Lakes Dr, Miami Lakes&nbsp;&nbsp;·&nbsp;&nbsp;(305) 558-4653</div>
+            <div class="course-meta">6801 Miami Lakes Dr, Miami Lakes</div>
+            <div class="course-meta">(305) 558-4653</div>
           </div>
           
             <div class="day-block">
@@ -465,7 +466,8 @@
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">Normandy Shores</div>
-            <div class="course-meta">2401 Biarritz Dr, Miami Beach&nbsp;&nbsp;·&nbsp;&nbsp;(305) 868-6502</div>
+            <div class="course-meta">2401 Biarritz Dr, Miami Beach</div>
+            <div class="course-meta">(305) 868-6502</div>
           </div>
           
             <div class="day-block">
@@ -493,7 +495,8 @@
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">Miami Shores</div>
-            <div class="course-meta">10000 Biscayne Blvd, Miami Shores&nbsp;&nbsp;·&nbsp;&nbsp;(305) 795-2369</div>
+            <div class="course-meta">10000 Biscayne Blvd, Miami Shores</div>
+            <div class="course-meta">(305) 795-2369</div>
           </div>
           
             <div class="day-block">
@@ -508,7 +511,7 @@
                 <span class="day-name">Saturday, Feb 28</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-02-28&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+              <div class="slots"><span class="slot">2:54 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -548,7 +551,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772028204 * 1000);
+      const lastRun = new Date(1772029646 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
