@@ -616,6 +616,7 @@ async def check_day(course: dict, target_date: date):
 def generate_html():
     dates = get_upcoming_weekend_dates()
     now_str = datetime.now(ET).strftime("%-I:%M %p ET, %A %B %-d, %Y")
+    now_ts  = int(datetime.now(ET).timestamp())
 
     # Build data structure: course -> date -> slots
     course_data = []
@@ -649,20 +650,8 @@ def generate_html():
         days_html = ""
         for day in cd["days"]:
             if day["slots"]:
-                def slot_class(time_str):
-                    try:
-                        parts = time_str.strip().split()
-                        h, _ = map(int, parts[0].split(":"))
-                        ampm = parts[1].upper() if len(parts) > 1 else "AM"
-                        if ampm == "PM" and h != 12: h += 12
-                        elif ampm == "AM" and h == 12: h = 0
-                        if h < 9:  return "slot slot-early"
-                        if h < 12: return "slot slot-prime"
-                        return "slot slot-afternoon"
-                    except Exception:
-                        return "slot slot-prime"
                 times_html = "".join(
-                    f'<span class="{slot_class(s.get("time",""))}">{s.get("time","?")}'
+                    f'<span class="slot">{s.get("time","?")}'
                     f'{(" · " + s["price"]) if s.get("price") else ""}</span>'
                     for s in day["slots"]
                 )
@@ -922,31 +911,16 @@ def generate_html():
       gap: 6px;
     }}
     .slot {{
+      background: var(--green-pale);
+      color: var(--green-deep);
       font-size: 0.82rem;
       font-weight: 600;
       padding: 5px 12px;
       border-radius: 6px;
       font-variant-numeric: tabular-nums;
+      border: 1px solid rgba(46,139,79,0.2);
       min-width: 82px;
       text-align: center;
-    }}
-    /* Early morning: before 9 AM — gold */
-    .slot-early {{
-      background: #fef3d0;
-      color: #8a6000;
-      border: 1px solid rgba(232,185,74,0.4);
-    }}
-    /* Prime time: 9 AM–12 PM — green */
-    .slot-prime {{
-      background: var(--green-pale);
-      color: var(--green-deep);
-      border: 1px solid rgba(46,139,79,0.2);
-    }}
-    /* Afternoon: 12 PM+ — muted teal */
-    .slot-afternoon {{
-      background: #e8f4f0;
-      color: #2a5a4a;
-      border: 1px solid rgba(42,90,74,0.2);
     }}
     .no-times {{
       font-size: 0.82rem;
@@ -1123,7 +1097,7 @@ def generate_html():
     <div class="header-inner">
       <span class="header-flag">⛳</span>
       <div>
-        <h1>TEE TIME<br><em>Watch</em></h1>
+        <h1>TEE TIME<br><em>WATCH</em></h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
       </div>
       <span class="header-golfer">🏌️</span>
@@ -1131,7 +1105,7 @@ def generate_html():
   </header>
 
   <div class="updated-bar">
-    Checked every 5 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
@@ -1150,6 +1124,9 @@ def generate_html():
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
   </div>
+  <div style="text-align:center; margin-top:8px;">
+    <div class="trigger-msg" id="trigger-msg"></div>
+  </div>
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
@@ -1163,15 +1140,12 @@ def generate_html():
     (function() {{
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const strong = document.querySelector('.updated-bar strong');
-      if (!strong) return;
-      const lastRun = new Date(strong.textContent);
-      if (isNaN(lastRun)) return;
+      const lastRun = new Date({now_ts} * 1000);
       function update() {{
         const mins = Math.floor((Date.now() - lastRun) / 60000);
-        if (mins < 1)      el.textContent = ' · just now';
+        if (mins < 1)       el.textContent = ' · just now';
         else if (mins < 60) el.textContent = ' · ' + mins + ' min' + (mins === 1 ? '' : 's') + ' ago';
-        else               el.textContent = ' · ' + Math.floor(mins/60) + 'h ago';
+        else                el.textContent = ' · ' + Math.floor(mins/60) + 'h ago';
       }}
       update();
       setInterval(update, 30000);
@@ -1195,15 +1169,13 @@ def generate_html():
         const data = await resp.json();
         if (resp.ok) {{
           showToast('✓ Check triggered! Results update in ~2 mins.');
-          btn.textContent = 'CHECK NOW ⛳';
         }} else {{
           showToast('Error: ' + (data.error || 'unknown'));
-          btn.textContent = 'CHECK NOW ⛳';
         }}
       }} catch (e) {{
         showToast('Network error — try again.');
-        btn.textContent = 'CHECK NOW ⛳';
       }}
+      btn.textContent = 'CHECK NOW ⛳';
       btn.disabled = false;
     }}
   </script>
@@ -1217,25 +1189,19 @@ def generate_html():
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
-async def check_course(course: dict, dates: list):
-    """Check all dates for a single course sequentially."""
-    print(f"\n{'#'*60}")
-    print(f"  {course['name']}")
-    print(f"{'#'*60}")
-    for d in dates:
-        await check_day(course, d)
-
-
 async def main():
     dates = get_upcoming_weekend_dates()
 
     print(f"\nTee Time Monitor")
     print(f"  Courses: {', '.join(c['name'] for c in COURSES)}")
-    print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}")
-    print(f"  Mode:    Concurrent (courses run in parallel)\n")
+    print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}\n")
 
-    # Run all courses concurrently, dates sequential within each course
-    await asyncio.gather(*[check_course(course, dates) for course in COURSES])
+    for course in COURSES:
+        print(f"\n{'#'*60}")
+        print(f"  {course['name']}")
+        print(f"{'#'*60}")
+        for d in dates:
+            await check_day(course, d)
 
     print("\n" + "="*60)
     print("Generating index.html...")
