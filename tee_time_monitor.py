@@ -1024,8 +1024,7 @@ def generate_html():
       transition: all 0.2s;
       box-shadow: 0 4px 16px rgba(232,185,74,0.4);
     }}
-    .check-now-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
-    .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; transform: none; }}
+      .book-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
 
     /* ── Minutes ago ── */
     .mins-ago {{
