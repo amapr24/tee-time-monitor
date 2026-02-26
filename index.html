@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="300">
+  <meta name="format-detection" content="telephone=no">
   <title>Tee Time Watch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
@@ -111,7 +112,7 @@
       font-style: normal;
     }
     .subtitle {
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       color: rgba(255,255,255,0.5);
       margin-top: 12px;
       letter-spacing: 0.2em;
@@ -120,7 +121,7 @@
     }
     .window-tag {
       color: var(--gold);
-      font-size: 0.7rem;
+      font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       padding: 6px 0 8px;
@@ -132,7 +133,7 @@
       background: var(--green-mid);
       text-align: center;
       padding: 10px 24px;
-      font-size: 0.78rem;
+      font-size: 0.88rem;
       color: rgba(255,255,255,0.65);
       letter-spacing: 0.04em;
       border-bottom: 3px solid var(--gold);
@@ -185,10 +186,15 @@
       line-height: 1;
     }
     .course-meta {
-      font-size: 0.7rem;
+      font-size: 0.78rem;
       color: rgba(255,255,255,0.55);
       letter-spacing: 0.04em;
       margin-top: 4px;
+    }
+    /* Prevent browsers auto-linking phone numbers with blue link color */
+    .card-header a {
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
     }
 
     /* ── Day block ── */
@@ -501,7 +507,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>10:43 PM ET, Wednesday February 25, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>11:47 PM ET, Wednesday February 25, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
@@ -561,7 +567,7 @@
                 <span class="day-name">Sunday, Mar 1</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-01&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">11:24 AM</span><span class="slot">2:20 PM</span><span class="slot">2:28 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">2:20 PM</span><span class="slot">2:28 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -613,7 +619,8 @@
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
-    Monitoring 3 courses · Fri–Sun · Times shown in ET · © 2026 Tee Time Watch
+    Monitoring 3 courses · Fri–Sun · Times shown in ET<br>
+    © 2026 Tee Time Watch
   </footer>
 
   <div class="toast" id="toast"></div>
@@ -623,7 +630,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772077421 * 1000);
+      const lastRun = new Date(1772081265 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
