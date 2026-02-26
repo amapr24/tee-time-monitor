@@ -126,7 +126,8 @@
       font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: 6px 0 8px;
+      #padding: 6px 0 8px;
+      padding: 14px 0 0px;
       display: block;
     }
 
@@ -313,7 +314,7 @@
       background: var(--gold);
       color: var(--green-deep);
       border: none;
-      height: 40px;
+      height: 32px;
       width: 180px;
       display: inline-flex;
       align-items: center;
@@ -327,7 +328,8 @@
       transition: all 0.2s;
       box-shadow: 0 4px 16px rgba(232,185,74,0.4);
     }
-    .check-now-btn:hover { background: var(--gold-dark); transform: translateY(-2px); }
+    #.check-now-btn:hover { background: var(--gold-dark); transform: translateY(-2px); }
+    .check-now-btn:hover { background: var(--gold-dark); color: var(--green-deep); transform: none; }
     .check-now-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
     /* ── Minutes ago ── */
@@ -515,7 +517,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>9:33 AM ET, Thursday February 26, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>10:16 AM ET, Thursday February 26, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
@@ -530,7 +532,8 @@
           <div class="card-header">
             <div class="course-name">Miami Lakes</div>
             <div class="course-meta">6801 Miami Lakes Dr, Miami Lakes</div>
-            <div class="course-meta">(305) 558-4653</div>
+            <div class="course-meta"><a href="tel:(305) 558-4653">(305) 558-4653</a></div>
+            #<div class="course-meta">(305) 558-4653</div>
           </div>
           
             <div class="day-block">
@@ -559,7 +562,8 @@
           <div class="card-header">
             <div class="course-name">Normandy Shores</div>
             <div class="course-meta">2401 Biarritz Dr, Miami Beach</div>
-            <div class="course-meta">(305) 868-6502</div>
+            <div class="course-meta"><a href="tel:(305) 868-6502">(305) 868-6502</a></div>
+            #<div class="course-meta">(305) 868-6502</div>
           </div>
           
             <div class="day-block">
@@ -581,14 +585,15 @@
                 <span class="day-name">Sunday, Mar 1</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-01&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">12:52 PM</span><span class="slot">2:20 PM</span><span class="slot">2:28 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">2:44 PM</span></div>
             </div>
         </div>
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">Miami Shores</div>
             <div class="course-meta">10000 Biscayne Blvd, Miami Shores</div>
-            <div class="course-meta">(305) 795-2369</div>
+            <div class="course-meta"><a href="tel:(305) 795-2369">(305) 795-2369</a></div>
+            #<div class="course-meta">(305) 795-2369</div>
           </div>
           
             <div class="day-block">
@@ -642,7 +647,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772116436 * 1000);
+      const lastRun = new Date(1772119015 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
