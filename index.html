@@ -311,11 +311,11 @@
       display: none;
     }
     .check-now-btn {
-      background: var(--gold);
-      color: var(--green-deep);
-      border: none;
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid rgba(232,185,74,0.35);      
       height: 32px;
-      width: 180px;
+      width: 180px;  
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -326,9 +326,9 @@
       border-radius: 40px;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 4px 16px rgba(232,185,74,0.4);
     }
-      .book-btn:hover { background: var(--gold); color: var(--green-deep); border-color: var(--gold); }
+    .check-now-btn:hover { background: var(--gold); color: var(--green-deep); border-color: var(--gold); }
+    .check-now-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
     /* ── Minutes ago ── */
     .mins-ago {
@@ -515,7 +515,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>10:39 AM ET, Thursday February 26, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>10:49 AM ET, Thursday February 26, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
@@ -581,7 +581,7 @@
                 <span class="day-name">Sunday, Mar 1</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-01&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:44 PM</span></div>
+              <div class="slots"><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -642,7 +642,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772120396 * 1000);
+      const lastRun = new Date(1772120968 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
