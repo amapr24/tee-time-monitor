@@ -1198,7 +1198,7 @@ def generate_html():
     <div class="header-inner">
       <span class="header-flag">⛳</span>
       <div>
-        <h1>TEE <em>TIME</em><br> WATCH</h1>
+        <h1>TEE TIME<br><em>WATCH</em></h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
         <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
       </div>
