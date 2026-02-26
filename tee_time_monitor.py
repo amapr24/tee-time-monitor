@@ -700,6 +700,7 @@ def generate_html():
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="300">
+  <meta name="format-detection" content="telephone=no">
   <title>Tee Time Watch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
@@ -807,7 +808,7 @@ def generate_html():
       font-style: normal;
     }}
     .subtitle {{
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       color: rgba(255,255,255,0.5);
       margin-top: 12px;
       letter-spacing: 0.2em;
@@ -816,7 +817,7 @@ def generate_html():
     }}
     .window-tag {{
       color: var(--gold);
-      font-size: 0.7rem;
+      font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       padding: 6px 0 8px;
@@ -828,7 +829,7 @@ def generate_html():
       background: var(--green-mid);
       text-align: center;
       padding: 10px 24px;
-      font-size: 0.78rem;
+      font-size: 0.88rem;
       color: rgba(255,255,255,0.65);
       letter-spacing: 0.04em;
       border-bottom: 3px solid var(--gold);
@@ -881,10 +882,15 @@ def generate_html():
       line-height: 1;
     }}
     .course-meta {{
-      font-size: 0.7rem;
+      font-size: 0.78rem;
       color: rgba(255,255,255,0.55);
       letter-spacing: 0.04em;
       margin-top: 4px;
+    }}
+    /* Prevent browsers auto-linking phone numbers with blue link color */
+    .card-header a {{
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
     }}
 
     /* ── Day block ── */
@@ -1222,7 +1228,8 @@ def generate_html():
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
-    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
+    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET<br>
+    © {datetime.now(ET).year} Tee Time Watch
   </footer>
 
   <div class="toast" id="toast"></div>
