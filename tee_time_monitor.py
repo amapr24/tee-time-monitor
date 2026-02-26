@@ -689,7 +689,8 @@ def generate_html():
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
             <div class="course-meta">{course.get("address","")}</div>
-            <div class="course-meta">{course.get("phone","")}</div>
+            <div class="course-meta"><a href="tel:{course.get('phone','')}">{course.get('phone','')}</a></div>
+            #<div class="course-meta">{course.get("phone","")}</div>
           </div>
           {days_html}
         </div>"""
@@ -822,7 +823,8 @@ def generate_html():
       font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      padding: 6px 0 8px;
+      #padding: 6px 0 8px;
+      padding: 14px 0 0px;
       display: block;
     }}
 
@@ -1009,7 +1011,7 @@ def generate_html():
       background: var(--gold);
       color: var(--green-deep);
       border: none;
-      height: 40px;
+      height: 32px;
       width: 180px;
       display: inline-flex;
       align-items: center;
@@ -1023,7 +1025,8 @@ def generate_html():
       transition: all 0.2s;
       box-shadow: 0 4px 16px rgba(232,185,74,0.4);
     }}
-    .check-now-btn:hover {{ background: var(--gold-dark); transform: translateY(-2px); }}
+    #.check-now-btn:hover {{ background: var(--gold-dark); transform: translateY(-2px); }}
+    .check-now-btn:hover {{ background: var(--gold-dark); color: var(--green-deep); transform: none; }}
     .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; transform: none; }}
 
     /* ── Minutes ago ── */
