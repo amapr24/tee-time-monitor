@@ -841,7 +841,7 @@ def generate_html():
     /* ── Main grid ── */
     main {{
       max-width: 1100px;
-      margin: 32px auto 0;
+      margin: 0 auto;
       padding: 0 20px 20px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -918,15 +918,16 @@ def generate_html():
     .book-btn {{
       font-size: 0.72rem;
       font-weight: 600;
-      color: var(--green-deep);
-      background: var(--gold);
+      color: var(--gold-dark);
+      background: rgba(232, 185, 74, 0.12);
       text-decoration: none;
       padding: 5px 12px;
       border-radius: 20px;
+      border: 1px solid rgba(232, 185, 74, 0.35);
       transition: all 0.15s;
       letter-spacing: 0.04em;
     }}
-    .book-btn:hover {{ background: var(--gold-dark); }}
+    .book-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
 
     /* ── Slots ── */
     .slots {{
@@ -994,7 +995,7 @@ def generate_html():
     /* Top row: desktop only, sits just below the updated bar */
     .check-now-wrap-top {{
       text-align: center;
-      padding: 12px 24px 0;
+      padding: 14px 24px 14px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -1008,8 +1009,11 @@ def generate_html():
       background: var(--gold);
       color: var(--green-deep);
       border: none;
-      padding: 10px 0;
+      height: 40px;
       width: 180px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1rem;
@@ -1088,11 +1092,11 @@ def generate_html():
       .header-inner {{ gap: 12px; }}
       h1 {{ font-size: 3.2rem; letter-spacing: 0.05em; white-space: normal; }}
       h1 br {{ display: inline; }}
-      .subtitle {{ font-size: 0.65rem; margin-top: 5px; letter-spacing: 1.5px; }}
-      .window-tag {{ font-size: 0.65rem; letter-spacing: 0.1em; padding: 4px 0 5px; }}
+      .subtitle {{ font-size: 0.76rem; margin-top: 5px; letter-spacing: 1.5px; }}
+      .window-tag {{ font-size: 0.74rem; letter-spacing: 0.1em; padding: 4px 0 5px; }}
 
       /* Updated bar */
-      .updated-bar {{ font-size: 0.7rem; padding: 6px 15px; }}
+      .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
 
       /* Grid — already collapses to 1 col via auto-fit, just tighten margins */
       main {{ margin: 15px auto 0; padding: 0 12px; gap: 15px; }}
@@ -1103,29 +1107,29 @@ def generate_html():
       .card-header {{ padding: 12px 15px; }}
       .card-header::before {{ font-size: 1.8rem; opacity: 0.12; top: 8px; right: 12px; }}
       .course-name {{ font-size: 1.5rem; }}
-      .course-meta {{ font-size: 0.6rem; }}
+      .course-meta {{ font-size: 0.68rem; }}
 
       /* Day block — make room for the absolutely-positioned book button */
       .day-block {{ padding: 10px 15px; min-height: 58px; position: relative; }}
       .day-header {{ margin-bottom: 6px; }}
-      .day-name {{ font-size: 0.7rem; }}
+      .day-name {{ font-size: 0.75rem; }}
 
-      /* Book button — reposition to top-right corner, subtle style */
+      /* Book button — solid gold pill on mobile (more tappable, no hover) */
       .book-btn {{
         position: absolute;
         top: 10px;
         right: 12px;
         font-size: 0.6rem;
         font-weight: 700;
-        background: rgba(232, 185, 74, 0.15);
-        color: var(--gold-dark);
-        padding: 3px 8px;
-        border-radius: 4px;
-        border: 1px solid rgba(232, 185, 74, 0.35);
+        background: var(--gold);
+        color: var(--green-deep);
+        padding: 3px 10px;
+        border-radius: 20px;
+        border: none;
         width: auto;
       }}
       .book-btn:hover {{
-        background: var(--gold);
+        background: var(--gold-dark);
         color: var(--green-deep);
       }}
 
@@ -1137,7 +1141,7 @@ def generate_html():
         border-radius: 4px;
         min-width: auto;
       }}
-      .no-times {{ font-size: 0.7rem; }}
+      .no-times {{ font-size: 0.75rem; }}
 
       /* Hide callout strip on mobile */
       .callout-strip {{ display: none; }}
@@ -1198,7 +1202,7 @@ def generate_html():
     <div class="header-inner">
       <span class="header-flag">⛳</span>
       <div>
-        <h1>TEE TIME <br><em>WATCH</em></h1>
+        <h1>TEE <em>TIME</em><br> WATCH</h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
         <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
       </div>
