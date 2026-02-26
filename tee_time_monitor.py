@@ -802,7 +802,9 @@ def generate_html():
       letter-spacing: 0.08em;
       line-height: 0.9;
       position: relative;
+      white-space: nowrap;
     }}
+    h1 br {{ display: none; }}
     h1 em {{
       color: var(--gold);
       font-style: normal;
@@ -1084,7 +1086,8 @@ def generate_html():
       header::after {{ height: 6px; }}
       .header-flag, .header-golfer {{ font-size: 3rem; }}
       .header-inner {{ gap: 12px; }}
-      h1 {{ font-size: 3.2rem; letter-spacing: 0.05em; }}
+      h1 {{ font-size: 3.2rem; letter-spacing: 0.05em; white-space: normal; }}
+      h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.65rem; margin-top: 5px; letter-spacing: 1.5px; }}
       .window-tag {{ font-size: 0.65rem; letter-spacing: 0.1em; padding: 4px 0 5px; }}
 
@@ -1195,7 +1198,7 @@ def generate_html():
     <div class="header-inner">
       <span class="header-flag">⛳</span>
       <div>
-        <h1>TEE TIME<br><em>WATCH</em></h1>
+        <h1>TEE <em>TIME</em><br> WATCH</h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
         <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
       </div>
