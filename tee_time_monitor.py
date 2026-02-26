@@ -754,7 +754,7 @@ def generate_html():
     /* ── Header ── */
     header {{
       background: var(--green-deep);
-      padding: 48px 30px;
+      padding: 32px 30px;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -785,7 +785,7 @@ def generate_html():
       position: relative;
     }}
     .header-flag, .header-golfer {{
-      font-size: 6rem;
+      font-size: 4.5rem;
       flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
@@ -953,8 +953,8 @@ def generate_html():
     /* ── Callout strip ── */
     .callout-strip {{
       background: var(--green-deep);
-      padding: 28px 24px;
-      margin: 32px 20px 0;
+      padding: 14px 24px;
+      margin: 20px 20px 0;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -966,7 +966,7 @@ def generate_html():
     }}
     .callout-quote {{
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1.4rem, 4vw, 2.2rem);
+      font-size: clamp(1rem, 3vw, 1.5rem);
       color: var(--gold);
       letter-spacing: 0.1em;
       text-align: center;
@@ -974,39 +974,43 @@ def generate_html():
     }}
     .callout-quote span {{
       color: rgba(255,255,255,0.4);
-      font-size: 0.6em;
+      font-size: 0.55em;
       display: block;
       letter-spacing: 0.2em;
       font-family: 'DM Sans', sans-serif;
       font-weight: 300;
-      margin-top: 4px;
+      margin-top: 2px;
     }}
     .callout-divider {{
       width: 1px;
-      height: 40px;
+      height: 28px;
       background: rgba(255,255,255,0.15);
       flex-shrink: 0;
     }}
 
     /* ── Check Now buttons ── */
-    .check-now-wrap {{
+    /* Top row: desktop only, sits just below the updated bar */
+    .check-now-wrap-top {{
       text-align: center;
-      padding: 36px 24px 16px;
+      padding: 12px 24px 0;
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
+      gap: 12px;
+    }}
+    /* Bottom row: hidden on desktop, shown on mobile */
+    .check-now-wrap-bottom {{
+      display: none;
     }}
     .check-now-btn {{
       background: var(--gold);
       color: var(--green-deep);
       border: none;
-      padding: 14px 0;
-      width: 200px;
+      padding: 10px 0;
+      width: 180px;
       flex-shrink: 0;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
+      font-size: 1rem;
       letter-spacing: 0.12em;
       border-radius: 40px;
       cursor: pointer;
@@ -1015,14 +1019,6 @@ def generate_html():
     }}
     .check-now-btn:hover {{ background: var(--gold-dark); transform: translateY(-2px); }}
     .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; transform: none; }}
-
-    .trigger-msg {{
-      width: 100%;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-mid);
-      min-height: 1.2em;
-    }}
 
     /* ── Minutes ago ── */
     .mins-ago {{
@@ -1140,12 +1136,17 @@ def generate_html():
       }}
       .no-times {{ font-size: 0.7rem; }}
 
-      /* Hide callout strip and trigger message on mobile */
+      /* Hide callout strip on mobile */
       .callout-strip {{ display: none; }}
-      .trigger-msg {{ display: none; }}
 
-      /* Check Now buttons — inverted style, auto width */
-      .check-now-wrap {{ padding: 20px; gap: 10px; }}
+      /* Hide top buttons on mobile, show bottom ones instead */
+      .check-now-wrap-top {{ display: none; }}
+      .check-now-wrap-bottom {{
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        gap: 10px;
+      }}
       .check-now-btn {{
         background: var(--green-deep);
         color: var(--gold);
@@ -1206,6 +1207,12 @@ def generate_html():
     Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
+  <!-- Desktop: buttons sit just below the updated bar, above the cards -->
+  <div class="check-now-wrap-top">
+    <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
+    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
+  </div>
+
   <main>
     {cards_html}
   </main>
@@ -1218,12 +1225,10 @@ def generate_html():
     <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
   </div>
 
-  <div class="check-now-wrap">
+  <!-- Mobile: buttons sit below the cards -->
+  <div class="check-now-wrap-bottom">
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
-  </div>
-  <div style="text-align:center; margin-top:8px;">
-    <div class="trigger-msg" id="trigger-msg"></div>
   </div>
 
   <footer>
@@ -1260,9 +1265,10 @@ def generate_html():
 
     // ── Check Now ──
     async function triggerCheck() {{
-      const btn = document.querySelector('.check-now-btn');
-      btn.disabled = true;
-      btn.textContent = 'TRIGGERING… ⛳';
+      const btns = document.querySelectorAll('.check-now-btn');
+      btns.forEach(b => {{ b.disabled = true; }});
+      // Update whichever set is visible
+      btns.forEach(b => {{ if (b.textContent.includes('CHECK')) b.textContent = 'TRIGGERING… ⛳'; }});
       try {{
         const resp = await fetch('/api/trigger', {{ method: 'POST' }});
         const data = await resp.json();
@@ -1274,8 +1280,7 @@ def generate_html():
       }} catch (e) {{
         showToast('Network error — try again.');
       }}
-      btn.textContent = 'CHECK NOW ⛳';
-      btn.disabled = false;
+      btns.forEach(b => {{ b.disabled = false; if (b.textContent.includes('TRIGGERING')) b.textContent = 'CHECK NOW ⛳'; }});
     }}
   </script>
 
