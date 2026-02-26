@@ -1007,11 +1007,11 @@ def generate_html():
       display: none;
     }}
     .check-now-btn {{
-      background: var(--gold);
-      color: var(--green-deep);
-      border: none;
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid rgba(232,185,74,0.35);      
       height: 32px;
-      width: 180px;
+      width: 180px;  
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1022,9 +1022,9 @@ def generate_html():
       border-radius: 40px;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 4px 16px rgba(232,185,74,0.4);
     }}
-      .book-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
+    .check-now-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
+    .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; }}
 
     /* ── Minutes ago ── */
     .mins-ago {{
