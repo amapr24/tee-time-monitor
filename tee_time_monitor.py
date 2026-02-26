@@ -620,86 +620,86 @@ async def check_day(course: dict, target_date: date):
 # ── HTML generator ────────────────────────────────────────────────────────────
 
 def generate_html():
+    """
+    Generates a static HTML dashboard for golf tee time availability.
+    """
     dates = get_upcoming_weekend_dates()
-    now_str = datetime.now(ET).strftime("%-I:%M %p ET, %A %B %-d, %Y")
-    now_ts  = int(datetime.now(ET).timestamp())
+    now = datetime.now(ET)
+    now_str = now.strftime("%-I:%M %p ET, %A %B %-d, %Y")
+    now_ts = int(now.timestamp())
 
-    # Build data structure: course -> date -> slots
+    # 1. Build data structure: course -> date -> slots
     course_data = []
     for course in COURSES:
         cache_file = CACHE_DIR / course["cache_file"]
         days = []
+        
         for d in dates:
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             slots = load_cache(cache_file, d)
-            # Build booking URL
+            
+            # Construct booking URL
             if course["type"] == "cpsgolf":
-                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
+                book_params = f"TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
+                book_url = f"{course['url']}?{book_params}"
             else:
                 book_url = (
                     f"{course['url']}?date={d.isoformat()}"
                     f"&step=teetimes&holes={course.get('holes', 18)}"
-                    f"&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
+                    f"&coursesIds=&deals=false"
+                    f"&groupSize={course.get('group_size', 4)}"
                 )
+            
             days.append({
-                "date":     d,
-                "label":    d.strftime("%A, %b %-d"),
-                "slots":    slots,
+                "date": d,
+                "label": d.strftime("%a, %b %-d"),
+                "slots": slots,
                 "book_url": book_url,
             })
+            
         course_data.append({"course": course, "days": days})
-  
-    # Grab sunset info for the first date to use in the header
-    first_date = dates[0]
-    s = sun(MIAMI.observer, date=first_date, tzinfo=ET)
-    actual_sunset = s["sunset"].strftime("%-I:%M %p") # e.g., "6:14 PM"
-    
-    # Calculate display boundaries
-    repr_cutoff = get_sunset_cutoff(first_date, COURSES[0]["tee_time_max"])
-    end_hour = repr_cutoff + 1
-    end_ampm = f"{end_hour % 12 or 12}:00 {'AM' if end_hour < 12 else 'PM'}"
-    start_ampm = f"{COURSES[0]['tee_time_min'] % 12 or 12}:00 AM"
 
-    # Build course cards HTML
+    # 2. Build course cards HTML
     cards_html = ""
     for cd in course_data:
         course = cd["course"]
         days_html = ""
+        
         for day in cd["days"]:
             if day["slots"]:
-                times_html = "".join(
-                    f'<span class="slot">{s.get("time","?")}'
-                    f'{(" · " + s["price"]) if s.get("price") else ""}</span>'
-                    for s in day["slots"]
-                )
+                times_list = []
+                for s in day["slots"]:
+                    price = f" · {s['price']}" if s.get("price") else ""
+                    times_list.append(f'<span class="slot">{s.get("time", "?")}{price}</span>')
+                times_html = "".join(times_list)
                 day_body = f'<div class="slots">{times_html}</div>'
             else:
                 day_body = '<p class="no-times">No times available</p>'
 
             days_html += f"""
             <div class="day-block">
-              <div class="day-header">
-                <span class="day-name">{day["label"]}</span>
-                <a class="book-btn" href="{day["book_url"]}" target="_blank">Book →</a>
-              </div>
-              {day_body}
+                <a class="book-btn-float" href="{day["book_url"]}" target="_blank">BOOK →</a>
+                <div class="day-name">{day["label"]}</div>
+                {day_body}
             </div>"""
 
-        # Compute a representative cutoff for the card header (use first date)
-        repr_cutoff = get_sunset_cutoff(cd["days"][0]["date"], course["tee_time_max"]) if cd["days"] else course["tee_time_max"]
-        cutoff_ampm = f"{repr_cutoff % 12 or 12}:00 {'AM' if repr_cutoff < 12 else 'PM'}"
+        # Time formatting logic
+        repr_date = cd["days"][0]["date"] if cd["days"] else None
+        repr_cutoff = get_sunset_cutoff(repr_date, course["tee_time_max"]) if repr_date else course["tee_time_max"]
+        period = "AM" if repr_cutoff < 12 else "PM"
+        cutoff_ampm = f"{repr_cutoff % 12 or 12}:00 {period}"
 
         cards_html += f"""
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
-            <div class="course-meta">{course.get("address","")}</div>
-            <div class="course-meta">{course.get("phone","")}</div>
-            <div class="course-meta">{""}</div>
+            <div class="course-meta">{course.get("address", "")}</div>
+            <span class="window-tag-small">⏱ {course["tee_time_min"]}AM – {cutoff_ampm}</span>
           </div>
           {days_html}
         </div>"""
 
+    # 3. Final HTML assembly
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -708,504 +708,353 @@ def generate_html():
   <meta http-equiv="refresh" content="300">
   <title>Tee Time Watch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    *, 
+    *::before, 
+    *::after {{ 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }}
 
     :root {{
-      --green-deep:   #0d2b1a;
-      --green-mid:    #1a5c32;
-      --green-light:  #2e8b4f;
-      --green-pale:   #d4eddc;
-      --fairway:      #3a7d44;
-      --white:        #ffffff;
-      --cream:        #f5f0e8;
-      --gold:         #e8b94a;
-      --gold-dark:    #c49a28;
-      --text-dark:    #0d2b1a;
-      --text-mid:     #3a5c42;
-      --text-light:   #7a9485;
+      --green-deep: #0d2b1a;
+      --green-mid: #1a5c32;
+      --green-light: #2e8b4f;
+      --green-pale: #d4eddc;
+      --fairway: #3a7d44;
+      --white: #ffffff;
+      --cream: #f5f0e8;
+      --gold: #e8b94a;
+      --gold-dark: #c49a28;
+      --text-dark: #0d2b1a;
+      --text-mid: #3a5c42;
+      --text-light: #7a9485;
     }}
 
-    body {{
-      font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
-      color: var(--text-dark);
-      min-height: 100vh;
-      overflow-x: hidden;
+    body {{ 
+      font-family: 'DM Sans', sans-serif; 
+      background: var(--cream); 
+      color: var(--text-dark); 
+      min-height: 100vh; 
+      font-size: 0.9rem; 
     }}
 
-    /* ── Scrolling ticker ── */
-    .ticker {{
-      background: var(--gold);
-      color: var(--green-deep);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.15em;
-      padding: 6px 0;
-      overflow: hidden;
-      white-space: nowrap;
-    }}
-    .ticker-inner {{
-      display: inline-block;
-      animation: ticker 36s linear infinite;
-    }}
-    .ticker-inner span {{ margin: 0 48px; }}
-    @keyframes ticker {{
-      0%   {{ transform: translateX(0); }}
-      100% {{ transform: translateX(-50%); }}
+    /* Ticker Styles */
+    .ticker {{ 
+      background: var(--gold); 
+      color: var(--green-deep); 
+      font-family: 'Bebas Neue', sans-serif; 
+      font-size: 0.85rem; 
+      padding: 4px 0; 
+      overflow: hidden; 
+      white-space: nowrap; 
     }}
 
-    /* ── Header ── */
-    header {{
-      background: var(--green-deep);
-      padding: 48px 30px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }}
-    header::after {{
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 12px;
-      background: repeating-linear-gradient(
-        90deg,
-        var(--fairway) 0px, var(--fairway) 8px,
-        var(--green-mid) 8px, var(--green-mid) 16px
-      );
-    }}
-    header::before {{
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size: 24px 24px;
-    }}
-    .header-inner {{
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 18px;
-      position: relative;
-    }}
-    .header-flag, .header-golfer {{
-      font-size: 6rem;
-      flex-shrink: 0;
-      animation: flagwave 3s ease-in-out infinite;
-      transform-origin: bottom center;
-    }}
-    .header-golfer {{ animation-direction: reverse; }}
-    @keyframes flagwave {{
-      0%, 100% {{ transform: rotate(-3deg); }}
-      50%       {{ transform: rotate(3deg); }}
-    }}
-    h1 {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(3.5rem, 10vw, 6rem);
-      color: var(--white);
-      letter-spacing: 0.08em;
-      line-height: 0.9;
-      position: relative;
-    }}
-    h1 em {{
-      color: var(--gold);
-      font-style: normal;
-    }}
-    .subtitle {{
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.5);
-      margin-top: 12px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      position: relative;
+    .ticker-inner {{ 
+      display: inline-block; 
+      animation: ticker 36s linear infinite; 
     }}
 
-    /* ── Updated bar ── */
-    .updated-bar {{
-      background: var(--green-mid);
-      text-align: center;
-      padding: 10px 24px;
-      font-size: 0.78rem;
-      color: rgba(255,255,255,0.65);
-      letter-spacing: 0.04em;
-      border-bottom: 3px solid var(--gold);
-    }}
-    .updated-bar strong {{ color: var(--white); font-weight: 500; }}
-
-    /* ── Main grid ── */
-    main {{
-      max-width: 1100px;
-      margin: 32px auto 0;
-      padding: 0 20px 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      align-items: start;
+    .ticker-inner span {{ 
+      margin: 0 30px; 
     }}
 
-    /* ── Course card ── */
-    .course-card {{
-      background: var(--white);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
-      transition: transform 0.2s, box-shadow 0.2s;
-      border: 1px solid rgba(13,43,26,0.06);
-    }}
-    .course-card:hover {{
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(13,43,26,0.18), 0 2px 8px rgba(13,43,26,0.1);
-    }}
-    .card-header {{
-      background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
-      padding: 20px 20px 0;
-      position: relative;
-      overflow: hidden;
-    }}
-    /* ── Course card header ── */
-    .card-header {{
-      background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
-      padding: 20px 24px 0;
-      position: relative;
-      overflow: hidden;
-    }}
-    .card-header::before {{
-      content: '⛳';
-      position: absolute;
-      right: 16px;
-      top: 12px;
-      font-size: 2.5rem;
-      opacity: 0.15;
-    }}
-    .course-name {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.8rem;
-      color: var(--white);
-      letter-spacing: 0.06em;
-      line-height: 1;
-    }}
-    .course-meta {{
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.55);
-      letter-spacing: 0.04em;
-      margin-top: 4px;
-    }}
-    .window-tag {{
-      color: var(--gold);
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 6px 0 8px;
-      display: block;
+    @keyframes ticker {{ 
+      0% {{ transform: translateX(0); }} 
+      100% {{ transform: translateX(-50%); }} 
     }}
 
-    /* ── Day block ── */
-    .day-block {{
-      padding: 14px 20px;
-      border-bottom: 1px solid #edf5f0;
-      background: var(--white);
+    /* Header Styles */
+    header {{ 
+      background: var(--green-deep); 
+      padding: 20px 15px; 
+      text-align: center; 
+      position: relative; 
+      border-bottom: 4px solid var(--fairway); 
     }}
-    .day-block:last-child {{ border-bottom: none; }}
-    .day-header {{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 15px;
+
+    .header-inner {{ 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 12px; 
     }}
-    .day-name {{
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-mid);
+
+    .header-flag, 
+    .header-golfer {{ 
+      font-size: 3rem; 
+      animation: flagwave 3s ease-in-out infinite; 
     }}
-    .book-btn {{
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--green-deep);
-      background: var(--gold);
+
+    @keyframes flagwave {{ 
+      0%, 100% {{ transform: rotate(-3deg); }} 
+      50% {{ transform: rotate(3deg); }} 
+    }}
+    
+    h1 {{ 
+      font-family: 'Bebas Neue', sans-serif; 
+      font-size: 3.2rem; 
+      color: var(--white); 
+      line-height: 0.85; 
+      letter-spacing: 0.05em; 
+    }}
+
+    h1 em {{ 
+      color: var(--gold); 
+      font-style: normal; 
+    }}
+
+    .subtitle {{ 
+      font-size: 0.65rem; 
+      color: rgba(255,255,255,0.4); 
+      margin-top: 5px; 
+      text-transform: uppercase; 
+      letter-spacing: 1.5px; 
+    }}
+
+    .updated-bar {{ 
+      background: var(--green-mid); 
+      text-align: center; 
+      padding: 6px 15px; 
+      font-size: 0.7rem; 
+      color: rgba(255,255,255,0.7); 
+      border-bottom: 2px solid var(--gold); 
+    }}
+
+    .updated-bar strong {{ 
+      color: var(--white); 
+    }}
+
+    /* Layout & Cards */
+    main {{ 
+      max-width: 1100px; 
+      margin: 15px auto 0; 
+      padding: 0 12px; 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+      gap: 15px; 
+    }}
+
+    .course-card {{ 
+      background: var(--white); 
+      border-radius: 12px; 
+      overflow: hidden; 
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
+      border: 1px solid rgba(0,0,0,0.05); 
+      transition: transform 0.2s; 
+    }}
+
+    .card-header {{ 
+      background: linear-gradient(135deg, var(--green-deep), var(--green-mid)); 
+      padding: 12px 15px; 
+    }}
+
+    .course-name {{ 
+      font-family: 'Bebas Neue', sans-serif; 
+      font-size: 1.5rem; 
+      color: var(--white); 
+      line-height: 1; 
+    }}
+
+    .course-meta {{ 
+      font-size: 0.6rem; 
+      color: rgba(255,255,255,0.5); 
+    }}
+
+    .window-tag-small {{ 
+      color: var(--gold); 
+      font-size: 0.6rem; 
+      font-weight: bold; 
+      text-transform: uppercase; 
+      margin-top: 4px; 
+      display: block; 
+    }}
+
+    .day-block {{ 
+      padding: 10px 15px; 
+      border-bottom: 1px solid #f0f0f0; 
+      position: relative; 
+      min-height: 60px; 
+    }}
+
+    .day-name {{ 
+      font-size: 0.7rem; 
+      font-weight: 700; 
+      color: var(--text-mid); 
+      text-transform: uppercase; 
+      margin-bottom: 6px; 
+    }}
+    
+    .book-btn-float {{
+      position: absolute; 
+      top: 10px; 
+      right: 12px; 
+      font-size: 0.6rem; 
+      font-weight: bold;
+      background: rgba(232, 185, 74, 0.15); 
+      color: var(--gold-dark); 
       text-decoration: none;
-      padding: 5px 12px;
-      border-radius: 20px;
-      transition: all 0.15s;
-      letter-spacing: 0.04em;
-    }}
-    .book-btn:hover {{ background: var(--gold-dark); }}
-
-    /* ── Slots ── */
-    .slots {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }}
-    .slot {{
-      background: var(--green-pale);
-      color: var(--green-deep);
-      font-size: 0.82rem;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 6px;
-      font-variant-numeric: tabular-nums;
-      border: 1px solid rgba(46,139,79,0.2);
-      min-width: 82px;
-      text-align: center;
-    }}
-    .no-times {{
-      font-size: 0.82rem;
-      color: var(--text-light);
-      font-style: italic;
-    }}
-
-    /* ── Callout strip ── */
-    .callout-strip {{
-      background: var(--green-deep);
-      padding: 28px 24px;
-      margin: 32px 20px 0;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      max-width: 1060px;
-      margin-left: auto;
-      margin-right: auto;
-    }}
-    .callout-quote {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1.4rem, 4vw, 2.2rem);
-      color: var(--gold);
-      letter-spacing: 0.1em;
-      text-align: center;
-      flex: 1;
-    }}
-    .callout-quote span {{
-      color: rgba(255,255,255,0.4);
-      font-size: 0.6em;
-      display: block;
-      letter-spacing: 0.2em;
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 300;
-      margin-top: 4px;
-    }}
-    .callout-divider {{
-      width: 1px;
-      height: 40px;
-      background: rgba(255,255,255,0.15);
-      flex-shrink: 0;
-    }}
-    
-/* ── Check Now buttons ── */
-    .check-now-wrap {{
-      text-align: center;
-      padding: 36px 24px 16px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }}
-    .check-now-btn {{
-      background: var(--gold);
-      color: var(--green-deep);
-      border: none;
-      padding: 14px 0;
-      width: 200px;
-      flex-shrink: 0;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
-      letter-spacing: 0.12em;
-      border-radius: 40px;
-      cursor: pointer;
+      padding: 3px 8px; 
+      border-radius: 4px; 
+      border: 1px solid rgba(232, 185, 74, 0.3);
       transition: all 0.2s;
-      box-shadow: 0 4px 16px rgba(232,185,74,0.4);
     }}
-    .check-now-btn:hover {{ background: var(--gold-dark); transform: translateY(-2px); }}
-    .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; transform: none; }}
+
+    .book-btn-float:hover {{ 
+      background: var(--gold); 
+      color: var(--green-deep); 
+    }}
+
+    .slots {{ 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 4px; 
+      padding-right: 45px; 
+    }}
+
+    .slot {{ 
+      background: var(--green-pale); 
+      color: var(--green-deep); 
+      font-size: 0.75rem; 
+      font-weight: 600; 
+      padding: 4px 8px; 
+      border-radius: 4px; 
+      border: 1px solid rgba(46,139,79,0.1); 
+    }}
+
+    .no-times {{ 
+      font-size: 0.7rem; 
+      color: var(--text-light); 
+      font-style: italic; 
+    }}
+
+    /* Buttons & Footer */
+    .check-now-wrap {{ 
+      text-align: center; 
+      padding: 20px; 
+      display: flex; 
+      justify-content: center; 
+      gap: 10px; 
+    }}
+
+    .check-now-btn {{ 
+      background: var(--green-deep); 
+      color: var(--gold); 
+      border: 1px solid var(--gold); 
+      padding: 10px 20px; 
+      font-family: 'Bebas Neue', sans-serif; 
+      font-size: 1rem; 
+      border-radius: 30px; 
+      cursor: pointer; 
+    }}
     
-    @media (max-width: 600px) {{
-      .check-now-wrap {{
-        flex-direction: column;
-        gap: 12px;
-      }}
-      .check-now-btn {{
-        width: 100%;
-        max-width: 280px;
-      }}
+    footer {{ 
+      text-align: center; 
+      padding: 20px; 
+      font-size: 0.7rem; 
+      color: var(--text-light); 
     }}
 
-    .trigger-msg {{
-      width: 100%;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-mid);
-      min-height: 1.2em;
+    .toast {{ 
+      position: fixed; 
+      bottom: 20px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      background: var(--green-deep); 
+      color: white; 
+      padding: 10px 20px; 
+      border-radius: 20px; 
+      font-size: 0.8rem; 
+      border: 1px solid var(--gold); 
+      opacity: 0; 
+      transition: 0.3s; 
+      pointer-events: none; 
     }}
 
-    /* ── Minutes ago ── */
-    .mins-ago {{
-      font-size: 0.72rem;
-      color: var(--gold);
-      margin-left: 6px;
-      font-weight: 500;
-    }}
-
-    /* ── Toast ── */
-    .toast {{
-      position: fixed;
-      bottom: 32px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--green-deep);
-      color: var(--white);
-      padding: 12px 28px;
-      border-radius: 40px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      letter-spacing: 0.04em;
-      border: 1px solid var(--gold);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      opacity: 0;
-      z-index: 999;
-      white-space: nowrap;
-    }}
-    .toast.show {{
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }}
-
-    /* ── Footer ── */
-    footer {{
-      text-align: center;
-      padding: 32px 24px;
-      font-size: 0.75rem;
-      color: var(--text-light);
-      border-top: 2px solid rgba(13,43,26,0.08);
-      margin-top: 24px;
-    }}
-    .footer-fore {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.4rem;
-      color: var(--green-light);
-      letter-spacing: 0.2em;
-      display: block;
-      margin-bottom: 8px;
-      opacity: 0.4;
+    .toast.show {{ 
+      opacity: 1; 
     }}
   </style>
 </head>
 <body>
-
   <div class="ticker">
     <div class="ticker-inner">
-      <span>FORE! ⛳</span>
-      <span>TEE TIME WATCH 🏌️</span>
-      <span>MIAMI AREA GOLF ⛳</span>
-      <span>BOOK BEFORE THEY'RE GONE 🏌️</span>
-      <span>DON'T THREE PUTT ⛳</span>
-      <span>WEEKEND AVAILABILITY 🏌️</span>
-      <span>AVOID THREE PUTTS! ⛳</span>
-      <span>JUST BOOK THE TEE TIME 🏌️</span>
-      <span>FORE! ⛳</span>
-      <span>TEE TIME WATCH 🏌️</span>
-      <span>MIAMI AREA GOLF ⛳</span>
-      <span>BOOK BEFORE THEY'RE GONE 🏌️</span>
-      <span>DON'T THREE PUTT ⛳</span>
-      <span>WEEKEND AVAILABILITY 🏌️</span>
-      <span>AVOID THREE PUTTS! ⛳</span>
-      <span>JUST BOOK THE TEE TIME 🏌️</span>
+      <span>FORE! ⛳</span><span>TEE TIME WATCH 🏌️</span><span>MIAMI AREA GOLF ⛳</span><span>JUST BOOK THE TEE TIME 🏌️</span>
+      <span>FORE! ⛳</span><span>TEE TIME WATCH 🏌️</span><span>MIAMI AREA GOLF ⛳</span><span>JUST BOOK THE TEE TIME 🏌️</span>
     </div>
   </div>
 
   <header>
-      <div class="header-inner">
-        <span class="header-flag">⛳</span>
-        <div>
-          <h1>TEE TIME<br><em>WATCH</em></h1>
-          <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
-          <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
-        </div>
-        <span class="header-golfer">🏌️</span>
+    <div class="header-inner">
+      <span class="header-flag">⛳</span>
+      <div>
+        <h1>TEE TIME <em>WATCH</em></h1>
+        <p class="subtitle">Miami Area · Weekend Availability</p>
       </div>
+      <span class="header-golfer">🏌️</span>
+    </div>
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
+    Last run: <strong>{now_str}</strong><span id="mins-ago"></span>
   </div>
 
-  <main>
-    {cards_html}
-  </main>
-
-  <div class="callout-strip">
-    <div class="callout-quote">FORE!<span>heads up</span></div>
-    <div class="callout-divider"></div>
-    <div class="callout-quote">BOOK FAST<span>they go quick</span></div>
-    <div class="callout-divider"></div>
-    <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
-  </div>
+  <main>{cards_html}</main>
 
   <div class="check-now-wrap">
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
-    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
-  </div>
-  <div style="text-align:center; margin-top:8px;">
-    <div class="trigger-msg" id="trigger-msg"></div>
+    <button class="check-now-btn" onclick="location.reload()">REFRESH ↺</button>
   </div>
 
   <footer>
-    <span class="footer-fore">⛳ 🏌️ ⛳</span>
-    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
+    Monitoring {len(COURSES)} courses · © {now.year} Tee Time Watch
   </footer>
 
   <div class="toast" id="toast"></div>
 
   <script>
-    // ── Minutes ago counter ──
     (function() {{
       const el = document.getElementById('mins-ago');
-      if (!el) return;
       const lastRun = new Date({now_ts} * 1000);
+
       function update() {{
         const mins = Math.floor((Date.now() - lastRun) / 60000);
-        if (mins < 1)       el.textContent = ' · just now';
-        else if (mins < 60) el.textContent = ' · ' + mins + ' min' + (mins === 1 ? '' : 's') + ' ago';
-        else                el.textContent = ' · ' + Math.floor(mins/60) + 'h ago';
+        el.textContent = mins < 1 ? ' · just now' : ' · ' + mins + 'm ago';
       }}
+
       update();
       setInterval(update, 30000);
     }})();
 
-    // ── Toast helper ──
-    function showToast(msg, duration = 3500) {{
+    function showToast(msg) {{
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), duration);
+      setTimeout(() => t.classList.remove('show'), 3000);
     }}
 
-    // ── Check Now ──
     async function triggerCheck() {{
       const btn = document.querySelector('.check-now-btn');
       btn.disabled = true;
-      btn.textContent = 'TRIGGERING… ⛳';
+      btn.textContent = 'TRIGGERING...';
+      
       try {{
         const resp = await fetch('/api/trigger', {{ method: 'POST' }});
-        const data = await resp.json();
         if (resp.ok) {{
-          showToast('✓ Check triggered! Results update in ~2 mins.');
+          showToast('✓ Triggered! Updates in ~2 mins.');
         }} else {{
-          showToast('Error: ' + (data.error || 'unknown'));
+          showToast('Error triggering.');
         }}
       }} catch (e) {{
-        showToast('Network error — try again.');
+        showToast('Network error.');
+      }} finally {{
+        btn.textContent = 'CHECK NOW ⛳';
+        btn.disabled = false;
       }}
-      btn.textContent = 'CHECK NOW ⛳';
-      btn.disabled = false;
     }}
   </script>
-
 </body>
 </html>"""
 
