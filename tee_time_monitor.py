@@ -690,7 +690,6 @@ def generate_html():
             <div class="course-name">{course["name"]}</div>
             <div class="course-meta">{course.get("address","")}</div>
             <div class="course-meta"><a href="tel:{course.get('phone','')}">{course.get('phone','')}</a></div>
-            #<div class="course-meta">{course.get("phone","")}</div>
           </div>
           {days_html}
         </div>"""
@@ -1025,8 +1024,7 @@ def generate_html():
       transition: all 0.2s;
       box-shadow: 0 4px 16px rgba(232,185,74,0.4);
     }}
-    #.check-now-btn:hover {{ background: var(--gold-dark); transform: translateY(-2px); }}
-    .check-now-btn:hover {{ background: var(--gold-dark); color: var(--green-deep); transform: none; }}
+    .check-now-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
     .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; transform: none; }}
 
     /* ── Minutes ago ── */
