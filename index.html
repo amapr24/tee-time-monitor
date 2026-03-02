@@ -389,15 +389,18 @@
        ════════════════════════════════════════════ */
     @media (max-width: 767px) {
 
+      /* Ticker */
+      .ticker { font-size: 0.82rem; }
+
       /* Header — shrink padding and emojis */
       header { padding: 20px 15px; }
       header::after { height: 6px; }
-      .header-flag, .header-golfer { font-size: 3rem; }
-      .header-inner { gap: 12px; }
-      h1 { font-size: 3.2rem; letter-spacing: 0.05em; white-space: normal; }
+      .header-flag, .header-golfer { font-size: 2rem; }
+      .header-inner { gap: 8px; }
+      h1 { font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }
       h1 br { display: inline; }
-      .subtitle { font-size: 0.76rem; margin-top: 5px; letter-spacing: 1.5px; }
-      .window-tag { font-size: 0.74rem; letter-spacing: 0.1em; padding: 4px 0 5px; }
+      .subtitle { font-size: 0.84rem; margin-top: 5px; letter-spacing: 1.5px; }
+      .window-tag { font-size: 0.82rem; letter-spacing: 0.1em; padding: 4px 0 5px; }
 
       /* Updated bar */
       .updated-bar { font-size: 0.78rem; padding: 6px 15px; }
@@ -460,7 +463,7 @@
       }
       .check-now-btn {
         background: var(--green-deep);
-        color: var(--gold);
+        color: var(--white);
         border: 1px solid var(--gold);
         padding: 10px 24px;
         width: auto;
@@ -515,7 +518,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>12:02 AM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>12:17 AM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
@@ -545,7 +548,7 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=14" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:28 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -567,7 +570,7 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">1:00 PM</span><span class="slot">1:08 PM</span><span class="slot">1:16 PM</span><span class="slot">1:24 PM</span><span class="slot">1:32 PM</span><span class="slot">1:40 PM</span><span class="slot">1:48 PM</span><span class="slot">1:56 PM</span><span class="slot">2:04 PM</span><span class="slot">2:20 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">1:24 PM</span><span class="slot">1:32 PM</span><span class="slot">1:40 PM</span><span class="slot">1:48 PM</span><span class="slot">1:56 PM</span><span class="slot">2:04 PM</span><span class="slot">2:20 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -621,7 +624,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772427764 * 1000);
+      const lastRun = new Date(1772428648 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
