@@ -522,7 +522,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>10:58 AM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>11:22 AM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
@@ -567,14 +567,14 @@
                 <span class="day-name">Friday, Mar 6</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-06&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">9:32 AM</span><span class="slot">9:40 AM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">9:40 AM</span><span class="slot">2:52 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -628,7 +628,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772467131 * 1000);
+      const lastRun = new Date(1772468524 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
