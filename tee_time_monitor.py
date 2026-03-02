@@ -226,7 +226,7 @@ def send_email(subject: str, body: str):
 
 
 def notify(subject: str, body: str, push_msg: str):
-    send_email(subject, body)
+#    send_email(subject, body)
     send_pushover(subject, push_msg)
 
 # ── Browser launch helper (shared) ────────────────────────────────────────────
