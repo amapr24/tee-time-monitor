@@ -1236,7 +1236,7 @@ def generate_html():
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes &nbsp;·&nbsp; Last run:<br><strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
+     &nbsp;·&nbsp; Checked every 15 minutes &nbsp;·&nbsp; <br>Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
