@@ -1030,7 +1030,7 @@ def generate_html():
     }}
     .check-now-btn {{
       background: rgba(13, 43, 26, 0.5);
-      color: var(--white);
+      color: var(--gold);
       border: 1px solid rgba(232,185,74,0.55);
       height: 32px;
       width: 180px;  
@@ -1114,7 +1114,8 @@ def generate_html():
       header {{ padding: 14px 12px; }}
       header::after {{ height: 6px; }}
       .header-inner {{ gap: 8px; align-items: flex-start; }}
-      .header-flag, .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; }}
+      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-left: 12px; }}
+      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-right: 12px; }}
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
