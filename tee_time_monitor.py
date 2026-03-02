@@ -1113,8 +1113,8 @@ def generate_html():
       /* Header — shrink padding and emojis */
       header {{ padding: 14px 12px; }}
       header::after {{ height: 6px; }}
-      .header-flag, .header-golfer {{ font-size: 2.8rem; align-self: center; }}
-      .header-inner {{ gap: 8px; }}
+      .header-inner {{ gap: 8px; align-items: flex-start; }}
+      .header-flag, .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; }}
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
@@ -1236,7 +1236,7 @@ def generate_html():
   </header>
 
   <div class="updated-bar">
-     &nbsp;·&nbsp; Checked every 15 minutes &nbsp;·&nbsp; <br>Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
