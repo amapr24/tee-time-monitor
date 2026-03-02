@@ -800,20 +800,30 @@ def generate_html():
       background-size: 24px 24px;
     }}
     .header-inner {{
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      gap: 18px;
       position: relative;
       width: 100%;
       max-width: 700px;
       margin: 0 auto;
     }}
-    .header-flag, .header-golfer {{
+    .header-flag {{
       font-size: 4.5rem;
       flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
+      justify-self: end;
+      padding-right: 18px;
+    }}
+    .header-golfer {{
+      font-size: 4.5rem;
+      flex-shrink: 0;
+      animation: flagwave 3s ease-in-out infinite;
+      transform-origin: bottom center;
+      animation-direction: reverse;
+      justify-self: start;
+      padding-left: 18px;
     }}
     .header-golfer {{ animation-direction: reverse; }}
     @keyframes flagwave {{
@@ -1116,9 +1126,9 @@ def generate_html():
       /* Header — shrink padding and emojis */
       header {{ padding: 14px 28px; }}
       header::after {{ height: 6px; }}
-      .header-inner {{ gap: 8px; align-items: flex-start; max-width: 100%; }}
-      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-left: 0; }}
-      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-right: 0; }}
+      .header-inner {{ align-items: flex-start; max-width: 100%; }}
+      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-right: 8px; }}
+      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-left: 8px; }}
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
