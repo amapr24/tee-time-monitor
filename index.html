@@ -84,9 +84,12 @@
     .header-inner {
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       gap: 18px;
       position: relative;
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
     }
     .header-flag, .header-golfer {
       font-size: 4.5rem;
@@ -393,11 +396,11 @@
       .ticker { font-size: 0.82rem; }
 
       /* Header — shrink padding and emojis */
-      header { padding: 14px 12px; }
+      header { padding: 14px 28px; }
       header::after { height: 6px; }
-      .header-inner { gap: 8px; align-items: flex-start; }
-      .header-flag { font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-left: 12px; }
-      .header-golfer { font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-right: 12px; }
+      .header-inner { gap: 8px; align-items: flex-start; max-width: 100%; }
+      .header-flag { font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-left: 0; }
+      .header-golfer { font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-right: 0; }
       h1 { font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }
       h1 br { display: inline; }
       .subtitle { font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }
@@ -519,7 +522,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>10:20 AM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>11:45 AM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
@@ -542,7 +545,7 @@
                 <span class="day-name">Friday, Mar 6</span>
                 <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=14" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:52 PM</span></div>
+              <p class="no-times">No times available</p>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -564,14 +567,14 @@
                 <span class="day-name">Friday, Mar 6</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-06&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">9:40 AM</span><span class="slot">2:52 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:20 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <div class="slots"><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -593,7 +596,7 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">1:58 PM</span><span class="slot">2:06 PM</span><span class="slot">2:14 PM</span><span class="slot">2:22 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+              <div class="slots"><span class="slot">2:06 PM</span><span class="slot">2:14 PM</span><span class="slot">2:22 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
             </div>
         </div>
   </main>
@@ -625,7 +628,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772464806 * 1000);
+      const lastRun = new Date(1772469920 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';

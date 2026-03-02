@@ -226,7 +226,7 @@ def send_email(subject: str, body: str):
 
 
 def notify(subject: str, body: str, push_msg: str):
-    send_email(subject, body)
+#    send_email(subject, body)
     send_pushover(subject, push_msg)
 
 # ── Browser launch helper (shared) ────────────────────────────────────────────
@@ -802,9 +802,12 @@ def generate_html():
     .header-inner {{
       display: flex;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       gap: 18px;
       position: relative;
+      width: 100%;
+      max-width: 700px;
+      margin: 0 auto;
     }}
     .header-flag, .header-golfer {{
       font-size: 4.5rem;
@@ -1111,11 +1114,11 @@ def generate_html():
       .ticker {{ font-size: 0.82rem; }}
 
       /* Header — shrink padding and emojis */
-      header {{ padding: 14px 12px; }}
+      header {{ padding: 14px 28px; }}
       header::after {{ height: 6px; }}
-      .header-inner {{ gap: 8px; align-items: flex-start; }}
-      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-left: 12px; }}
-      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-right: 12px; }}
+      .header-inner {{ gap: 8px; align-items: flex-start; max-width: 100%; }}
+      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-left: 0; }}
+      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-right: 0; }}
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
