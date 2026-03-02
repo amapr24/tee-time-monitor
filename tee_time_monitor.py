@@ -1029,9 +1029,9 @@ def generate_html():
       display: none;
     }}
     .check-now-btn {{
-      background: transparent;
+      background: rgba(13, 43, 26, 0.5);
       color: var(--gold);
-      border: 1px solid rgba(232,185,74,0.35);      
+      border: 1px solid rgba(232,185,74,0.55);
       height: 32px;
       width: 180px;  
       display: inline-flex;
