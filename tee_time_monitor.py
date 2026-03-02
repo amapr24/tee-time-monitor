@@ -632,7 +632,6 @@ def generate_html():
         for d in dates:
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             slots = load_cache(cache_file, d)
-            # Build booking URL
             if course["type"] == "cpsgolf":
                 book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
             else:
@@ -648,13 +647,12 @@ def generate_html():
                 "book_url": book_url,
             })
         course_data.append({"course": course, "days": days})
-  
-    # Grab sunset info for the first date to use in the header
+
+    # Sunset info for header
     first_date = dates[0]
     s = sun(MIAMI.observer, date=first_date, tzinfo=ET)
-    actual_sunset = s["sunset"].strftime("%-I:%M %p") # e.g., "6:14 PM"
-    
-    # Calculate display boundaries
+    actual_sunset = s["sunset"].strftime("%-I:%M %p")
+
     repr_cutoff = get_sunset_cutoff(first_date, COURSES[0]["tee_time_max"])
     end_hour = repr_cutoff + 1
     end_ampm = f"{end_hour % 12 or 12}:00 {'AM' if end_hour < 12 else 'PM'}"
@@ -685,17 +683,13 @@ def generate_html():
               {day_body}
             </div>"""
 
-        # Compute a representative cutoff for the card header (use first date)
-        repr_cutoff = get_sunset_cutoff(cd["days"][0]["date"], course["tee_time_max"]) if cd["days"] else course["tee_time_max"]
-        cutoff_ampm = f"{repr_cutoff % 12 or 12}:00 {'AM' if repr_cutoff < 12 else 'PM'}"
-
+        # Phone number lives on the card header for both desktop and mobile
         cards_html += f"""
         <div class="course-card">
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
             <div class="course-meta">{course.get("address","")}</div>
-            <div class="course-meta">{course.get("phone","")}</div>
-            <div class="course-meta">{""}</div>
+            <div class="course-meta"><a href="tel:{course.get('phone','')}">{course.get('phone','')}</a></div>
           </div>
           {days_html}
         </div>"""
@@ -706,6 +700,7 @@ def generate_html():
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="300">
+  <meta name="format-detection" content="telephone=no">
   <title>Tee Time Watch</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
@@ -759,7 +754,7 @@ def generate_html():
     /* ── Header ── */
     header {{
       background: var(--green-deep);
-      padding: 48px 30px;
+      padding: 32px 30px;
       text-align: center;
       position: relative;
       overflow: hidden;
@@ -790,7 +785,7 @@ def generate_html():
       position: relative;
     }}
     .header-flag, .header-golfer {{
-      font-size: 6rem;
+      font-size: 4.5rem;
       flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
@@ -807,18 +802,29 @@ def generate_html():
       letter-spacing: 0.08em;
       line-height: 0.9;
       position: relative;
+      white-space: nowrap;
     }}
+    h1 br {{ display: none; }}
     h1 em {{
       color: var(--gold);
       font-style: normal;
     }}
     .subtitle {{
-      font-size: 0.8rem;
+      font-size: 0.9rem;
       color: rgba(255,255,255,0.5);
       margin-top: 12px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
       position: relative;
+    }}
+    .window-tag {{
+      color: var(--gold);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      #padding: 6px 0 8px;
+      padding: 14px 0 0px;
+      display: block;
     }}
 
     /* ── Updated bar ── */
@@ -826,7 +832,7 @@ def generate_html():
       background: var(--green-mid);
       text-align: center;
       padding: 10px 24px;
-      font-size: 0.78rem;
+      font-size: 0.88rem;
       color: rgba(255,255,255,0.65);
       letter-spacing: 0.04em;
       border-bottom: 3px solid var(--gold);
@@ -836,7 +842,7 @@ def generate_html():
     /* ── Main grid ── */
     main {{
       max-width: 1100px;
-      margin: 32px auto 0;
+      margin: 0 auto;
       padding: 0 20px 20px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -859,14 +865,7 @@ def generate_html():
     }}
     .card-header {{
       background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
-      padding: 20px 20px 0;
-      position: relative;
-      overflow: hidden;
-    }}
-    /* ── Course card header ── */
-    .card-header {{
-      background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
-      padding: 20px 24px 0;
+      padding: 20px 24px 12px;
       position: relative;
       overflow: hidden;
     }}
@@ -886,18 +885,15 @@ def generate_html():
       line-height: 1;
     }}
     .course-meta {{
-      font-size: 0.7rem;
+      font-size: 0.78rem;
       color: rgba(255,255,255,0.55);
       letter-spacing: 0.04em;
       margin-top: 4px;
     }}
-    .window-tag {{
-      color: var(--gold);
-      font-size: 0.7rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 6px 0 8px;
-      display: block;
+    /* Prevent browsers auto-linking phone numbers with blue link color */
+    .card-header a {{
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
     }}
 
     /* ── Day block ── */
@@ -923,15 +919,16 @@ def generate_html():
     .book-btn {{
       font-size: 0.72rem;
       font-weight: 600;
-      color: var(--green-deep);
-      background: var(--gold);
+      color: var(--gold-dark);
+      background: rgba(232, 185, 74, 0.12);
       text-decoration: none;
       padding: 5px 12px;
       border-radius: 20px;
+      border: 1px solid rgba(232, 185, 74, 0.35);
       transition: all 0.15s;
       letter-spacing: 0.04em;
     }}
-    .book-btn:hover {{ background: var(--gold-dark); }}
+    .book-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
 
     /* ── Slots ── */
     .slots {{
@@ -960,8 +957,8 @@ def generate_html():
     /* ── Callout strip ── */
     .callout-strip {{
       background: var(--green-deep);
-      padding: 28px 24px;
-      margin: 32px 20px 0;
+      padding: 14px 24px;
+      margin: 20px 20px 0;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -973,7 +970,7 @@ def generate_html():
     }}
     .callout-quote {{
       font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1.4rem, 4vw, 2.2rem);
+      font-size: clamp(1rem, 3vw, 1.5rem);
       color: var(--gold);
       letter-spacing: 0.1em;
       text-align: center;
@@ -981,66 +978,53 @@ def generate_html():
     }}
     .callout-quote span {{
       color: rgba(255,255,255,0.4);
-      font-size: 0.6em;
+      font-size: 0.55em;
       display: block;
       letter-spacing: 0.2em;
       font-family: 'DM Sans', sans-serif;
       font-weight: 300;
-      margin-top: 4px;
+      margin-top: 2px;
     }}
     .callout-divider {{
       width: 1px;
-      height: 40px;
+      height: 28px;
       background: rgba(255,255,255,0.15);
       flex-shrink: 0;
     }}
-    
-/* ── Check Now buttons ── */
-    .check-now-wrap {{
+
+    /* ── Check Now buttons ── */
+    /* Top row: desktop only, sits just below the updated bar */
+    .check-now-wrap-top {{
       text-align: center;
-      padding: 36px 24px 16px;
+      padding: 14px 24px 14px;
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
+      gap: 12px;
+    }}
+    /* Bottom row: hidden on desktop, shown on mobile */
+    .check-now-wrap-bottom {{
+      display: none;
     }}
     .check-now-btn {{
-      background: var(--gold);
-      color: var(--green-deep);
-      border: none;
-      padding: 14px 0;
-      width: 200px;
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid rgba(232,185,74,0.35);      
+      height: 32px;
+      width: 180px;  
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       flex-shrink: 0;
       font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.1rem;
+      font-size: 1rem;
       letter-spacing: 0.12em;
       border-radius: 40px;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 4px 16px rgba(232,185,74,0.4);
     }}
-    .check-now-btn:hover {{ background: var(--gold-dark); transform: translateY(-2px); }}
-    .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; transform: none; }}
-    
-    @media (max-width: 600px) {{
-      .check-now-wrap {{
-        flex-direction: column;
-        gap: 12px;
-      }}
-      .check-now-btn {{
-        width: 100%;
-        max-width: 280px;
-      }}
-    }}
-
-    .trigger-msg {{
-      width: 100%;
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-mid);
-      min-height: 1.2em;
-    }}
+    .check-now-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
+    .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; }}
 
     /* ── Minutes ago ── */
     .mins-ago {{
@@ -1093,6 +1077,102 @@ def generate_html():
       margin-bottom: 8px;
       opacity: 0.4;
     }}
+
+    /* ════════════════════════════════════════════
+       MOBILE OVERRIDES  (≤ 767px)
+       Everything above stays 100% untouched.
+       Only these rules apply on small screens.
+       ════════════════════════════════════════════ */
+    @media (max-width: 767px) {{
+
+      /* Header — shrink padding and emojis */
+      header {{ padding: 20px 15px; }}
+      header::after {{ height: 6px; }}
+      .header-flag, .header-golfer {{ font-size: 3rem; }}
+      .header-inner {{ gap: 12px; }}
+      h1 {{ font-size: 3.2rem; letter-spacing: 0.05em; white-space: normal; }}
+      h1 br {{ display: inline; }}
+      .subtitle {{ font-size: 0.76rem; margin-top: 5px; letter-spacing: 1.5px; }}
+      .window-tag {{ font-size: 0.74rem; letter-spacing: 0.1em; padding: 4px 0 5px; }}
+
+      /* Updated bar */
+      .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
+
+      /* Grid — already collapses to 1 col via auto-fit, just tighten margins */
+      main {{ margin: 15px auto 0; padding: 0 12px; gap: 15px; }}
+
+      /* Card */
+      .course-card {{ border-radius: 12px; }}
+      .course-card:hover {{ transform: none; }}  /* no hover lift on touch */
+      .card-header {{ padding: 12px 15px; }}
+      .card-header::before {{ font-size: 1.8rem; opacity: 0.12; top: 8px; right: 12px; }}
+      .course-name {{ font-size: 1.5rem; }}
+      .course-meta {{ font-size: 0.68rem; }}
+
+      /* Day block — make room for the absolutely-positioned book button */
+      .day-block {{ padding: 10px 15px; min-height: 58px; position: relative; }}
+      .day-header {{ margin-bottom: 6px; }}
+      .day-name {{ font-size: 0.75rem; }}
+
+      /* Book button — solid gold pill on mobile (more tappable, no hover) */
+      .book-btn {{
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        font-size: 0.6rem;
+        font-weight: 700;
+        background: var(--gold);
+        color: var(--green-deep);
+        padding: 3px 10px;
+        border-radius: 20px;
+        border: none;
+        width: auto;
+      }}
+      .book-btn:hover {{
+        background: var(--gold-dark);
+        color: var(--green-deep);
+      }}
+
+      /* Slots — smaller chips, leave room for the floating book btn */
+      .slots {{ gap: 4px; padding-right: 50px; }}
+      .slot {{
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        min-width: auto;
+      }}
+      .no-times {{ font-size: 0.75rem; }}
+
+      /* Hide callout strip on mobile */
+      .callout-strip {{ display: none; }}
+
+      /* Hide top buttons on mobile, show bottom ones instead */
+      .check-now-wrap-top {{ display: none; }}
+      .check-now-wrap-bottom {{
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        gap: 10px;
+      }}
+      .check-now-btn {{
+        background: var(--green-deep);
+        color: var(--gold);
+        border: 1px solid var(--gold);
+        padding: 10px 24px;
+        width: auto;
+        font-size: 1rem;
+        border-radius: 30px;
+        box-shadow: none;
+      }}
+      .check-now-btn:hover {{ transform: none; background: var(--green-mid); }}
+
+      /* Footer */
+      footer {{ padding: 20px; font-size: 0.7rem; margin-top: 12px; }}
+      .footer-fore {{ display: none; }}
+
+      /* Toast — slightly higher so it clears mobile bottom bar */
+      .toast {{ bottom: 24px; font-size: 0.8rem; padding: 10px 20px; }}
+    }}
   </style>
 </head>
 <body>
@@ -1119,19 +1199,25 @@ def generate_html():
   </div>
 
   <header>
-      <div class="header-inner">
-        <span class="header-flag">⛳</span>
-        <div>
-          <h1>TEE TIME<br><em>WATCH</em></h1>
-          <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
-          <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
-        </div>
-        <span class="header-golfer">🏌️</span>
+    <div class="header-inner">
+      <span class="header-flag">⛳</span>
+      <div>
+        <h1>TEE <em>TIME</em><br> WATCH</h1>
+        <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
+        <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
       </div>
+      <span class="header-golfer">🏌️</span>
+    </div>
   </header>
 
   <div class="updated-bar">
     Checked every 15 minutes &nbsp;·&nbsp; Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
+  </div>
+
+  <!-- Desktop: buttons sit just below the updated bar, above the cards -->
+  <div class="check-now-wrap-top">
+    <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
+    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
   </div>
 
   <main>
@@ -1146,17 +1232,16 @@ def generate_html():
     <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
   </div>
 
-  <div class="check-now-wrap">
+  <!-- Mobile: buttons sit below the cards -->
+  <div class="check-now-wrap-bottom">
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
-  </div>
-  <div style="text-align:center; margin-top:8px;">
-    <div class="trigger-msg" id="trigger-msg"></div>
   </div>
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
-    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET · © {datetime.now(ET).year} Tee Time Watch
+    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET<br>
+    © {datetime.now(ET).year} Tee Time Watch
   </footer>
 
   <div class="toast" id="toast"></div>
@@ -1187,9 +1272,10 @@ def generate_html():
 
     // ── Check Now ──
     async function triggerCheck() {{
-      const btn = document.querySelector('.check-now-btn');
-      btn.disabled = true;
-      btn.textContent = 'TRIGGERING… ⛳';
+      const btns = document.querySelectorAll('.check-now-btn');
+      btns.forEach(b => {{ b.disabled = true; }});
+      // Update whichever set is visible
+      btns.forEach(b => {{ if (b.textContent.includes('CHECK')) b.textContent = 'TRIGGERING… ⛳'; }});
       try {{
         const resp = await fetch('/api/trigger', {{ method: 'POST' }});
         const data = await resp.json();
@@ -1201,8 +1287,7 @@ def generate_html():
       }} catch (e) {{
         showToast('Network error — try again.');
       }}
-      btn.textContent = 'CHECK NOW ⛳';
-      btn.disabled = false;
+      btns.forEach(b => {{ b.disabled = false; if (b.textContent.includes('TRIGGERING')) b.textContent = 'CHECK NOW ⛳'; }});
     }}
   </script>
 
@@ -1211,7 +1296,6 @@ def generate_html():
 
     Path("index.html").write_text(html)
     print("  index.html generated.")
-
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
