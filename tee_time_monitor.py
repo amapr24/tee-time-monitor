@@ -1107,15 +1107,18 @@ def generate_html():
        ════════════════════════════════════════════ */
     @media (max-width: 767px) {{
 
+      /* Ticker */
+      .ticker {{ font-size: 0.82rem; }}
+
       /* Header — shrink padding and emojis */
       header {{ padding: 20px 15px; }}
       header::after {{ height: 6px; }}
-      .header-flag, .header-golfer {{ font-size: 3rem; }}
-      .header-inner {{ gap: 12px; }}
-      h1 {{ font-size: 3.2rem; letter-spacing: 0.05em; white-space: normal; }}
+      .header-flag, .header-golfer {{ font-size: 2rem; }}
+      .header-inner {{ gap: 8px; }}
+      h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
-      .subtitle {{ font-size: 0.76rem; margin-top: 5px; letter-spacing: 1.5px; }}
-      .window-tag {{ font-size: 0.74rem; letter-spacing: 0.1em; padding: 4px 0 5px; }}
+      .subtitle {{ font-size: 0.84rem; margin-top: 5px; letter-spacing: 1.5px; }}
+      .window-tag {{ font-size: 0.82rem; letter-spacing: 0.1em; padding: 4px 0 5px; }}
 
       /* Updated bar */
       .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
@@ -1178,7 +1181,7 @@ def generate_html():
       }}
       .check-now-btn {{
         background: var(--green-deep);
-        color: var(--gold);
+        color: var(--white);
         border: 1px solid var(--gold);
         padding: 10px 24px;
         width: auto;
