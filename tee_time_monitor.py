@@ -148,6 +148,24 @@ def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
         return True
 
 
+def is_slot_in_past(time_str: str, target_date: date) -> bool:
+    """Return True if the slot time has already passed today (ET)."""
+    if target_date != datetime.now(ET).date():
+        return False
+    try:
+        parts = time_str.strip().split()
+        hour, minute = map(int, parts[0].split(":"))
+        ampm = parts[1].upper() if len(parts) > 1 else "AM"
+        if ampm == "PM" and hour != 12:
+            hour += 12
+        elif ampm == "AM" and hour == 12:
+            hour = 0
+        now_et = datetime.now(ET)
+        return (hour, minute) <= (now_et.hour, now_et.minute)
+    except Exception:
+        return False
+
+
 def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
     seen = set()
     out  = []
@@ -631,7 +649,11 @@ def generate_html():
         days = []
         for d in dates:
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
-            slots = load_cache(cache_file, d)
+            raw_slots = load_cache(cache_file, d)
+            slots = [
+                s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
+                if not is_slot_in_past(s.get("time", ""), d)
+            ]
             if course["type"] == "cpsgolf":
                 book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
             else:
