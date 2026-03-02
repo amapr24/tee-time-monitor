@@ -529,7 +529,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>2:47 PM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>5:27 PM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
@@ -581,7 +581,7 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:52 PM</span></div>
+              <p class="no-times">No times available</p>
             </div>
         </div>
         <div class="course-card">
@@ -635,7 +635,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772480840 * 1000);
+      const lastRun = new Date(1772490453 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
