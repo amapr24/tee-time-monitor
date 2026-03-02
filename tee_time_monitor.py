@@ -1030,7 +1030,7 @@ def generate_html():
     }}
     .check-now-btn {{
       background: rgba(13, 43, 26, 0.5);
-      color: var(--gold);
+      color: var(--white);
       border: 1px solid rgba(232,185,74,0.55);
       height: 32px;
       width: 180px;  
