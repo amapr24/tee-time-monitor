@@ -805,27 +805,24 @@ def generate_html():
       align-items: center;
       position: relative;
       width: 100%;
-      max-width: 700px;
+      max-width: 760px;
       margin: 0 auto;
     }}
     .header-flag {{
       font-size: 4.5rem;
-      flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
       justify-self: end;
-      padding-right: 18px;
+      padding-right: 20px;
     }}
     .header-golfer {{
       font-size: 4.5rem;
-      flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
       animation-direction: reverse;
       justify-self: start;
-      padding-left: 18px;
+      padding-left: 20px;
     }}
-    .header-golfer {{ animation-direction: reverse; }}
     @keyframes flagwave {{
       0%, 100% {{ transform: rotate(-3deg); }}
       50%       {{ transform: rotate(3deg); }}
@@ -1124,11 +1121,11 @@ def generate_html():
       .ticker {{ font-size: 0.82rem; }}
 
       /* Header — shrink padding and emojis */
-      header {{ padding: 14px 28px; }}
+      header {{ padding: 14px 12px; }}
       header::after {{ height: 6px; }}
       .header-inner {{ align-items: flex-start; max-width: 100%; }}
-      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-right: 8px; }}
-      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-left: 8px; }}
+      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-right: 10px; }}
+      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-left: 10px; }}
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
