@@ -1181,12 +1181,13 @@ def generate_html():
         text-align: center;
         display: block;
       }}
-      /* Remove nowrap so long subtitle can't drift right */
-      .subtitle {{
-        white-space: normal;
-        text-align: center;
-        width: 100%;
-        display: block;
+      /* Force subtitle to truly center — more specific selector to win over base */
+      header .subtitle {{
+        white-space: normal !important;
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        letter-spacing: 0.1em;
       }}
 
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
