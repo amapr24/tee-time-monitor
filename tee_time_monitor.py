@@ -801,7 +801,8 @@ def generate_html():
     }}
     .header-inner {{
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      /* Change 1fr to minmax(0, 1fr) on both sides */
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
       position: relative;
       width: 100%;
@@ -832,6 +833,8 @@ def generate_html():
       font-size: clamp(3.5rem, 10vw, 6rem);
       color: var(--white);
       letter-spacing: 0.08em;
+      /* Add this line: */
+      padding-left: 0.08em; 
       line-height: 0.9;
       position: relative;
       white-space: nowrap;
