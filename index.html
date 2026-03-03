@@ -430,11 +430,11 @@
         max-width: 100%;
       }
 
-      /* Pin emojis to absolute edges, vertically centered */
+      /* Pin emojis to absolute edges */
       .header-flag {
         position: absolute;
         left: 10px;
-        top: 50%;
+        top: 35%;
         font-size: 2.4rem;
         padding: 0;
         margin: 0;
@@ -443,7 +443,7 @@
       .header-golfer {
         position: absolute;
         right: 10px;
-        top: 50%;
+        top: 35%;
         font-size: 2.4rem;
         padding: 0;
         margin: 0;
@@ -453,8 +453,14 @@
 
       /* Keyframe includes translateY so it doesn't fight the animation */
       @keyframes flagwave-mobile {
-        0%, 100% { transform: translateY(-50%) rotate(-3deg); }
-        50%       { transform: translateY(-50%) rotate(3deg); }
+        0%, 100% { transform: translateY(-35%) rotate(-3deg); }
+        50%       { transform: translateY(-35%) rotate(3deg); }
+      }
+
+      /* Force inner text div to full width so subtitle centers correctly */
+      .header-inner > div {
+        width: 100%;
+        text-align: center;
       }
 
       h1 { font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }
@@ -579,7 +585,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>2:48 PM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>2:59 PM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -704,7 +710,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772567282 * 1000);
+      const lastRun = new Date(1772567988 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
