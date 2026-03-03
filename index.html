@@ -417,35 +417,51 @@
       /* Ticker */
       .ticker { font-size: 0.82rem; }
 
-      /* Header — shrink padding and emojis */
+      /* Header */
       header { padding: 14px 0; }
       header::after { height: 6px; }
-      .header-inner { 
-        display: grid;
-        /* Reserve 60px for emojis, title takes the rest */
-        grid-template-columns: 60px 1fr 60px; 
-        align-items: center; 
+
+      /* Switch to block layout so center text owns full width */
+      .header-inner {
+        display: block;
+        position: relative;
+        text-align: center;
+        padding: 0 70px;
         max-width: 100%;
-        /* Global inset from screen edges */
-        padding: 0 10px; 
       }
-      .header-flag { 
-        font-size: 2.4rem; 
-        justify-self: center; 
-        padding: 0; 
+
+      /* Pin emojis to absolute edges, vertically centered */
+      .header-flag {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        font-size: 2.4rem;
+        padding: 0;
         margin: 0;
+        animation: flagwave-mobile 3s ease-in-out infinite;
       }
-      .header-golfer { 
-        font-size: 2.4rem; 
-        justify-self: center; 
-        padding: 0; 
+      .header-golfer {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        font-size: 2.4rem;
+        padding: 0;
         margin: 0;
+        animation: flagwave-mobile 3s ease-in-out infinite;
+        animation-direction: reverse;
       }
+
+      /* Keyframe includes translateY so it doesn't fight the animation */
+      @keyframes flagwave-mobile {
+        0%, 100% { transform: translateY(-50%) rotate(-3deg); }
+        50%       { transform: translateY(-50%) rotate(3deg); }
+      }
+
       h1 { font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }
       h1 br { display: inline; }
       .subtitle { font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }
       .window-tag { font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }
-      .sunset-pill { font-size: 0.72rem; padding: 1px 6px; }
+      .sunset-pill { font-size: 0.68rem; padding: 1px 5px; }
 
       /* Updated bar */
       .updated-bar { font-size: 0.78rem; padding: 6px 15px; }
@@ -563,7 +579,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>1:32 PM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>2:42 PM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -628,7 +644,7 @@
                 <span class="day-name">Sunday, Mar 8</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-08&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:20 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span><span class="slot">3:08 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
+              <div class="slots"><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span><span class="slot">3:08 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -650,7 +666,7 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:30 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+              <div class="slots"><span class="slot">2:30 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -688,7 +704,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772562766 * 1000);
+      const lastRun = new Date(1772566955 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
