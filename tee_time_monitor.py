@@ -862,6 +862,18 @@ def generate_html():
       display: block;
     }}
 
+    /* ── Sunset pill highlight ── */
+    .sunset-pill {{
+      background: var(--gold);
+      color: var(--green-deep);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 800;
+      margin-left: 5px;
+      display: inline-block;
+      vertical-align: baseline;
+    }}
+
     /* ── Updated bar ── */
     .updated-bar {{
       background: var(--green-mid);
@@ -1151,6 +1163,7 @@ def generate_html():
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
       .window-tag {{ font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }}
+      .sunset-pill {{ font-size: 0.72rem; padding: 1px 6px; }}
 
       /* Updated bar */
       .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
@@ -1261,7 +1274,7 @@ def generate_html():
       <div>
         <h1>TEE <em>TIME</em><br> WATCH</h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
-        <span class="window-tag">⏱ {start_ampm} – {end_ampm} (SUNSET: {actual_sunset})</span>
+        <span class="window-tag">⏱ {start_ampm} – {end_ampm} <span class="sunset-pill">SUNSET: {actual_sunset}</span></span>
       </div>
       <span class="header-golfer">🏌️</span>
     </div>
@@ -1271,7 +1284,6 @@ def generate_html():
     Checked every 15 minutes <br>Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
-  <!-- Desktop: buttons sit just below the updated bar, above the cards -->
   <div class="check-now-wrap-top">
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
@@ -1289,7 +1301,6 @@ def generate_html():
     <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
   </div>
 
-  <!-- Mobile: buttons sit below the cards -->
   <div class="check-now-wrap-bottom">
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
