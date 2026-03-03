@@ -1127,8 +1127,8 @@ def generate_html():
       header {{ padding: 14px 24px; }}
       header::after {{ height: 6px; }}
       .header-inner {{ align-items: flex-start; max-width: 100%; }}
-      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-right: 10px; }}
-      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-left: 10px; }}
+      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-right: 10px; margin-left: 20px;}}
+      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-left: 10px; margin-right: 10px;}}
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
