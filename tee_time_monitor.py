@@ -1124,11 +1124,29 @@ def generate_html():
       .ticker {{ font-size: 0.82rem; }}
 
       /* Header — shrink padding and emojis */
-      header {{ padding: 14px 24px; }}
+      header {{ padding: 14px 0; }}
       header::after {{ height: 6px; }}
-      .header-inner {{ align-items: flex-start; max-width: 100%; }}
-      .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-right: 10px; margin-left: 20px;}}
-      .header-golfer {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-left: 10px; margin-right: 10px;}}
+      .header-inner {{ 
+        display: grid;
+        /* Reserve 60px for emojis, title takes the rest */
+        grid-template-columns: 60px 1fr 60px; 
+        align-items: center; 
+        max-width: 100%;
+        /* Global inset from screen edges */
+        padding: 0 10px; 
+      }}
+      .header-flag {{ 
+        font-size: 2.4rem; 
+        justify-self: center; 
+        padding: 0; 
+        margin: 0;
+      }}
+      .header-golfer {{ 
+        font-size: 2.4rem; 
+        justify-self: center; 
+        padding: 0; 
+        margin: 0;
+      }}
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
