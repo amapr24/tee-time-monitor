@@ -82,22 +82,30 @@
       background-size: 24px 24px;
     }
     .header-inner {
-      display: flex;
+      display: grid;
+      /* Change 1fr to minmax(0, 1fr) on both sides */
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
-      justify-content: space-between;
-      gap: 18px;
       position: relative;
       width: 100%;
-      max-width: 700px;
+      max-width: 760px;
       margin: 0 auto;
     }
-    .header-flag, .header-golfer {
+    .header-flag {
       font-size: 4.5rem;
-      flex-shrink: 0;
       animation: flagwave 3s ease-in-out infinite;
       transform-origin: bottom center;
+      justify-self: end;
+      padding-right: 20px;
     }
-    .header-golfer { animation-direction: reverse; }
+    .header-golfer {
+      font-size: 4.5rem;
+      animation: flagwave 3s ease-in-out infinite;
+      transform-origin: bottom center;
+      animation-direction: reverse;
+      justify-self: start;
+      padding-left: 20px;
+    }
     @keyframes flagwave {
       0%, 100% { transform: rotate(-3deg); }
       50%       { transform: rotate(3deg); }
@@ -107,6 +115,8 @@
       font-size: clamp(3.5rem, 10vw, 6rem);
       color: var(--white);
       letter-spacing: 0.08em;
+      /* Add this line: */
+      padding-left: 0.08em; 
       line-height: 0.9;
       position: relative;
       white-space: nowrap;
@@ -132,6 +142,18 @@
       #padding: 6px 0 8px;
       padding: 14px 0 0px;
       display: block;
+    }
+
+    /* ── Sunset pill highlight ── */
+    .sunset-pill {
+      background: var(--gold);
+      color: var(--green-deep);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 800;
+      margin-left: 5px;
+      display: inline-block;
+      vertical-align: baseline;
     }
 
     /* ── Updated bar ── */
@@ -395,16 +417,67 @@
       /* Ticker */
       .ticker { font-size: 0.82rem; }
 
-      /* Header — shrink padding and emojis */
-      header { padding: 14px 28px; }
+      /* Header */
+      header { padding: 14px 0; }
       header::after { height: 6px; }
-      .header-inner { gap: 8px; align-items: flex-start; max-width: 100%; }
-      .header-flag { font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-left: 0; }
-      .header-golfer { font-size: 2.8rem; margin-top: 0.2em; line-height: 1; margin-right: 0; }
+
+      /* Switch to block layout so center text owns full width */
+      .header-inner {
+        display: block;
+        position: relative;
+        text-align: center;
+        padding: 0 55px;
+        max-width: 100%;
+      }
+
+      /* Pin emojis to absolute edges */
+      .header-flag {
+        position: absolute;
+        left: 10px;
+        top: 28%;
+        font-size: 2.4rem;
+        padding: 0;
+        margin: 0;
+        animation: flagwave-mobile 3s ease-in-out infinite;
+      }
+      .header-golfer {
+        position: absolute;
+        right: 10px;
+        top: 28%;
+        font-size: 2.4rem;
+        padding: 0;
+        margin: 0;
+        animation: flagwave-mobile 3s ease-in-out infinite;
+        animation-direction: reverse;
+      }
+
+      /* Keyframe includes translateY so it doesn't fight the animation */
+      @keyframes flagwave-mobile {
+        0%, 100% { transform: translateY(-28%) rotate(-3deg); }
+        50%       { transform: translateY(-28%) rotate(3deg); }
+      }
+
+      /* Force inner text div to full width so subtitle centers correctly */
+      .header-inner > div {
+        width: 100%;
+        text-align: center;
+        display: block;
+      }
+      /* Force subtitle to truly center — more specific selector to win over base */
+      header .subtitle {
+        white-space: nowrap !important;
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+      }
+
       h1 { font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }
       h1 br { display: inline; }
       .subtitle { font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }
       .window-tag { font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }
+      .sunset-pill { font-size: 0.68rem; padding: 1px 5px; }
 
       /* Updated bar */
       .updated-bar { font-size: 0.78rem; padding: 6px 15px; }
@@ -515,17 +588,16 @@
       <div>
         <h1>TEE <em>TIME</em><br> WATCH</h1>
         <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
-        <span class="window-tag">⏱ 8:00 AM – 3:00 PM (SUNSET: 6:25 PM)</span>
+        <span class="window-tag">⏱ 8:00 AM – 3:00 PM <span class="sunset-pill">SUNSET: 6:25 PM</span></span>
       </div>
       <span class="header-golfer">🏌️</span>
     </div>
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>12:17 PM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>4:51 PM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
-  <!-- Desktop: buttons sit just below the updated bar, above the cards -->
   <div class="check-now-wrap-top">
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
@@ -554,6 +626,13 @@
               </div>
               <p class="no-times">No times available</p>
             </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=15" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
         </div>
         <div class="course-card">
           <div class="card-header">
@@ -574,7 +653,14 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span></div>
+              <p class="no-times">No times available</p>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-08&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span><span class="slot">3:08 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -596,7 +682,14 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:06 PM</span><span class="slot">2:14 PM</span><span class="slot">2:22 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+              <div class="slots"><span class="slot">11:50 AM</span><span class="slot">2:30 PM</span></div>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-08&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
             </div>
         </div>
   </main>
@@ -609,7 +702,6 @@
     <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
   </div>
 
-  <!-- Mobile: buttons sit below the cards -->
   <div class="check-now-wrap-bottom">
     <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
@@ -628,7 +720,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772471853 * 1000);
+      const lastRun = new Date(1772574696 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
