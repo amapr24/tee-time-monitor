@@ -83,7 +83,8 @@
     }
     .header-inner {
       display: grid;
-      grid-template-columns: 1fr auto 1fr;
+      /* Change 1fr to minmax(0, 1fr) on both sides */
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
       position: relative;
       width: 100%;
@@ -114,6 +115,8 @@
       font-size: clamp(3.5rem, 10vw, 6rem);
       color: var(--white);
       letter-spacing: 0.08em;
+      /* Add this line: */
+      padding-left: 0.08em; 
       line-height: 0.9;
       position: relative;
       white-space: nowrap;
@@ -529,7 +532,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>5:27 PM ET, Monday March 2, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>9:17 AM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
@@ -561,6 +564,13 @@
               </div>
               <p class="no-times">No times available</p>
             </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=15" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
         </div>
         <div class="course-card">
           <div class="card-header">
@@ -583,6 +593,13 @@
               </div>
               <p class="no-times">No times available</p>
             </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-08&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">1:16 PM</span><span class="slot">1:24 PM</span><span class="slot">1:48 PM</span><span class="slot">1:56 PM</span><span class="slot">2:04 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span><span class="slot">3:00 PM</span><span class="slot">3:08 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
+            </div>
         </div>
         <div class="course-card">
           <div class="card-header">
@@ -603,7 +620,14 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:22 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+              <div class="slots"><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span></div>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-08&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
             </div>
         </div>
   </main>
@@ -635,7 +659,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772490453 * 1000);
+      const lastRun = new Date(1772547468 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
