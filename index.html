@@ -406,7 +406,7 @@
       .ticker { font-size: 0.82rem; }
 
       /* Header — shrink padding and emojis */
-      header { padding: 14px 12px; }
+      header { padding: 14px 24px; }
       header::after { height: 6px; }
       .header-inner { align-items: flex-start; max-width: 100%; }
       .header-flag { font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-right: 10px; }
@@ -532,7 +532,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>9:17 AM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>9:37 AM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <!-- Desktop: buttons sit just below the updated bar, above the cards -->
@@ -598,7 +598,7 @@
                 <span class="day-name">Sunday, Mar 8</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-08&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">1:16 PM</span><span class="slot">1:24 PM</span><span class="slot">1:48 PM</span><span class="slot">1:56 PM</span><span class="slot">2:04 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span><span class="slot">3:00 PM</span><span class="slot">3:08 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
+              <div class="slots"><span class="slot">1:24 PM</span><span class="slot">1:48 PM</span><span class="slot">1:56 PM</span><span class="slot">2:04 PM</span><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span><span class="slot">3:00 PM</span><span class="slot">3:08 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
             </div>
         </div>
         <div class="course-card">
@@ -659,7 +659,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772547468 * 1000);
+      const lastRun = new Date(1772548635 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
