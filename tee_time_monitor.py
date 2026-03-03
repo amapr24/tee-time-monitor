@@ -1144,7 +1144,7 @@ def generate_html():
         display: block;
         position: relative;
         text-align: center;
-        padding: 0 70px;
+        padding: 0 55px;
         max-width: 100%;
       }}
 
@@ -1183,11 +1183,12 @@ def generate_html():
       }}
       /* Force subtitle to truly center — more specific selector to win over base */
       header .subtitle {{
-        white-space: normal !important;
+        white-space: nowrap !important;
         text-align: center !important;
         width: 100% !important;
         display: block !important;
-        letter-spacing: 0.1em;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
       }}
 
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
