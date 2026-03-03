@@ -1124,7 +1124,7 @@ def generate_html():
       .ticker {{ font-size: 0.82rem; }}
 
       /* Header — shrink padding and emojis */
-      header {{ padding: 14px 12px; }}
+      header {{ padding: 14px 24px; }}
       header::after {{ height: 6px; }}
       .header-inner {{ align-items: flex-start; max-width: 100%; }}
       .header-flag {{ font-size: 2.8rem; margin-top: 0.2em; line-height: 1; padding-right: 10px; }}
