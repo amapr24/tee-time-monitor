@@ -463,12 +463,13 @@
         text-align: center;
         display: block;
       }
-      /* Remove nowrap so long subtitle can't drift right */
-      .subtitle {
-        white-space: normal;
-        text-align: center;
-        width: 100%;
-        display: block;
+      /* Force subtitle to truly center — more specific selector to win over base */
+      header .subtitle {
+        white-space: normal !important;
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        letter-spacing: 0.1em;
       }
 
       h1 { font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }
@@ -593,7 +594,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>3:43 PM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>4:44 PM ET, Tuesday March 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -680,7 +681,7 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:30 PM</span></div>
+              <div class="slots"><span class="slot">11:50 AM</span><span class="slot">2:30 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -718,7 +719,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772570612 * 1000);
+      const lastRun = new Date(1772574290 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
