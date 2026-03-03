@@ -1135,35 +1135,51 @@ def generate_html():
       /* Ticker */
       .ticker {{ font-size: 0.82rem; }}
 
-      /* Header — shrink padding and emojis */
+      /* Header */
       header {{ padding: 14px 0; }}
       header::after {{ height: 6px; }}
-      .header-inner {{ 
-        display: grid;
-        /* Reserve 60px for emojis, title takes the rest */
-        grid-template-columns: 60px 1fr 60px; 
-        align-items: center; 
+
+      /* Switch to block layout so center text owns full width */
+      .header-inner {{
+        display: block;
+        position: relative;
+        text-align: center;
+        padding: 0 70px;
         max-width: 100%;
-        /* Global inset from screen edges */
-        padding: 0 10px; 
       }}
-      .header-flag {{ 
-        font-size: 2.4rem; 
-        justify-self: center; 
-        padding: 0; 
+
+      /* Pin emojis to absolute edges, vertically centered */
+      .header-flag {{
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        font-size: 2.4rem;
+        padding: 0;
         margin: 0;
+        animation: flagwave-mobile 3s ease-in-out infinite;
       }}
-      .header-golfer {{ 
-        font-size: 2.4rem; 
-        justify-self: center; 
-        padding: 0; 
+      .header-golfer {{
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        font-size: 2.4rem;
+        padding: 0;
         margin: 0;
+        animation: flagwave-mobile 3s ease-in-out infinite;
+        animation-direction: reverse;
       }}
+
+      /* Keyframe includes translateY so it doesn't fight the animation */
+      @keyframes flagwave-mobile {{
+        0%, 100% {{ transform: translateY(-50%) rotate(-3deg); }}
+        50%       {{ transform: translateY(-50%) rotate(3deg); }}
+      }}
+
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
       .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
       .window-tag {{ font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }}
-      .sunset-pill {{ font-size: 0.72rem; padding: 1px 6px; }}
+      .sunset-pill {{ font-size: 0.68rem; padding: 1px 5px; }}
 
       /* Updated bar */
       .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
