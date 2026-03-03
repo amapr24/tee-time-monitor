@@ -1152,7 +1152,7 @@ def generate_html():
       .header-flag {{
         position: absolute;
         left: 10px;
-        top: 35%;
+        top: 28%;
         font-size: 2.4rem;
         padding: 0;
         margin: 0;
@@ -1161,7 +1161,7 @@ def generate_html():
       .header-golfer {{
         position: absolute;
         right: 10px;
-        top: 35%;
+        top: 28%;
         font-size: 2.4rem;
         padding: 0;
         margin: 0;
@@ -1171,14 +1171,22 @@ def generate_html():
 
       /* Keyframe includes translateY so it doesn't fight the animation */
       @keyframes flagwave-mobile {{
-        0%, 100% {{ transform: translateY(-35%) rotate(-3deg); }}
-        50%       {{ transform: translateY(-35%) rotate(3deg); }}
+        0%, 100% {{ transform: translateY(-28%) rotate(-3deg); }}
+        50%       {{ transform: translateY(-28%) rotate(3deg); }}
       }}
 
       /* Force inner text div to full width so subtitle centers correctly */
       .header-inner > div {{
         width: 100%;
         text-align: center;
+        display: block;
+      }}
+      /* Remove nowrap so long subtitle can't drift right */
+      .subtitle {{
+        white-space: normal;
+        text-align: center;
+        width: 100%;
+        display: block;
       }}
 
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
