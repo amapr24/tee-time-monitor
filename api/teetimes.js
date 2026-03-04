@@ -1,6 +1,6 @@
 const OWNER  = 'amapr24';
 const REPO   = 'tee-time-monitor';
-const BRANCH = 'dev';
+const BRANCH = 'main';
 const FILE   = 'tee_times.html';
 
 export default async function handler(req, res) {
