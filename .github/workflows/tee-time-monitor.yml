@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install playwright requests astral
-          playwright install chromium --with-deps
+          playwright install chromium
 
       # ── Cache strategy ────────────────────────────────────────────────────
       # Restore using a prefix so we always get the most recent cache entry.
