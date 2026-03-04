@@ -1,5 +1,5 @@
-const OWNER  = 'YOUR_GITHUB_USERNAME';
-const REPO   = 'YOUR_REPO_NAME';
+const OWNER  = 'amapr24';
+const REPO   = 'tee-time-monitor';
 const BRANCH = 'dev';
 const FILE   = 'tee_times.html';
 
