@@ -99,25 +99,13 @@
   </div>
 
   <script>
-    // ── Config ──────────────────────────────────────────────────────────────────
-    // Update OWNER and REPO to match your GitHub repository.
-    const OWNER  = 'amapr24';
-    const REPO   = 'tee-time-monitor';
-    const BRANCH = 'dev';
-    const FILE   = 'tee_times.html';
-
-    // GitHub raw URL — no auth needed for public repos.
-    // Bust the CDN cache with a timestamp so we always get the latest commit.
-    function rawUrl() {
-      return `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${FILE}?t=${Date.now()}`;
-    }
-
     async function loadContent() {
       document.getElementById('loader').style.display    = 'flex';
       document.getElementById('error-box').style.display = 'none';
 
       try {
-        const res = await fetch(rawUrl());
+        // Fetch via serverless proxy so the GitHub token stays server-side.
+        const res = await fetch(`/api/teetimes?t=${Date.now()}`);
 
         if (!res.ok) {
           throw new Error(`HTTP ${res.status} — ${res.statusText}`);
