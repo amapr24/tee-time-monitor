@@ -4,12 +4,12 @@ const BRANCH = 'main';
 const FILE   = 'tee_times.html';
 
 export default async function handler(req, res) {
-  const url = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/${FILE}`;
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}?ref=${BRANCH}`;
 
   const ghRes = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${process.env.GITHUB_TOKEN}`,
-      'Accept': 'text/html',
+      'Accept': 'application/vnd.github.v3.raw',
     },
   });
 
