@@ -1442,7 +1442,7 @@ async def main():
         )
 
     print("\n" + "="*60)
-    print("Generating index.html...")
+    print("Generating tee_times.html...")
     generate_html()
     print("Done.\n")
 
