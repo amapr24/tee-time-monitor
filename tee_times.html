@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="refresh" content="300">
+  <meta name="format-detection" content="telephone=no">
+  <title>Tee Time Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green-deep:   #0d2b1a;
+      --green-mid:    #1a5c32;
+      --green-light:  #2e8b4f;
+      --green-pale:   #d4eddc;
+      --fairway:      #3a7d44;
+      --white:        #ffffff;
+      --cream:        #f5f0e8;
+      --gold:         #e8b94a;
+      --gold-dark:    #c49a28;
+      --text-dark:    #0d2b1a;
+      --text-mid:     #3a5c42;
+      --text-light:   #7a9485;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Scrolling ticker ── */
+    .ticker {
+      background: var(--gold);
+      color: var(--green-deep);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      padding: 6px 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .ticker-inner {
+      display: inline-block;
+      animation: ticker 36s linear infinite;
+    }
+    .ticker-inner span { margin: 0 48px; }
+    @keyframes ticker {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--green-deep);
+      padding: 32px 30px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 12px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--fairway) 0px, var(--fairway) 8px,
+        var(--green-mid) 8px, var(--green-mid) 16px
+      );
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .header-inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      position: relative;
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .header-flag {
+      font-size: 4.5rem;
+      animation: flagwave 3s ease-in-out infinite;
+      transform-origin: bottom center;
+      justify-self: end;
+      padding-right: 20px;
+    }
+    .header-golfer {
+      font-size: 4.5rem;
+      animation: flagwave 3s ease-in-out infinite;
+      transform-origin: bottom center;
+      animation-direction: reverse;
+      justify-self: start;
+      padding-left: 20px;
+    }
+    @keyframes flagwave {
+      0%, 100% { transform: rotate(-3deg); }
+      50%       { transform: rotate(3deg); }
+    }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(3.5rem, 10vw, 6rem);
+      color: var(--white);
+      letter-spacing: 0.08em;
+      padding-left: 0.08em;
+      line-height: 0.9;
+      position: relative;
+      white-space: nowrap;
+    }
+    h1 br { display: none; }
+    h1 em {
+      color: var(--gold);
+      font-style: normal;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.5);
+      margin-top: 12px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      position: relative;
+    }
+    .window-tag {
+      color: var(--gold);
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 14px 0 0px;
+      display: block;
+    }
+
+    /* ── Sunset pill highlight ── */
+    .sunset-pill {
+      background: var(--gold);
+      color: var(--green-deep);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 800;
+      margin-left: 5px;
+      display: inline-block;
+      vertical-align: baseline;
+    }
+
+    /* ── Updated bar ── */
+    .updated-bar {
+      background: var(--green-mid);
+      text-align: center;
+      padding: 10px 24px;
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.04em;
+      border-bottom: 3px solid var(--gold);
+    }
+    .updated-bar strong { color: var(--white); font-weight: 500; }
+
+    /* ── Main grid ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 20px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      align-items: start;
+    }
+
+    /* ── Course card ── */
+    .course-card {
+      background: var(--white);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(13,43,26,0.06);
+    }
+    .course-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(13,43,26,0.18), 0 2px 8px rgba(13,43,26,0.1);
+    }
+    .card-header {
+      background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
+      padding: 20px 24px 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card-header::before {
+      content: '⛳';
+      position: absolute;
+      right: 16px;
+      top: 12px;
+      font-size: 2.5rem;
+      opacity: 0.15;
+    }
+    .course-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      color: var(--white);
+      letter-spacing: 0.06em;
+      line-height: 1;
+    }
+    .course-meta {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.55);
+      letter-spacing: 0.04em;
+      margin-top: 4px;
+    }
+    .card-header a {
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+    }
+
+    /* ── Day block ── */
+    .day-block {
+      padding: 14px 20px;
+      border-bottom: 1px solid #edf5f0;
+      background: var(--white);
+    }
+    .day-block:last-child { border-bottom: none; }
+    .day-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    .day-name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-mid);
+    }
+    .book-btn {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--gold-dark);
+      background: rgba(232, 185, 74, 0.12);
+      text-decoration: none;
+      padding: 5px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(232, 185, 74, 0.35);
+      transition: all 0.15s;
+      letter-spacing: 0.04em;
+    }
+    .book-btn:hover { background: var(--gold); color: var(--green-deep); border-color: var(--gold); }
+
+    /* ── Slots ── */
+    .slots {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .slot {
+      background: var(--green-pale);
+      color: var(--green-deep);
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+      border: 1px solid rgba(46,139,79,0.2);
+      min-width: 82px;
+      text-align: center;
+    }
+    .no-times {
+      font-size: 0.82rem;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    /* ── Callout strip ── */
+    .callout-strip {
+      background: var(--green-deep);
+      padding: 14px 24px;
+      margin: 20px 20px 0;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      max-width: 1060px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .callout-quote {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      text-align: center;
+      flex: 1;
+    }
+    .callout-quote span {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.55em;
+      display: block;
+      letter-spacing: 0.2em;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      margin-top: 2px;
+    }
+    .callout-divider {
+      width: 1px;
+      height: 28px;
+      background: rgba(255,255,255,0.15);
+      flex-shrink: 0;
+    }
+
+    /* ── Check Now buttons ── */
+    .check-now-wrap-top {
+      text-align: center;
+      padding: 14px 24px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+    .check-now-wrap-bottom {
+      display: none;
+    }
+    .check-now-btn {
+      background: rgba(13, 43, 26, 0.5);
+      color: var(--gold);
+      border: 1px solid rgba(232,185,74,0.55);
+      height: 32px;
+      width: 180px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      border-radius: 40px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .check-now-btn:hover { background: var(--gold); color: var(--green-deep); border-color: var(--gold); }
+    .check-now-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Minutes ago ── */
+    .mins-ago {
+      font-size: 0.72rem;
+      color: var(--gold);
+      margin-left: 6px;
+      font-weight: 500;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--green-deep);
+      color: var(--white);
+      padding: 12px 28px;
+      border-radius: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      border: 1px solid var(--gold);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      opacity: 0;
+      z-index: 999;
+      white-space: nowrap;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 32px 24px;
+      font-size: 0.75rem;
+      color: var(--text-light);
+      border-top: 2px solid rgba(13,43,26,0.08);
+      margin-top: 24px;
+    }
+    .footer-fore {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      color: var(--green-light);
+      letter-spacing: 0.2em;
+      display: block;
+      margin-bottom: 8px;
+      opacity: 0.4;
+    }
+
+    /* ════════════════════════════════════════════
+       MOBILE OVERRIDES  (≤ 767px)
+       ════════════════════════════════════════════ */
+    @media (max-width: 767px) {
+
+      /* Ticker */
+      .ticker { font-size: 0.82rem; }
+
+      /* Header */
+      header { padding: 14px 0; }
+      header::after { height: 6px; }
+
+      /* Switch to block layout so center text owns full width */
+      .header-inner {
+        display: block;
+        position: relative;
+        text-align: center;
+        padding: 0 55px;
+        max-width: 100%;
+      }
+
+      /* Pin emojis to absolute edges */
+      .header-flag {
+        position: absolute;
+        left: 10px;
+        top: 28%;
+        font-size: 2.4rem;
+        padding: 0;
+        margin: 0;
+        animation: flagwave-mobile 3s ease-in-out infinite;
+      }
+      .header-golfer {
+        position: absolute;
+        right: 10px;
+        top: 28%;
+        font-size: 2.4rem;
+        padding: 0;
+        margin: 0;
+        animation: flagwave-mobile 3s ease-in-out infinite;
+        animation-direction: reverse;
+      }
+
+      /* Keyframe includes translateY so it doesn't fight the animation */
+      @keyframes flagwave-mobile {
+        0%, 100% { transform: translateY(-28%) rotate(-3deg); }
+        50%       { transform: translateY(-28%) rotate(3deg); }
+      }
+
+      /* Force inner text div to full width so subtitle centers correctly */
+      .header-inner > div {
+        width: 100%;
+        text-align: center;
+        display: block;
+      }
+
+      /* Force subtitle to truly center */
+      header .subtitle {
+        white-space: nowrap !important;
+        text-align: center !important;
+        width: 100% !important;
+        display: block !important;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+      }
+
+      h1 { font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }
+      h1 br { display: inline; }
+      .window-tag { font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }
+      .sunset-pill { font-size: 0.68rem; padding: 1px 5px; }
+
+      /* Updated bar */
+      .updated-bar { font-size: 0.78rem; padding: 6px 15px; }
+
+      /* Grid */
+      main { margin: 15px auto 0; padding: 0 12px; gap: 15px; }
+
+      /* Card */
+      .course-card { border-radius: 12px; }
+      .course-card:hover { transform: none; }
+      .card-header { padding: 12px 15px; }
+      .card-header::before { font-size: 1.8rem; opacity: 0.12; top: 8px; right: 12px; }
+      .course-name { font-size: 1.5rem; }
+      .course-meta { font-size: 0.68rem; }
+
+      /* Day block */
+      .day-block { padding: 10px 15px; min-height: 58px; position: relative; }
+      .day-header { margin-bottom: 6px; }
+      .day-name { font-size: 0.75rem; }
+
+      /* Book button */
+      .book-btn {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        font-size: 0.6rem;
+        font-weight: 700;
+        background: var(--gold);
+        color: var(--green-deep);
+        padding: 3px 10px;
+        border-radius: 20px;
+        border: none;
+        width: auto;
+      }
+      .book-btn:hover {
+        background: var(--gold-dark);
+        color: var(--green-deep);
+      }
+
+      /* Slots */
+      .slots { gap: 4px; padding-right: 50px; }
+      .slot {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 4px;
+        min-width: auto;
+      }
+      .no-times { font-size: 0.75rem; }
+
+      /* Hide callout strip on mobile */
+      .callout-strip { display: none; }
+
+      /* Hide top buttons on mobile, show bottom ones instead */
+      .check-now-wrap-top { display: none; }
+      .check-now-wrap-bottom {
+        display: flex;
+        justify-content: center;
+        padding: 20px;
+        gap: 10px;
+      }
+      .check-now-btn {
+        background: var(--green-deep);
+        color: var(--white);
+        border: 1px solid var(--gold);
+        padding: 10px 24px;
+        width: auto;
+        font-size: 1rem;
+        border-radius: 30px;
+        box-shadow: none;
+      }
+      .check-now-btn:hover { transform: none; background: var(--green-mid); }
+
+      /* Footer */
+      footer { padding: 20px; font-size: 0.7rem; margin-top: 12px; }
+      .footer-fore { display: none; }
+
+      /* Toast */
+      .toast { bottom: 24px; font-size: 0.8rem; padding: 10px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ticker">
+    <div class="ticker-inner">
+      <span>FORE! ⛳</span>
+      <span>TEE TIME WATCH 🏌️</span>
+      <span>MIAMI AREA GOLF ⛳</span>
+      <span>BOOK BEFORE THEY'RE GONE 🏌️</span>
+      <span>DON'T THREE PUTT ⛳</span>
+      <span>WEEKEND AVAILABILITY 🏌️</span>
+      <span>AVOID THREE PUTTS! ⛳</span>
+      <span>JUST BOOK THE TEE TIME 🏌️</span>
+      <span>FORE! ⛳</span>
+      <span>TEE TIME WATCH 🏌️</span>
+      <span>MIAMI AREA GOLF ⛳</span>
+      <span>BOOK BEFORE THEY'RE GONE 🏌️</span>
+      <span>DON'T THREE PUTT ⛳</span>
+      <span>WEEKEND AVAILABILITY 🏌️</span>
+      <span>AVOID THREE PUTTS! ⛳</span>
+      <span>JUST BOOK THE TEE TIME 🏌️</span>
+    </div>
+  </div>
+
+  <header>
+    <div class="header-inner">
+      <span class="header-flag">⛳</span>
+      <div>
+        <h1>TEE <em>TIME</em><br> WATCH</h1>
+        <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
+        <span class="window-tag">⏱ 8:00 AM – 3:00 PM <span class="sunset-pill">SUNSET: 6:25 PM</span></span>
+      </div>
+      <span class="header-golfer">🏌️</span>
+    </div>
+  </header>
+
+  <div class="updated-bar">
+    Checked every 15 minutes <br>Last run: <strong>9:34 AM ET, Wednesday March 4, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+  </div>
+
+  <div class="check-now-wrap-top">
+    <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
+    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
+  </div>
+
+  <main>
+    
+        <div class="course-card">
+          <div class="card-header">
+            <div class="course-name">Miami Lakes</div>
+            <div class="course-meta">6801 Miami Lakes Dr, Miami Lakes</div>
+            <div class="course-meta"><a href="tel:(305) 558-4653">(305) 558-4653</a></div>
+          </div>
+          
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Friday, Mar 6</span>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=14" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Saturday, Mar 7</span>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=14" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=15" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">2:36 PM</span></div>
+            </div>
+        </div>
+        <div class="course-card">
+          <div class="card-header">
+            <div class="course-name">Normandy Shores</div>
+            <div class="course-meta">2401 Biarritz Dr, Miami Beach</div>
+            <div class="course-meta"><a href="tel:(305) 868-6502">(305) 868-6502</a></div>
+          </div>
+          
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Friday, Mar 6</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-06&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Saturday, Mar 7</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-03-08&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">2:36 PM</span><span class="slot">2:44 PM</span><span class="slot">2:52 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
+            </div>
+        </div>
+        <div class="course-card">
+          <div class="card-header">
+            <div class="course-name">Miami Shores</div>
+            <div class="course-meta">10000 Biscayne Blvd, Miami Shores</div>
+            <div class="course-meta"><a href="tel:(305) 795-2369">(305) 795-2369</a></div>
+          </div>
+          
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Friday, Mar 6</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-06&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Saturday, Mar 7</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Mar 8</span>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-08&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <p class="no-times">No times available</p>
+            </div>
+        </div>
+  </main>
+
+  <div class="callout-strip">
+    <div class="callout-quote">FORE!<span>heads up</span></div>
+    <div class="callout-divider"></div>
+    <div class="callout-quote">BOOK FAST<span>they go quick</span></div>
+    <div class="callout-divider"></div>
+    <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
+  </div>
+
+  <div class="check-now-wrap-bottom">
+    <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
+    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
+  </div>
+
+  <footer>
+    <span class="footer-fore">⛳ 🏌️ ⛳</span>
+    Monitoring 3 courses · Fri–Sun · Times shown in ET<br>
+    © 2026 Tee Time Watch
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── Minutes ago counter ──
+    (function() {
+      const el = document.getElementById('mins-ago');
+      if (!el) return;
+      const lastRun = new Date(1772634875 * 1000);
+      function update() {
+        const mins = Math.floor((Date.now() - lastRun) / 60000);
+        if (mins < 1)       el.textContent = ' · just now';
+        else if (mins < 60) el.textContent = ' · ' + mins + ' min' + (mins === 1 ? '' : 's') + ' ago';
+        else                el.textContent = ' · ' + Math.floor(mins/60) + 'h ago';
+      }
+      update();
+      setInterval(update, 30000);
+    })();
+
+    // ── Toast helper ──
+    function showToast(msg, duration = 3500) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), duration);
+    }
+
+    // ── Check Now ──
+    async function triggerCheck() {
+      const btns = document.querySelectorAll('.check-now-btn');
+      btns.forEach(b => { b.disabled = true; });
+      btns.forEach(b => { if (b.textContent.includes('CHECK')) b.textContent = 'TRIGGERING… ⛳'; });
+      try {
+        const resp = await fetch('/api/trigger', { method: 'POST' });
+        const data = await resp.json();
+        if (resp.ok) {
+          showToast('✓ Check triggered! Results update in ~2 mins.');
+        } else {
+          showToast('Error: ' + (data.error || 'unknown'));
+        }
+      } catch (e) {
+        showToast('Network error — try again.');
+      }
+      btns.forEach(b => { b.disabled = false; if (b.textContent.includes('TRIGGERING')) b.textContent = 'CHECK NOW ⛳'; });
+    }
+  </script>
+
+</body>
+</html>
