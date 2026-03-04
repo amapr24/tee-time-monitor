@@ -1424,8 +1424,8 @@ def generate_html():
 </body>
 </html>"""
 
-    Path("index.html").write_text(html)
-    print("  index.html generated.")
+    Path("tee_times.html").write_text(html)
+    print("  tee_times.html generated.")
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
