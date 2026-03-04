@@ -4,7 +4,7 @@ Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
 Setup:
-  pip install playwright requests
+  pip install playwright requests astral
   playwright install chromium
 
 To add a new course, just add an entry to the COURSES list below.
@@ -17,6 +17,7 @@ import random
 import smtplib
 from datetime import date, timedelta, datetime
 from email.mime.text import MIMEText
+from functools import lru_cache
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -100,15 +101,16 @@ CACHE_DIR = Path(".")   # cache files live in the repo root alongside the script
 
 MIAMI = LocationInfo("Miami", "USA", "America/New_York", 25.7617, -80.1918)
 
+@lru_cache(maxsize=32)
 def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
     """
     Returns the latest hour (24h int) to start a round, defined as
     4 hours before sunset in Miami. Falls back to fallback_hour if astral fails.
+    Cached so each date is only calculated once per run.
     """
     try:
         s = sun(MIAMI.observer, date=target_date, tzinfo=ET)
-        sunset_hour  = s["sunset"].hour
-        cutoff_hour  = sunset_hour - 4
+        cutoff_hour = s["sunset"].hour - 4
         print(f"  Sunset: {s['sunset'].strftime('%-I:%M %p ET')} → cutoff: {cutoff_hour:02d}:00")
         return cutoff_hour
     except Exception as e:
@@ -119,13 +121,13 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
 
 def get_upcoming_weekend_dates() -> list[date]:
     """
-    Return all Fri/Sat/Sun from today through the next 6 days (Eastern Time).
-    Covers remaining days of this weekend + the full next weekend.
+    Return all Fri/Sat/Sun from today through the next 9 days (Eastern Time).
+    Covers the current booking window (~7 days ahead) across all courses.
     """
     today = datetime.now(ET).date()
     return [
         today + timedelta(days=i)
-        for i in range(6)
+        for i in range(9)
         if (today + timedelta(days=i)).weekday() in (4, 5, 6)
     ]
 
@@ -269,6 +271,7 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
     url      = f"{base_url}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}"
 
     page = await context.new_page()
+    tee_times = []
     try:
         print(f"  Loading page...")
         await page.goto(url, wait_until="networkidle", timeout=60_000)
