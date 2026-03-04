@@ -1437,12 +1437,9 @@ async def main():
     print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}\n")
 
     async with async_playwright() as playwright:
-        for course in COURSES:
-            await check_course(playwright, course, dates)
-            # Pause between courses — looks like a human switching sites
-            delay = random.uniform(2.0, 4.0)
-            print(f"\nWaiting {delay:.1f}s before next course...")
-            await asyncio.sleep(delay)
+        await asyncio.gather(
+            *[check_course(playwright, course, dates) for course in COURSES]
+        )
 
     print("\n" + "="*60)
     print("Generating index.html...")
