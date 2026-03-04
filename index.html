@@ -83,7 +83,6 @@
     }
     .header-inner {
       display: grid;
-      /* Change 1fr to minmax(0, 1fr) on both sides */
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
       position: relative;
@@ -115,8 +114,7 @@
       font-size: clamp(3.5rem, 10vw, 6rem);
       color: var(--white);
       letter-spacing: 0.08em;
-      /* Add this line: */
-      padding-left: 0.08em; 
+      padding-left: 0.08em;
       line-height: 0.9;
       position: relative;
       white-space: nowrap;
@@ -139,7 +137,6 @@
       font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      #padding: 6px 0 8px;
       padding: 14px 0 0px;
       display: block;
     }
@@ -219,7 +216,6 @@
       letter-spacing: 0.04em;
       margin-top: 4px;
     }
-    /* Prevent browsers auto-linking phone numbers with blue link color */
     .card-header a {
       color: rgba(255,255,255,0.55);
       text-decoration: none;
@@ -322,7 +318,6 @@
     }
 
     /* ── Check Now buttons ── */
-    /* Top row: desktop only, sits just below the updated bar */
     .check-now-wrap-top {
       text-align: center;
       padding: 14px 24px 14px;
@@ -331,7 +326,6 @@
       align-items: center;
       gap: 12px;
     }
-    /* Bottom row: hidden on desktop, shown on mobile */
     .check-now-wrap-bottom {
       display: none;
     }
@@ -340,7 +334,7 @@
       color: var(--gold);
       border: 1px solid rgba(232,185,74,0.55);
       height: 32px;
-      width: 180px;  
+      width: 180px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -409,8 +403,6 @@
 
     /* ════════════════════════════════════════════
        MOBILE OVERRIDES  (≤ 767px)
-       Everything above stays 100% untouched.
-       Only these rules apply on small screens.
        ════════════════════════════════════════════ */
     @media (max-width: 767px) {
 
@@ -463,7 +455,8 @@
         text-align: center;
         display: block;
       }
-      /* Force subtitle to truly center — more specific selector to win over base */
+
+      /* Force subtitle to truly center */
       header .subtitle {
         white-space: nowrap !important;
         text-align: center !important;
@@ -475,30 +468,29 @@
 
       h1 { font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }
       h1 br { display: inline; }
-      .subtitle { font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }
       .window-tag { font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }
       .sunset-pill { font-size: 0.68rem; padding: 1px 5px; }
 
       /* Updated bar */
       .updated-bar { font-size: 0.78rem; padding: 6px 15px; }
 
-      /* Grid — already collapses to 1 col via auto-fit, just tighten margins */
+      /* Grid */
       main { margin: 15px auto 0; padding: 0 12px; gap: 15px; }
 
       /* Card */
       .course-card { border-radius: 12px; }
-      .course-card:hover { transform: none; }  /* no hover lift on touch */
+      .course-card:hover { transform: none; }
       .card-header { padding: 12px 15px; }
       .card-header::before { font-size: 1.8rem; opacity: 0.12; top: 8px; right: 12px; }
       .course-name { font-size: 1.5rem; }
       .course-meta { font-size: 0.68rem; }
 
-      /* Day block — make room for the absolutely-positioned book button */
+      /* Day block */
       .day-block { padding: 10px 15px; min-height: 58px; position: relative; }
       .day-header { margin-bottom: 6px; }
       .day-name { font-size: 0.75rem; }
 
-      /* Book button — solid gold pill on mobile (more tappable, no hover) */
+      /* Book button */
       .book-btn {
         position: absolute;
         top: 10px;
@@ -517,7 +509,7 @@
         color: var(--green-deep);
       }
 
-      /* Slots — smaller chips, leave room for the floating book btn */
+      /* Slots */
       .slots { gap: 4px; padding-right: 50px; }
       .slot {
         font-size: 0.75rem;
@@ -554,7 +546,7 @@
       footer { padding: 20px; font-size: 0.7rem; margin-top: 12px; }
       .footer-fore { display: none; }
 
-      /* Toast — slightly higher so it clears mobile bottom bar */
+      /* Toast */
       .toast { bottom: 24px; font-size: 0.8rem; padding: 10px 20px; }
     }
   </style>
@@ -595,7 +587,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>12:05 AM ET, Wednesday March 4, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>12:10 AM ET, Wednesday March 4, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -720,7 +712,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772600728 * 1000);
+      const lastRun = new Date(1772601004 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
@@ -743,7 +735,6 @@
     async function triggerCheck() {
       const btns = document.querySelectorAll('.check-now-btn');
       btns.forEach(b => { b.disabled = true; });
-      // Update whichever set is visible
       btns.forEach(b => { if (b.textContent.includes('CHECK')) b.textContent = 'TRIGGERING… ⛳'; });
       try {
         const resp = await fetch('/api/trigger', { method: 'POST' });

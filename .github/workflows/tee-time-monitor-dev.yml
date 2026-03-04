@@ -19,10 +19,22 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-playwright-requests-astral
+
+      - name: Cache Playwright Chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-chromium
+
       - name: Install dependencies
         run: |
           pip install playwright requests astral
-          playwright install chromium --with-deps
+          playwright install chromium
 
       # ── Cache strategy ────────────────────────────────────────────────────
       # Restore using a prefix so we always get the most recent cache entry.
