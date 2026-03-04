@@ -13,6 +13,7 @@ To add a new course, just add an entry to the COURSES list below.
 import asyncio
 import json
 import os
+import random
 import smtplib
 from datetime import date, timedelta, datetime
 from email.mime.text import MIMEText
@@ -102,16 +103,12 @@ MIAMI = LocationInfo("Miami", "USA", "America/New_York", 25.7617, -80.1918)
 def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
     """
     Returns the latest hour (24h int) to start a round, defined as
-    5 hours before sunset in Miami. Falls back to fallback_hour if astral fails.
+    4 hours before sunset in Miami. Falls back to fallback_hour if astral fails.
     """
     try:
         s = sun(MIAMI.observer, date=target_date, tzinfo=ET)
-        sunset_hour   = s["sunset"].hour
-        sunset_minute = s["sunset"].minute
-        cutoff_hour   = sunset_hour - 4
-        #if sunset_minute < 30:
-            #cutoff_hour -= 1
-        #cutoff_hour = max(cutoff_hour, 6)
+        sunset_hour  = s["sunset"].hour
+        cutoff_hour  = sunset_hour - 4
         print(f"  Sunset: {s['sunset'].strftime('%-I:%M %p ET')} → cutoff: {cutoff_hour:02d}:00")
         return cutoff_hour
     except Exception as e:
@@ -122,7 +119,7 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
 
 def get_upcoming_weekend_dates() -> list[date]:
     """
-    Return all Fri/Sat/Sun from today through the next 9 days (Eastern Time).
+    Return all Fri/Sat/Sun from today through the next 6 days (Eastern Time).
     Covers remaining days of this weekend + the full next weekend.
     """
     today = datetime.now(ET).date()
@@ -170,14 +167,19 @@ def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
     seen = set()
     out  = []
     for slot in slots:
-        t = slot.get("time", "").strip().upper()
         if not is_within_window(slot.get("time", ""), t_min, t_max):
             continue
-        key = (t,)
+        key = (slot.get("time", "").strip().upper(),)
         if key not in seen:
             seen.add(key)
             out.append(slot)
     return out
+
+# ── Human-like delay helper ───────────────────────────────────────────────────
+
+async def human_delay(page, min_ms: int = 800, max_ms: int = 2200):
+    """Wait a random amount of time, like a human would between actions."""
+    await page.wait_for_timeout(random.randint(min_ms, max_ms))
 
 # ── Notifications ──────────────────────────────────────────────────────────────
 
@@ -232,6 +234,11 @@ def notify(subject: str, body: str, push_msg: str):
 # ── Browser launch helper (shared) ────────────────────────────────────────────
 
 async def launch_browser(playwright):
+    """
+    Launch a single browser + context to be reused across all dates for a course.
+    Shared context means cookies and cache persist between page loads, which
+    looks more like a returning human visitor than a fresh bot each time.
+    """
     browser = await playwright.chromium.launch(
         headless=True,
         args=["--disable-blink-features=AutomationControlled", "--no-sandbox"]
@@ -251,19 +258,21 @@ async def launch_browser(playwright):
 
 # ── Scraper: CPS Golf (Miami Lakes calendar-based) ────────────────────────────
 
-async def scrape_cpsgolf(course: dict, target_date: date) -> list[dict]:
-    base_url  = course["url"]
-    t_min     = course["tee_time_min"]
-    t_max     = course["tee_time_max"]
+async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]:
+    """
+    Reuses the shared browser context. Opens a new page per date so each
+    date is isolated, but benefits from shared cookies/cache.
+    """
+    base_url = course["url"]
+    t_min    = course["tee_time_min"]
+    t_max    = course["tee_time_max"]
+    url      = f"{base_url}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}"
 
-    async with async_playwright() as p:
-        browser, context = await launch_browser(p)
-        page = await context.new_page()
-        url  = f"{base_url}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}"
-
+    page = await context.new_page()
+    try:
         print(f"  Loading page...")
         await page.goto(url, wait_until="networkidle", timeout=60_000)
-        await page.wait_for_timeout(3_000)
+        await human_delay(page, 2000, 4000)
 
         # Navigate to correct month
         target_month_str = target_date.strftime("%B %Y")
@@ -310,7 +319,7 @@ async def scrape_cpsgolf(course: dict, target_date: date) -> list[dict]:
                     return false;
                 }
             """)
-            await page.wait_for_timeout(800)
+            await human_delay(page, 600, 1200)
 
         # Click the day
         day_num = str(target_date.day)
@@ -343,11 +352,10 @@ async def scrape_cpsgolf(course: dict, target_date: date) -> list[dict]:
 
         if not clicked:
             print(f"  Could not find day {day_num}.")
-            await browser.close()
             return []
 
         print(f"  {clicked}")
-        await page.wait_for_timeout(4_000)
+        await human_delay(page, 3000, 5000)
 
         tee_times = await page.evaluate("""
             () => {
@@ -406,14 +414,19 @@ async def scrape_cpsgolf(course: dict, target_date: date) -> list[dict]:
             }
         """)
 
-        await browser.close()
+    finally:
+        await page.close()
 
     print(f"  Raw slots found: {len(tee_times)}")
     return tee_times
 
 # ── Scraper: Chronogolf (date in URL) ─────────────────────────────────────────
 
-async def scrape_chronogolf(course: dict, target_date: date) -> list[dict]:
+async def scrape_chronogolf(context, course: dict, target_date: date) -> list[dict]:
+    """
+    Reuses the shared browser context. Opens a new page per date so each
+    date is isolated, but benefits from shared cookies/cache.
+    """
     base_url   = course["url"]
     holes      = course.get("holes", 18)
     group_size = course.get("group_size", 4)
@@ -428,13 +441,12 @@ async def scrape_chronogolf(course: dict, target_date: date) -> list[dict]:
     )
     print(f"  URL: {url}")
 
-    async with async_playwright() as p:
-        browser, context = await launch_browser(p)
-        page = await context.new_page()
-
+    page = await context.new_page()
+    tee_times = []
+    try:
         print(f"  Loading page...")
         await page.goto(url, wait_until="networkidle", timeout=60_000)
-        await page.wait_for_timeout(5_000)
+        await human_delay(page, 3000, 6000)
 
         try:
             await page.wait_for_selector(
@@ -521,7 +533,8 @@ async def scrape_chronogolf(course: dict, target_date: date) -> list[dict]:
             snippet = await page.evaluate("() => document.body.innerText.slice(0, 200)")
             print(f"  DEBUG page text:\n{snippet}\n")
 
-        await browser.close()
+    finally:
+        await page.close()
 
     print(f"  Raw slots found: {len(tee_times)}")
     return tee_times
@@ -559,7 +572,8 @@ def find_new_slots(old: list[dict], new: list[dict]) -> list[dict]:
 
 # ── Per-course, per-day check ──────────────────────────────────────────────────
 
-async def check_day(course: dict, target_date: date):
+async def check_day(context, course: dict, target_date: date):
+    """Check a single date for a course, reusing the shared browser context."""
     name       = course["name"]
     t_min      = course["tee_time_min"]
     t_max      = get_sunset_cutoff(target_date, course["tee_time_max"])
@@ -581,12 +595,12 @@ async def check_day(course: dict, target_date: date):
     if target_date == now_et.date() and now_et.hour >= t_max:
         print(f"  Skipping today -- already past {t_max:02d}:00 ET.\n")
         return
-  
-    # Scrape based on site type
+
+    # Scrape based on site type, passing the shared context
     if course["type"] == "cpsgolf":
-        raw = await scrape_cpsgolf(course, target_date)
+        raw = await scrape_cpsgolf(context, course, target_date)
     elif course["type"] == "chronogolf":
-        raw = await scrape_chronogolf(course, target_date)
+        raw = await scrape_chronogolf(context, course, target_date)
     else:
         print(f"  Unknown site type: {course['type']}")
         return
@@ -609,7 +623,6 @@ async def check_day(course: dict, target_date: date):
         date_label = f"{day_name}, {target_date.strftime('%B %-d, %Y')}"
         subject    = f"Tee Time Alert - {name} {target_date.strftime('%a %b %-d')}"
 
-        # Build book URL based on type
         if course["type"] == "cpsgolf":
             book_url = f"{course['url']}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}"
         else:
@@ -634,6 +647,30 @@ async def check_day(course: dict, target_date: date):
         notify(subject, body, push_msg)
     else:
         print("  No new slots since last check.")
+
+# ── Per-course runner (one browser for all dates) ─────────────────────────────
+
+async def check_course(playwright, course: dict, dates: list[date]):
+    """
+    Launch ONE browser for the entire course, reuse the context across all
+    dates, then close when done. Human-like: same session, persistent cookies.
+    """
+    print(f"\n{'#'*60}")
+    print(f"  {course['name']}  ({len(dates)} date(s))")
+    print(f"{'#'*60}")
+
+    browser, context = await launch_browser(playwright)
+    try:
+        for i, d in enumerate(dates):
+            await check_day(context, course, d)
+            # Small random pause between dates — looks like a human thinking
+            if i < len(dates) - 1:
+                delay = random.uniform(1.5, 3.5)
+                print(f"  Waiting {delay:.1f}s before next date...")
+                await asyncio.sleep(delay)
+    finally:
+        await browser.close()
+        print(f"\n  Browser closed for {course['name']}.")
 
 # ── HTML generator ────────────────────────────────────────────────────────────
 
@@ -705,7 +742,6 @@ def generate_html():
               {day_body}
             </div>"""
 
-        # Phone number lives on the card header for both desktop and mobile
         cards_html += f"""
         <div class="course-card">
           <div class="card-header">
@@ -801,7 +837,6 @@ def generate_html():
     }}
     .header-inner {{
       display: grid;
-      /* Change 1fr to minmax(0, 1fr) on both sides */
       grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
       align-items: center;
       position: relative;
@@ -833,8 +868,7 @@ def generate_html():
       font-size: clamp(3.5rem, 10vw, 6rem);
       color: var(--white);
       letter-spacing: 0.08em;
-      /* Add this line: */
-      padding-left: 0.08em; 
+      padding-left: 0.08em;
       line-height: 0.9;
       position: relative;
       white-space: nowrap;
@@ -857,7 +891,6 @@ def generate_html():
       font-size: 0.8rem;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      #padding: 6px 0 8px;
       padding: 14px 0 0px;
       display: block;
     }}
@@ -937,7 +970,6 @@ def generate_html():
       letter-spacing: 0.04em;
       margin-top: 4px;
     }}
-    /* Prevent browsers auto-linking phone numbers with blue link color */
     .card-header a {{
       color: rgba(255,255,255,0.55);
       text-decoration: none;
@@ -1040,7 +1072,6 @@ def generate_html():
     }}
 
     /* ── Check Now buttons ── */
-    /* Top row: desktop only, sits just below the updated bar */
     .check-now-wrap-top {{
       text-align: center;
       padding: 14px 24px 14px;
@@ -1049,7 +1080,6 @@ def generate_html():
       align-items: center;
       gap: 12px;
     }}
-    /* Bottom row: hidden on desktop, shown on mobile */
     .check-now-wrap-bottom {{
       display: none;
     }}
@@ -1058,7 +1088,7 @@ def generate_html():
       color: var(--gold);
       border: 1px solid rgba(232,185,74,0.55);
       height: 32px;
-      width: 180px;  
+      width: 180px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1127,8 +1157,6 @@ def generate_html():
 
     /* ════════════════════════════════════════════
        MOBILE OVERRIDES  (≤ 767px)
-       Everything above stays 100% untouched.
-       Only these rules apply on small screens.
        ════════════════════════════════════════════ */
     @media (max-width: 767px) {{
 
@@ -1181,7 +1209,8 @@ def generate_html():
         text-align: center;
         display: block;
       }}
-      /* Force subtitle to truly center — more specific selector to win over base */
+
+      /* Force subtitle to truly center */
       header .subtitle {{
         white-space: nowrap !important;
         text-align: center !important;
@@ -1193,30 +1222,29 @@ def generate_html():
 
       h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
       h1 br {{ display: inline; }}
-      .subtitle {{ font-size: 0.84rem; margin-top: 4px; letter-spacing: 0.5px; white-space: nowrap; }}
       .window-tag {{ font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }}
       .sunset-pill {{ font-size: 0.68rem; padding: 1px 5px; }}
 
       /* Updated bar */
       .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
 
-      /* Grid — already collapses to 1 col via auto-fit, just tighten margins */
+      /* Grid */
       main {{ margin: 15px auto 0; padding: 0 12px; gap: 15px; }}
 
       /* Card */
       .course-card {{ border-radius: 12px; }}
-      .course-card:hover {{ transform: none; }}  /* no hover lift on touch */
+      .course-card:hover {{ transform: none; }}
       .card-header {{ padding: 12px 15px; }}
       .card-header::before {{ font-size: 1.8rem; opacity: 0.12; top: 8px; right: 12px; }}
       .course-name {{ font-size: 1.5rem; }}
       .course-meta {{ font-size: 0.68rem; }}
 
-      /* Day block — make room for the absolutely-positioned book button */
+      /* Day block */
       .day-block {{ padding: 10px 15px; min-height: 58px; position: relative; }}
       .day-header {{ margin-bottom: 6px; }}
       .day-name {{ font-size: 0.75rem; }}
 
-      /* Book button — solid gold pill on mobile (more tappable, no hover) */
+      /* Book button */
       .book-btn {{
         position: absolute;
         top: 10px;
@@ -1235,7 +1263,7 @@ def generate_html():
         color: var(--green-deep);
       }}
 
-      /* Slots — smaller chips, leave room for the floating book btn */
+      /* Slots */
       .slots {{ gap: 4px; padding-right: 50px; }}
       .slot {{
         font-size: 0.75rem;
@@ -1272,7 +1300,7 @@ def generate_html():
       footer {{ padding: 20px; font-size: 0.7rem; margin-top: 12px; }}
       .footer-fore {{ display: none; }}
 
-      /* Toast — slightly higher so it clears mobile bottom bar */
+      /* Toast */
       .toast {{ bottom: 24px; font-size: 0.8rem; padding: 10px 20px; }}
     }}
   </style>
@@ -1374,7 +1402,6 @@ def generate_html():
     async function triggerCheck() {{
       const btns = document.querySelectorAll('.check-now-btn');
       btns.forEach(b => {{ b.disabled = true; }});
-      // Update whichever set is visible
       btns.forEach(b => {{ if (b.textContent.includes('CHECK')) b.textContent = 'TRIGGERING… ⛳'; }});
       try {{
         const resp = await fetch('/api/trigger', {{ method: 'POST' }});
@@ -1406,12 +1433,13 @@ async def main():
     print(f"  Courses: {', '.join(c['name'] for c in COURSES)}")
     print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}\n")
 
-    for course in COURSES:
-        print(f"\n{'#'*60}")
-        print(f"  {course['name']}")
-        print(f"{'#'*60}")
-        for d in dates:
-            await check_day(course, d)
+    async with async_playwright() as playwright:
+        for course in COURSES:
+            await check_course(playwright, course, dates)
+            # Pause between courses — looks like a human switching sites
+            delay = random.uniform(2.0, 4.0)
+            print(f"\nWaiting {delay:.1f}s before next course...")
+            await asyncio.sleep(delay)
 
     print("\n" + "="*60)
     print("Generating index.html...")
