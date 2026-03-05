@@ -587,7 +587,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>7:44 AM ET, Thursday March 5, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>8:03 AM ET, Thursday March 5, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -688,7 +688,7 @@
                 <span class="day-name">Saturday, Mar 7</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-03-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <p class="no-times">No times available</p>
+              <div class="slots"><span class="slot">9:50 AM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -733,7 +733,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1772714659 * 1000);
+      const lastRun = new Date(1772715801 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
