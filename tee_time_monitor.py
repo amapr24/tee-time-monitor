@@ -122,12 +122,12 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
 def get_upcoming_weekend_dates() -> list[date]:
     """
     Return all Fri/Sat/Sun from today through the next 9 days (Eastern Time).
-    Covers the current booking window (~7 days ahead) across all courses.
+    Covers the current booking window (~5 days ahead) across all courses.
     """
     today = datetime.now(ET).date()
     return [
         today + timedelta(days=i)
-        for i in range(9)
+        for i in range(6)
         if (today + timedelta(days=i)).weekday() in (4, 5, 6)
     ]
 
