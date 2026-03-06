@@ -122,12 +122,12 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
 def get_upcoming_weekend_dates() -> list[date]:
     """
     Return all Fri/Sat/Sun from today through the next 9 days (Eastern Time).
-    Covers the current booking window (~7 days ahead) across all courses.
+    Covers the current booking window (~5 days ahead) across all courses.
     """
     today = datetime.now(ET).date()
     return [
         today + timedelta(days=i)
-        for i in range(9)
+        for i in range(6)
         if (today + timedelta(days=i)).weekday() in (4, 5, 6)
     ]
 
@@ -657,6 +657,8 @@ async def check_course(playwright, course: dict, dates: list[date]):
     """
     Launch ONE browser for the entire course, reuse the context across all
     dates, then close when done. Human-like: same session, persistent cookies.
+    Each date is wrapped in its own try/except so a single timeout or crash
+    skips that date rather than aborting the remaining ones.
     """
     print(f"\n{'#'*60}")
     print(f"  {course['name']}  ({len(dates)} date(s))")
@@ -665,7 +667,10 @@ async def check_course(playwright, course: dict, dates: list[date]):
     browser, context = await launch_browser(playwright)
     try:
         for i, d in enumerate(dates):
-            await check_day(context, course, d)
+            try:
+                await check_day(context, course, d)
+            except Exception as e:
+                print(f"  ⚠️  Error on {course['name']} {d} -- skipping date. ({type(e).__name__}: {e})")
             # Small random pause between dates — looks like a human thinking
             if i < len(dates) - 1:
                 delay = random.uniform(1.5, 3.5)
@@ -1437,9 +1442,13 @@ async def main():
     print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}\n")
 
     async with async_playwright() as playwright:
-        await asyncio.gather(
-            *[check_course(playwright, course, dates) for course in COURSES]
+        results = await asyncio.gather(
+            *[check_course(playwright, course, dates) for course in COURSES],
+            return_exceptions=True,
         )
+        for course, result in zip(COURSES, results):
+            if isinstance(result, Exception):
+                print(f"\n  ⚠️  {course['name']} failed entirely: {type(result).__name__}: {result}")
 
     print("\n" + "="*60)
     print("Generating tee_times.html...")
