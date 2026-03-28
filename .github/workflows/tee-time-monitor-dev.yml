@@ -1,4 +1,4 @@
-name: Tee Time Monitor Dev
+name: Tee Time Monitor Miami Dev
 
 on:
   workflow_dispatch:  # triggered externally by cron-job.org
