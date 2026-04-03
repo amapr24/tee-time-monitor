@@ -587,7 +587,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>10:30 AM ET, Friday April 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>10:45 AM ET, Friday April 3, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -712,7 +712,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1775226655 * 1000);
+      const lastRun = new Date(1775227558 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
