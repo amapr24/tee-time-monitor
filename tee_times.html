@@ -587,7 +587,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>10:30 AM ET, Saturday April 4, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>10:45 AM ET, Saturday April 4, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -609,7 +609,7 @@
                 <span class="day-name">Saturday, Apr 4</span>
                 <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=15" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">11:48 AM</span></div>
+              <div class="slots"><span class="slot">11:48 AM</span><span class="slot">1:32 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -653,7 +653,7 @@
                 <span class="day-name">Saturday, Apr 4</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-04&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span><span class="slot">3:42 PM</span><span class="slot">3:50 PM</span><span class="slot">3:58 PM</span></div>
+              <div class="slots"><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span><span class="slot">3:42 PM</span><span class="slot">3:50 PM</span><span class="slot">3:58 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -691,7 +691,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1775313050 * 1000);
+      const lastRun = new Date(1775313947 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
