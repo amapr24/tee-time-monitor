@@ -587,7 +587,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>1:16 PM ET, Thursday April 9, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>1:31 PM ET, Thursday April 9, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -609,7 +609,7 @@
                 <span class="day-name">Friday, Apr 10</span>
                 <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=8&TeeOffTimeMax=15" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">12:28 PM</span></div>
+              <p class="no-times">No times available</p>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -667,14 +667,14 @@
                 <span class="day-name">Friday, Apr 10</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-10&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <p class="no-times">No times available</p>
+              <div class="slots"><span class="slot">8:30 AM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
                 <span class="day-name">Saturday, Apr 11</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-11&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span><span class="slot">3:10 PM</span><span class="slot">3:18 PM</span><span class="slot">3:26 PM</span><span class="slot">3:34 PM</span><span class="slot">3:50 PM</span><span class="slot">3:58 PM</span></div>
+              <div class="slots"><span class="slot">12:54 PM</span><span class="slot">1:02 PM</span><span class="slot">1:10 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span><span class="slot">3:10 PM</span><span class="slot">3:18 PM</span><span class="slot">3:26 PM</span><span class="slot">3:34 PM</span><span class="slot">3:50 PM</span><span class="slot">3:58 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -712,7 +712,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1775754967 * 1000);
+      const lastRun = new Date(1775755865 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
