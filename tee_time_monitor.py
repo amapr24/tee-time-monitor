@@ -83,7 +83,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_shores.json",
         "skip_past_dates": True,
-    }
+    },
     {
         "name":           "Miami Beach",
         "address":        "2301 Alton Rd, Miami Beach",
