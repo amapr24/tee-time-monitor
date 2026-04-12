@@ -84,6 +84,19 @@ COURSES = [
         "cache_file":     "cache_miami_shores.json",
         "skip_past_dates": True,
     }
+    {
+        "name":           "Miami Beach",
+        "address":        "2301 Alton Rd, Miami Beach",
+        "phone":          "(305) 532-3350",
+        "type":           "chronogolf",
+        "url":            "https://www.chronogolf.com/club/miami-beach-golf-club",
+        "holes":          18,
+        "group_size":     4,
+        "tee_time_min":   8,
+        "tee_time_max":   14,
+        "cache_file":     "cache_miami_beach.json",
+        "skip_past_dates": True,
+    },
 ]
 
 # ── Constants ─────────────────────────────────────────────────────────────────
