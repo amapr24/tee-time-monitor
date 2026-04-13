@@ -4,6 +4,10 @@ const BRANCH = 'main';
 const FILE   = 'tee_times.html';
 
 export default async function handler(req, res) {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}?ref=${BRANCH}`;
 
   const ghRes = await fetch(url, {

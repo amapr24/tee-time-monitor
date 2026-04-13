@@ -1,5 +1,5 @@
 """
-Tee Time Monitor -- Miami Lakes, Normandy & Miami Shores
+Tee Time Monitor -- Miami-area courses (CPS + Chronogolf)
 Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
@@ -40,8 +40,7 @@ PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
 # ── Course configuration ───────────────────────────────────────────────────────
 #
 # type "cpsgolf"    -- calendar-based site (Miami Lakes)
-# type "chronogolf" -- date-in-URL site (Normandy Shores, and any other
-#                      Chronogolf course -- just change the slug in the url)
+# type "chronogolf" -- date-in-URL site (Chronogolf courses; change the url slug)
 #
 # TEE_TIME_MIN / TEE_TIME_MAX: 24h hours. 0=midnight, 7=7AM, 18=6PM
 # skip_past_dates: True for Chronogolf (it silently redirects past dates to today)
@@ -134,8 +133,8 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
 
 def get_upcoming_weekend_dates() -> list[date]:
     """
-    Return all Fri/Sat/Sun from today through the next 9 days (Eastern Time).
-    Covers the current booking window (~5 days ahead) across all courses.
+    Return Fri/Sat/Sun dates within the next 6 calendar days (Eastern Time).
+    Covers the usual booking window across courses.
     """
     today = datetime.now(ET).date()
     return [
@@ -157,7 +156,7 @@ def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
             hour = 0
         return t_min <= hour <= t_max
     except Exception:
-        return True
+        return False
 
 
 def is_slot_in_past(time_str: str, target_date: date) -> bool:
@@ -189,6 +188,19 @@ def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
             seen.add(key)
             out.append(slot)
     return out
+
+
+def _format_hour_window_label(hour_24: int) -> str:
+    """Format a whole clock hour (0-23) as '8:00 AM' / '2:00 PM' for the HTML header."""
+    h = hour_24 % 24
+    if h == 0:
+        return "12:00 AM"
+    if h < 12:
+        return f"{h}:00 AM"
+    if h == 12:
+        return "12:00 PM"
+    return f"{h - 12}:00 PM"
+
 
 # ── Human-like delay helper ───────────────────────────────────────────────────
 
@@ -545,7 +557,7 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
             }
         """)
 
-        if not tee_times:
+        if not tee_times and os.environ.get("DEBUG_SCRAPE"):
             snippet = await page.evaluate("() => document.body.innerText.slice(0, 200)")
             print(f"  DEBUG page text:\n{snippet}\n")
 
@@ -733,10 +745,12 @@ def generate_html():
     s = sun(MIAMI.observer, date=first_date, tzinfo=ET)
     actual_sunset = s["sunset"].strftime("%-I:%M %p")
 
-    repr_cutoff = get_sunset_cutoff(first_date, COURSES[0]["tee_time_max"])
+    min_start_hour = min(c["tee_time_min"] for c in COURSES)
+    max_fallback_hour = max(c["tee_time_max"] for c in COURSES)
+    repr_cutoff = get_sunset_cutoff(first_date, max_fallback_hour)
     end_hour = repr_cutoff + 1
-    end_ampm = f"{end_hour % 12 or 12}:00 {'AM' if end_hour < 12 else 'PM'}"
-    start_ampm = f"{COURSES[0]['tee_time_min'] % 12 or 12}:00 AM"
+    end_ampm = _format_hour_window_label(end_hour)
+    start_ampm = _format_hour_window_label(min_start_hour)
 
     # Build course cards HTML
     cards_html = ""

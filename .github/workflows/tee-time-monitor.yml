@@ -4,7 +4,7 @@ on:
   workflow_dispatch:  # triggered externally by cron-job.org
 
 permissions:
-  contents: write   # needed to commit index.html back to repo
+  contents: write   # needed to commit tee_times.html back to repo
 
 jobs:
   check-tee-times:
