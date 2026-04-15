@@ -49,6 +49,7 @@ jobs:
             cache_normandy.json
             cache_miami_shores.json
             cache_miami_beach.json
+            cache_plantation.json
           key: teetime-cache-${{ github.run_id }}   # won't match — intentional
           restore-keys: teetime-cache-               # grabs the latest saved entry
 
@@ -71,6 +72,7 @@ jobs:
             cache_normandy.json
             cache_miami_shores.json
             cache_miami_beach.json
+            cache_plantation.json
           key: teetime-cache-${{ github.run_id }}
 
       - name: Commit and push tee_times.html
