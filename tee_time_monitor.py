@@ -84,6 +84,17 @@ COURSES = [
         "skip_past_dates": True,
     },
     {
+        "name":           "Plantation Preserve",
+        "address":        "7050 W Broward Blvd, Plantation",
+        "phone":          "(954) 585-5020",
+        "type":           "webtrac",
+        "url":            "https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail",
+        "tee_time_min":   8,
+        "tee_time_max":   14,
+        "cache_file":     "cache_plantation.json",
+        "skip_past_dates": False,
+    },
+    {
         "name":           "Miami Shores",
         "address":        "10000 Biscayne Blvd, Miami Shores",
         "phone":          "(305) 795-2369",
@@ -567,6 +578,82 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
     print(f"  Raw slots found: {len(tee_times)}")
     return tee_times
 
+# ── Scraper: WebTrac (Plantation Preserve) ────────────────────────────────────
+
+async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]:
+    """
+    Handles WebTrac session management by loading the base search page,
+    inputting the date, and submitting the form to generate a valid CSRF token.
+    """
+    page = await context.new_page()
+    tee_times = []
+    try:
+        print(f"  Loading WebTrac search page for clean session...")
+        # Navigate to the base URL without tokens to establish a clean session
+        await page.goto(course["url"], wait_until="networkidle", timeout=60_000)
+        await human_delay(page, 2000, 4000)
+
+        # WebTrac date format is MM/DD/YYYY
+        date_str = target_date.strftime("%m/%d/%Y")
+        print(f"  Setting search date to {date_str}...")
+        
+        # Look for the date input field and fill it
+        date_input_selector = 'input[name="begindate"], input[id*="begindate"]'
+        await page.wait_for_selector(date_input_selector, timeout=10_000)
+        
+        # Clear the field first, then fill it
+        await page.fill(date_input_selector, "")
+        await page.fill(date_input_selector, date_str)
+        
+        # Click the search button. 
+        search_btn_selector = 'input[name="grwebsearch_buttonsearch"], button[name*="search"]'
+        await page.click(search_btn_selector)
+        
+        print(f"  Waiting for results table to load...")
+        # Wait for the grid to appear, or timeout safely if no tee times exist for that date
+        try:
+            await page.wait_for_selector('tr.webtrac_grid_row', timeout=15_000)
+        except Exception:
+            print("  Timed out waiting for WebTrac results. Table might be empty.")
+            return []
+
+        await human_delay(page, 1000, 2000)
+
+        # Extract the data using Playwright's evaluate, matching the deduplicate_slots keys
+        tee_times = await page.evaluate("""
+            () => {
+                const results = [];
+                // Look for standard WebTrac grid rows
+                const rows = Array.from(document.querySelectorAll('tr.webtrac_grid_row'));
+                
+                rows.forEach(row => {
+                    const timeEl = row.querySelector('[class*="column_time"]');
+                    const priceEl = row.querySelector('[class*="column_price"]');
+                    const descEl = row.querySelector('[class*="column_description"]');
+                    
+                    if (timeEl) {
+                        const time = timeEl.innerText.trim();
+                        // Sanity check to ensure it's a valid time string
+                        if (time.match(/\\d{1,2}:\\d{2}/)) {
+                            results.push({
+                                time: time,
+                                price: priceEl ? priceEl.innerText.trim() : '',
+                                holes: descEl ? descEl.innerText.trim() : '18 Holes'
+                            });
+                        }
+                    }
+                });
+                return results;
+            }
+        """)
+        
+    finally:
+        await page.close()
+
+    print(f"  Raw slots found: {len(tee_times)}")
+    return tee_times
+
+
 # ── Cache ──────────────────────────────────────────────────────────────────────
 
 def load_cache(cache_file: Path, d: date) -> list[dict]:
@@ -629,6 +716,8 @@ async def check_day(context, course: dict, target_date: date):
         raw = await scrape_cpsgolf(context, course, target_date)
     elif course["type"] == "chronogolf":
         raw = await scrape_chronogolf(context, course, target_date)
+    elif course["type"] == "webtrac":
+        raw = await scrape_webtrac(context, course, target_date)
     else:
         print(f"  Unknown site type: {course['type']}")
         return
