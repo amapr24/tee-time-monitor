@@ -597,17 +597,22 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
         date_str = target_date.strftime("%m/%d/%Y")
         print(f"  Setting search date to {date_str}...")
         
-        # Look for the date input field and fill it
-        date_input_selector = 'input[name="begindate"], input[id*="begindate"]'
-        await page.wait_for_selector(date_input_selector, timeout=10_000)
+        date_input_selector = 'input[name="begindate"]'
         
-        # Clear the field first, then fill it
-        await page.fill(date_input_selector, "")
-        await page.fill(date_input_selector, date_str)
+        # Bypass Playwright's visibility checks by forcibly setting the value via JS
+        # We also dispatch 'input' and 'change' events so the Vue.js frontend registers the new date
+        await page.evaluate(f"""
+            const dateInput = document.querySelector('{date_input_selector}');
+            if (dateInput) {{
+                dateInput.value = '{date_str}';
+                dateInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                dateInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
+            }}
+        """)
         
-        # Click the search button. 
+        # Click the search button, using force=True in case the button has overlapping elements
         search_btn_selector = 'input[name="grwebsearch_buttonsearch"], button[name*="search"]'
-        await page.click(search_btn_selector)
+        await page.locator(search_btn_selector).click(force=True)
         
         print(f"  Waiting for results table to load...")
         # Wait for the grid to appear, or timeout safely if no tee times exist for that date
