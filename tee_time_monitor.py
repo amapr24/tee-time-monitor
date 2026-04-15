@@ -610,8 +610,8 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
             }}
         """)
         
-        # Click the search button, using force=True in case the button has overlapping elements
-        search_btn_selector = 'input[name="grwebsearch_buttonsearch"], button[name*="search"]'
+        # Click the search button using its exact ID to avoid strict mode violations
+        search_btn_selector = '#grwebsearch_buttonsearch'
         await page.locator(search_btn_selector).click(force=True)
         
         print(f"  Waiting for results table to load...")
