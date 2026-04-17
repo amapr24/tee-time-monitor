@@ -19,6 +19,7 @@ from datetime import date, timedelta, datetime
 from email.mime.text import MIMEText
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
 import requests
@@ -582,76 +583,90 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
 
 async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]:
     """
-    Handles WebTrac session management by loading the base search page,
-    inputting the date, and submitting the form to generate a valid CSRF token.
+    WebTrac (Plantation Preserve) scraper.
+
+    The form is a plain GET form. We load the base URL to acquire a session
+    cookie and CSRF token, then navigate directly to the results URL with all
+    parameters pre-set. This bypasses unreliable JS injection into the hidden
+    Vue-managed date/time pickers and avoids the default 11:00 pm begintime
+    that would filter out all morning tee times.
+
+    Row structure confirmed from live DOM inspection (2026-04-16):
+      td[0]  cart button
+      td[1]  time  ("7:00 am")
+      td[2]  date  ("04/18/2026")
+      td[3]  holes ("18 (Front)")
+      td[4]  course name
+      td[5]  open slots count
+      td[6]  per-slot status labels
+      td[7]  cost (often empty)
     """
     page = await context.new_page()
     tee_times = []
     try:
-        print(f"  Loading WebTrac search page for clean session...")
-        # Navigate to the base URL without tokens to establish a clean session
-        await page.goto(course["url"], wait_until="networkidle", timeout=60_000)
-        await human_delay(page, 2000, 4000)
-
-        # WebTrac date format is MM/DD/YYYY
-        date_str = target_date.strftime("%m/%d/%Y")
-        print(f"  Setting search date to {date_str}...")
-        
-        date_input_selector = 'input[name="begindate"]'
-        
-        # Bypass Playwright's visibility checks by forcibly setting the value via JS
-        # We also dispatch 'input' and 'change' events so the Vue.js frontend registers the new date
-        await page.evaluate(f"""
-            const dateInput = document.querySelector('{date_input_selector}');
-            if (dateInput) {{
-                dateInput.value = '{date_str}';
-                dateInput.dispatchEvent(new Event('input', {{ bubbles: true }}));
-                dateInput.dispatchEvent(new Event('change', {{ bubbles: true }}));
-            }}
-        """)
-        
-        # Click the search button using its exact ID to avoid strict mode violations
-        search_btn_selector = '#grwebsearch_buttonsearch'
-        await page.locator(search_btn_selector).click(force=True)
-        
-        print(f"  Waiting for results table to load...")
-        # Wait for the grid to appear, or timeout safely if no tee times exist for that date
-        try:
-            await page.wait_for_selector('tr.webtrac_grid_row', timeout=15_000)
-        except Exception:
-            print("  Timed out waiting for WebTrac results. Table might be empty.")
-            return []
-
+        print(f"  Loading WebTrac base page to acquire session...")
+        base_url = course["url"].split("?")[0]
+        await page.goto(base_url + "?module=GR&display=Detail", wait_until="networkidle", timeout=60_000)
         await human_delay(page, 1000, 2000)
 
-        # Extract the data using Playwright's evaluate, matching the deduplicate_slots keys
+        csrf = await page.evaluate("() => document.querySelector('#_csrf_token')?.value || ''")
+        if not csrf:
+            print("  WARNING: could not find CSRF token — search may fail.")
+
+        date_str = target_date.strftime("%m/%d/%Y")
+        print(f"  Navigating to results for {date_str}...")
+
+        # begintime="12:00 am" returns all tee times from opening; the caller's
+        # tee_time_min/max window filtering trims them to the desired range.
+        params = {
+            "Action":                 "Start",
+            "SubAction":              "",
+            "_csrf_token":            csrf,
+            "secondarycode":          "",
+            "numberofplayers":        "1",
+            "begindate":              date_str,
+            "begintime":              "12:00 am",
+            "numberofholes":          "18",
+            "reservee":               "",
+            "display":                "Detail",
+            "module":                 "GR",
+            "multiselectlist_value":  "",
+            "grwebsearch_buttonsearch": "yes",
+        }
+        await page.goto(base_url + "?" + urlencode(params), wait_until="networkidle", timeout=60_000)
+
+        try:
+            await page.wait_for_selector("#grwebsearch_output_table", timeout=15_000)
+        except Exception:
+            if os.environ.get("DEBUG_SCRAPE"):
+                snippet = await page.evaluate("() => document.body.innerText.slice(0, 300)")
+                print(f"  DEBUG page text:\n{snippet}\n")
+            print("  No results table — no tee times available for this date.")
+            return []
+
+        await human_delay(page, 500, 1000)
+
         tee_times = await page.evaluate("""
             () => {
                 const results = [];
-                // Look for standard WebTrac grid rows
-                const rows = Array.from(document.querySelectorAll('tr.webtrac_grid_row'));
-                
+                const rows = document.querySelectorAll('#grwebsearch_output_table tbody tr');
                 rows.forEach(row => {
-                    const timeEl = row.querySelector('[class*="column_time"]');
-                    const priceEl = row.querySelector('[class*="column_price"]');
-                    const descEl = row.querySelector('[class*="column_description"]');
-                    
-                    if (timeEl) {
-                        const time = timeEl.innerText.trim();
-                        // Sanity check to ensure it's a valid time string
-                        if (time.match(/\\d{1,2}:\\d{2}/)) {
-                            results.push({
-                                time: time,
-                                price: priceEl ? priceEl.innerText.trim() : '',
-                                holes: descEl ? descEl.innerText.trim() : '18 Holes'
-                            });
-                        }
-                    }
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length < 6) return;
+                    const openSlots = parseInt(cells[5].innerText.trim()) || 0;
+                    if (openSlots === 0) return;
+                    const time = cells[1].innerText.trim();
+                    if (!time.match(/\\d{1,2}:\\d{2}/)) return;
+                    results.push({
+                        time:  time,
+                        price: cells[7] ? cells[7].innerText.trim() : '',
+                        holes: cells[3] ? cells[3].innerText.trim() : '18 Holes',
+                    });
                 });
                 return results;
             }
         """)
-        
+
     finally:
         await page.close()
 
