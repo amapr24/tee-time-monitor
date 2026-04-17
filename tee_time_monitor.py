@@ -1,5 +1,5 @@
 """
-Tee Time Monitor -- Miami Lakes, Normandy & Miami Shores
+Tee Time Monitor -- Miami-area courses (CPS + Chronogolf)
 Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
@@ -19,6 +19,7 @@ from datetime import date, timedelta, datetime
 from email.mime.text import MIMEText
 from functools import lru_cache
 from pathlib import Path
+from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
 import requests
@@ -40,8 +41,7 @@ PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
 # ── Course configuration ───────────────────────────────────────────────────────
 #
 # type "cpsgolf"    -- calendar-based site (Miami Lakes)
-# type "chronogolf" -- date-in-URL site (Normandy Shores, and any other
-#                      Chronogolf course -- just change the slug in the url)
+# type "chronogolf" -- date-in-URL site (Chronogolf courses; change the url slug)
 #
 # TEE_TIME_MIN / TEE_TIME_MAX: 24h hours. 0=midnight, 7=7AM, 18=6PM
 # skip_past_dates: True for Chronogolf (it silently redirects past dates to today)
@@ -83,6 +83,17 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_normandy.json",
         "skip_past_dates": True,
+    },
+    {
+        "name":           "Plantation Preserve",
+        "address":        "7050 W Broward Blvd, Plantation",
+        "phone":          "(954) 585-5020",
+        "type":           "webtrac",
+        "url":            "https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail",
+        "tee_time_min":   8,
+        "tee_time_max":   14,
+        "cache_file":     "cache_plantation.json",
+        "skip_past_dates": False,
     },
     {
         "name":           "Miami Shores",
@@ -134,8 +145,8 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
 
 def get_upcoming_weekend_dates() -> list[date]:
     """
-    Return all Fri/Sat/Sun from today through the next 9 days (Eastern Time).
-    Covers the current booking window (~5 days ahead) across all courses.
+    Return Fri/Sat/Sun dates within the next 6 calendar days (Eastern Time).
+    Covers the usual booking window across courses.
     """
     today = datetime.now(ET).date()
     return [
@@ -157,7 +168,7 @@ def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
             hour = 0
         return t_min <= hour <= t_max
     except Exception:
-        return True
+        return False
 
 
 def is_slot_in_past(time_str: str, target_date: date) -> bool:
@@ -189,6 +200,19 @@ def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
             seen.add(key)
             out.append(slot)
     return out
+
+
+def _format_hour_window_label(hour_24: int) -> str:
+    """Format a whole clock hour (0-23) as '8:00 AM' / '2:00 PM' for the HTML header."""
+    h = hour_24 % 24
+    if h == 0:
+        return "12:00 AM"
+    if h < 12:
+        return f"{h}:00 AM"
+    if h == 12:
+        return "12:00 PM"
+    return f"{h - 12}:00 PM"
+
 
 # ── Human-like delay helper ───────────────────────────────────────────────────
 
@@ -545,7 +569,7 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
             }
         """)
 
-        if not tee_times:
+        if not tee_times and os.environ.get("DEBUG_SCRAPE"):
             snippet = await page.evaluate("() => document.body.innerText.slice(0, 200)")
             print(f"  DEBUG page text:\n{snippet}\n")
 
@@ -554,6 +578,101 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
 
     print(f"  Raw slots found: {len(tee_times)}")
     return tee_times
+
+# ── Scraper: WebTrac (Plantation Preserve) ────────────────────────────────────
+
+async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]:
+    """
+    WebTrac (Plantation Preserve) scraper.
+
+    The form is a plain GET form. We load the base URL to acquire a session
+    cookie and CSRF token, then navigate directly to the results URL with all
+    parameters pre-set. This bypasses unreliable JS injection into the hidden
+    Vue-managed date/time pickers and avoids the default 11:00 pm begintime
+    that would filter out all morning tee times.
+
+    Row structure confirmed from live DOM inspection (2026-04-16):
+      td[0]  cart button
+      td[1]  time  ("7:00 am")
+      td[2]  date  ("04/18/2026")
+      td[3]  holes ("18 (Front)")
+      td[4]  course name
+      td[5]  open slots count
+      td[6]  per-slot status labels
+      td[7]  cost (often empty)
+    """
+    page = await context.new_page()
+    tee_times = []
+    try:
+        print(f"  Loading WebTrac base page to acquire session...")
+        base_url = course["url"].split("?")[0]
+        await page.goto(base_url + "?module=GR&display=Detail", wait_until="networkidle", timeout=60_000)
+        await human_delay(page, 1000, 2000)
+
+        csrf = await page.evaluate("() => document.querySelector('#_csrf_token')?.value || ''")
+        if not csrf:
+            print("  WARNING: could not find CSRF token — search may fail.")
+
+        date_str = target_date.strftime("%m/%d/%Y")
+        print(f"  Navigating to results for {date_str}...")
+
+        # begintime="12:00 am" returns all tee times from opening; the caller's
+        # tee_time_min/max window filtering trims them to the desired range.
+        params = {
+            "Action":                 "Start",
+            "SubAction":              "",
+            "_csrf_token":            csrf,
+            "secondarycode":          "",
+            "numberofplayers":        "1",
+            "begindate":              date_str,
+            "begintime":              "12:00 am",
+            "numberofholes":          "18",
+            "reservee":               "",
+            "display":                "Detail",
+            "module":                 "GR",
+            "multiselectlist_value":  "",
+            "grwebsearch_buttonsearch": "yes",
+        }
+        await page.goto(base_url + "?" + urlencode(params), wait_until="networkidle", timeout=60_000)
+
+        try:
+            await page.wait_for_selector("#grwebsearch_output_table", timeout=15_000)
+        except Exception:
+            if os.environ.get("DEBUG_SCRAPE"):
+                snippet = await page.evaluate("() => document.body.innerText.slice(0, 300)")
+                print(f"  DEBUG page text:\n{snippet}\n")
+            print("  No results table — no tee times available for this date.")
+            return []
+
+        await human_delay(page, 500, 1000)
+
+        tee_times = await page.evaluate("""
+            () => {
+                const results = [];
+                const rows = document.querySelectorAll('#grwebsearch_output_table tbody tr');
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length < 6) return;
+                    const openSlots = parseInt(cells[5].innerText.trim()) || 0;
+                    if (openSlots === 0) return;
+                    const time = cells[1].innerText.trim();
+                    if (!time.match(/\\d{1,2}:\\d{2}/)) return;
+                    results.push({
+                        time:  time,
+                        price: cells[7] ? cells[7].innerText.trim() : '',
+                        holes: cells[3] ? cells[3].innerText.trim() : '18 Holes',
+                    });
+                });
+                return results;
+            }
+        """)
+
+    finally:
+        await page.close()
+
+    print(f"  Raw slots found: {len(tee_times)}")
+    return tee_times
+
 
 # ── Cache ──────────────────────────────────────────────────────────────────────
 
@@ -617,6 +736,8 @@ async def check_day(context, course: dict, target_date: date):
         raw = await scrape_cpsgolf(context, course, target_date)
     elif course["type"] == "chronogolf":
         raw = await scrape_chronogolf(context, course, target_date)
+    elif course["type"] == "webtrac":
+        raw = await scrape_webtrac(context, course, target_date)
     else:
         print(f"  Unknown site type: {course['type']}")
         return
@@ -733,10 +854,12 @@ def generate_html():
     s = sun(MIAMI.observer, date=first_date, tzinfo=ET)
     actual_sunset = s["sunset"].strftime("%-I:%M %p")
 
-    repr_cutoff = get_sunset_cutoff(first_date, COURSES[0]["tee_time_max"])
+    min_start_hour = min(c["tee_time_min"] for c in COURSES)
+    max_fallback_hour = max(c["tee_time_max"] for c in COURSES)
+    repr_cutoff = get_sunset_cutoff(first_date, max_fallback_hour)
     end_hour = repr_cutoff + 1
-    end_ampm = f"{end_hour % 12 or 12}:00 {'AM' if end_hour < 12 else 'PM'}"
-    start_ampm = f"{COURSES[0]['tee_time_min'] % 12 or 12}:00 AM"
+    end_ampm = _format_hour_window_label(end_hour)
+    start_ampm = _format_hour_window_label(min_start_hour)
 
     # Build course cards HTML
     cards_html = ""
