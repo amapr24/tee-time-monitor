@@ -587,7 +587,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>11:15 PM ET, Thursday April 16, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>11:21 PM ET, Thursday April 16, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="check-now-wrap-top">
@@ -686,6 +686,35 @@
         </div>
         <div class="course-card">
           <div class="card-header">
+            <div class="course-name">Plantation Preserve</div>
+            <div class="course-meta">7050 W Broward Blvd, Plantation</div>
+            <div class="course-meta"><a href="tel:(954) 585-5020">(954) 585-5020</a></div>
+          </div>
+          
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Friday, Apr 17</span>
+                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-17&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">1:09 pm</span><span class="slot">1:54 pm</span><span class="slot">2:03 pm</span><span class="slot">2:12 pm</span></div>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Saturday, Apr 18</span>
+                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-18&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">9:06 am</span><span class="slot">1:00 pm</span></div>
+            </div>
+            <div class="day-block">
+              <div class="day-header">
+                <span class="day-name">Sunday, Apr 19</span>
+                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-19&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+              </div>
+              <div class="slots"><span class="slot">10:00 am</span><span class="slot">11:57 am</span><span class="slot">12:06 pm</span><span class="slot">1:00 pm</span><span class="slot">2:30 pm</span><span class="slot">3:51 pm</span></div>
+            </div>
+        </div>
+        <div class="course-card">
+          <div class="card-header">
             <div class="course-name">Miami Shores</div>
             <div class="course-meta">10000 Biscayne Blvd, Miami Shores</div>
             <div class="course-meta"><a href="tel:(305) 795-2369">(305) 795-2369</a></div>
@@ -730,7 +759,7 @@
 
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
-    Monitoring 4 courses · Fri–Sun · Times shown in ET<br>
+    Monitoring 5 courses · Fri–Sun · Times shown in ET<br>
     © 2026 Tee Time Watch
   </footer>
 
@@ -741,7 +770,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776395755 * 1000);
+      const lastRun = new Date(1776396107 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
