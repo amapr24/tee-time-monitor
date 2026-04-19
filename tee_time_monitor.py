@@ -1565,8 +1565,8 @@ def generate_html():
 </body>
 </html>"""
 
-    Path("tee_times.html").write_text(html)
-    print("  tee_times.html generated.")
+    Path("index.html").write_text(html)
+    print("  index.html generated.")
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
@@ -1587,7 +1587,7 @@ async def main():
                 print(f"\n  ⚠️  {course['name']} failed entirely: {type(result).__name__}: {result}")
 
     print("\n" + "="*60)
-    print("Generating tee_times.html...")
+    print("Generating index.html...")
     generate_html()
     print("Done.\n")
 
