@@ -1,7 +1,7 @@
 const OWNER  = 'amapr24';
 const REPO   = 'tee-time-monitor';
 const BRANCH = 'main';
-const FILE   = 'tee_times.html';
+const FILE   = 'index.html';
 
 export default async function handler(req, res) {
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}?ref=${BRANCH}`;
