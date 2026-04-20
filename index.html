@@ -30,6 +30,11 @@
       --text-dark:    #0d2b1a;
       --text-mid:     #2e4d38;
       --text-light:   #5a7a66;
+      --text-on-brand:#ffffff;
+      --text-on-brand-muted: rgba(255,255,255,0.8);
+      --text-on-brand-subtle: rgba(255,255,255,0.78);
+      --text-on-brand-faint: rgba(255,255,255,0.5);
+      --divider-on-brand: rgba(255,255,255,0.15);
       /* time-of-day slot palettes */
       --early-bg:     #fff8e6;
       --early-border: #f0c060;
@@ -50,11 +55,15 @@
     [data-theme="dark"] {
       --cream:           #0f1a13;
       --bg:              #0f1a13;
-      --white:           #1a2e20;
       --surface:         #1a2e20;
       --text-dark:       #e8f0eb;
       --text-mid:        #a8c4b0;
       --text-light:      #6a9470;
+      --text-on-brand:   #f3f8f4;
+      --text-on-brand-muted: rgba(243,248,244,0.84);
+      --text-on-brand-subtle: rgba(243,248,244,0.8);
+      --text-on-brand-faint: rgba(243,248,244,0.58);
+      --divider-on-brand: rgba(243,248,244,0.18);
       --green-pale:      #1e3828;
       --border-soft:     #243d2c;
       --early-bg:        #2e2410;
@@ -165,7 +174,7 @@
     h1 {
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(3.5rem, 10vw, 6rem);
-      color: var(--white);
+      color: var(--text-on-brand);
       letter-spacing: 0.08em;
       padding-left: 0.08em;
       line-height: 0.9;
@@ -179,7 +188,7 @@
     }
     .subtitle {
       font-size: 0.9rem;
-      color: rgba(255,255,255,0.8);
+      color: var(--text-on-brand-muted);
       margin-top: 12px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
@@ -212,11 +221,11 @@
       text-align: center;
       padding: 10px 24px;
       font-size: 0.88rem;
-      color: rgba(255,255,255,0.8);
+      color: var(--text-on-brand-muted);
       letter-spacing: 0.04em;
       border-bottom: 3px solid var(--gold);
     }
-    .updated-bar strong { color: var(--white); font-weight: 500; }
+    .updated-bar strong { color: var(--text-on-brand); font-weight: 500; }
 
     /* ── Main grid ── */
     main {
@@ -259,18 +268,18 @@
     .course-name {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.8rem;
-      color: var(--white);
+      color: var(--text-on-brand);
       letter-spacing: 0.06em;
       line-height: 1;
     }
     .course-meta {
       font-size: 0.78rem;
-      color: rgba(255,255,255,0.78);
+      color: var(--text-on-brand-subtle);
       letter-spacing: 0.04em;
       margin-top: 4px;
     }
     .card-header a {
-      color: rgba(255,255,255,0.78);
+      color: var(--text-on-brand-subtle);
       text-decoration: none;
     }
 
@@ -414,7 +423,7 @@
       flex: 1;
     }
     .callout-quote span {
-      color: rgba(255,255,255,0.5);
+      color: var(--text-on-brand-faint);
       font-size: 0.55em;
       display: block;
       letter-spacing: 0.2em;
@@ -425,7 +434,7 @@
     .callout-divider {
       width: 1px;
       height: 28px;
-      background: rgba(255,255,255,0.15);
+      background: var(--divider-on-brand);
       flex-shrink: 0;
     }
 
@@ -444,7 +453,7 @@
       left: 50%;
       transform: translateX(-50%) translateY(80px);
       background: var(--green-deep);
-      color: var(--white);
+      color: var(--text-on-brand);
       padding: 12px 28px;
       border-radius: 40px;
       font-size: 0.85rem;
@@ -662,7 +671,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>5:46 PM ET, Monday April 20, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>6:10 PM ET, Monday April 20, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main aria-label="Course tee times">
@@ -679,7 +688,7 @@
                 <span class="day-name">Friday, Apr 24</span>
                 <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
+              <p class="no-times">No times available</p>
             </div>
             <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
@@ -723,7 +732,7 @@
                 <span class="day-name">Friday, Apr 24</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--early slot--new" role="listitem"><span class="new-badge" aria-label="New">NEW</span>8:28 AM</li><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
             <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
@@ -745,7 +754,7 @@
                 <span class="day-name">Friday, Apr 24</span>
                 <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:57 am</li><li class="slot slot--afternoon" role="listitem">1:54 pm</li><li class="slot slot--afternoon" role="listitem">2:21 pm</li><li class="slot slot--afternoon" role="listitem">2:30 pm</li><li class="slot slot--afternoon" role="listitem">2:39 pm</li><li class="slot slot--afternoon" role="listitem">2:48 pm</li><li class="slot slot--afternoon" role="listitem">3:15 pm</li><li class="slot slot--afternoon" role="listitem">3:24 pm</li><li class="slot slot--afternoon" role="listitem">3:33 pm</li><li class="slot slot--afternoon" role="listitem">3:51 pm</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:57 am</li><li class="slot slot--afternoon" role="listitem">1:54 pm</li><li class="slot slot--afternoon" role="listitem">2:21 pm</li><li class="slot slot--afternoon" role="listitem">2:30 pm</li><li class="slot slot--afternoon" role="listitem">2:48 pm</li><li class="slot slot--afternoon" role="listitem">3:15 pm</li><li class="slot slot--afternoon" role="listitem">3:24 pm</li><li class="slot slot--afternoon" role="listitem">3:33 pm</li><li class="slot slot--afternoon" role="listitem">3:51 pm</li></ul>
             </div>
             <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
@@ -814,7 +823,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776721571 * 1000);
+      const lastRun = new Date(1776723001 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
