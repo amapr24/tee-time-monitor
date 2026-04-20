@@ -54,7 +54,8 @@ COURSES = [
         "type":           "cpsgolf",
         "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
         "tee_time_min":   6,
-        "tee_time_max":   15,
+        "tee_time_max":   18,                 # TEMP: widened from 15 to confirm scraper — restore to 15 once verified
+        "ignore_sunset_cutoff": True,         # TEMP: bypass sunset clamp for the same diagnostic — remove with the line above
         "cache_file":     "cache_miami_lakes.json",
         "skip_past_dates": False,
     },
@@ -323,26 +324,6 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
             print(f"  [debug] body[:400]: {body_snippet!r}")
             if any(m in body_snippet.lower() for m in ["just a moment", "cloudflare", "attention required", "access denied"]):
                 print(f"  [debug] ⚠️ bot-challenge markers present in body text")
-
-        # CPS defaults the Players selector to 4. Any date without a 4-person
-        # opening in our time window then renders "No tee times available".
-        # Click "Any" so the tee sheet is unfiltered by party size.
-        any_clicked = await page.evaluate("""
-            () => {
-                for (const el of document.querySelectorAll('div, span, button, a, li')) {
-                    if ((el.innerText || '').trim() !== 'Any') continue;
-                    if (Array.from(el.children).some(c => (c.innerText || '').trim() === 'Any')) continue;
-                    el.click();
-                    return 'clicked: ' + el.tagName + ' class=' + el.className;
-                }
-                return null;
-            }
-        """)
-        if any_clicked:
-            print(f"  Players → Any ({any_clicked})")
-            await human_delay(page, 800, 1500)
-        else:
-            print(f"  Could not find Players 'Any' button — continuing with default.")
 
         # Navigate to correct month
         target_month_str = target_date.strftime("%B %Y")
@@ -771,7 +752,8 @@ async def check_day(context, course: dict, target_date: date):
     """Check a single date for a course, reusing the shared browser context."""
     name       = course["name"]
     t_min      = course["tee_time_min"]
-    t_max      = get_sunset_cutoff(target_date, course["tee_time_max"])
+    t_max      = (course["tee_time_max"] if course.get("ignore_sunset_cutoff")
+                  else get_sunset_cutoff(target_date, course["tee_time_max"]))
     cache_file = CACHE_DIR / course["cache_file"]
     day_name   = DAY_NAMES.get(target_date.weekday(), "Unknown")
 
@@ -887,7 +869,8 @@ def generate_html():
         cache_file = CACHE_DIR / course["cache_file"]
         days = []
         for d in dates:
-            t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
+            t_max_day = (course["tee_time_max"] if course.get("ignore_sunset_cutoff")
+                         else get_sunset_cutoff(d, course["tee_time_max"]))
             raw_slots = load_cache(cache_file, d)
             slots = [
                 s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
