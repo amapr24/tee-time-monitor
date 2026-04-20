@@ -317,38 +317,6 @@
       flex-shrink: 0;
     }
 
-    /* ── Check Now buttons ── */
-    .check-now-wrap-top {
-      text-align: center;
-      padding: 14px 24px 14px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-    }
-    .check-now-wrap-bottom {
-      display: none;
-    }
-    .check-now-btn {
-      background: rgba(13, 43, 26, 0.5);
-      color: var(--gold);
-      border: 1px solid rgba(232,185,74,0.55);
-      height: 32px;
-      width: 180px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.12em;
-      border-radius: 40px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .check-now-btn:hover { background: var(--gold); color: var(--green-deep); border-color: var(--gold); }
-    .check-now-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
     /* ── Minutes ago ── */
     .mins-ago {
       font-size: 0.72rem;
@@ -522,26 +490,6 @@
       /* Hide callout strip on mobile */
       .callout-strip { display: none; }
 
-      /* Hide top buttons on mobile, show bottom ones instead */
-      .check-now-wrap-top { display: none; }
-      .check-now-wrap-bottom {
-        display: flex;
-        justify-content: center;
-        padding: 20px;
-        gap: 10px;
-      }
-      .check-now-btn {
-        background: var(--green-deep);
-        color: var(--white);
-        border: 1px solid var(--gold);
-        padding: 10px 24px;
-        width: auto;
-        font-size: 1rem;
-        border-radius: 30px;
-        box-shadow: none;
-      }
-      .check-now-btn:hover { transform: none; background: var(--green-mid); }
-
       /* Footer */
       footer { padding: 20px; font-size: 0.7rem; margin-top: 12px; }
       .footer-fore { display: none; }
@@ -587,11 +535,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>9:45 AM ET, Monday April 20, 2026</strong><span class="mins-ago" id="mins-ago"></span>
-  </div>
-
-  <div class="check-now-wrap-top">
-    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
+    Checked every 15 minutes <br>Last run: <strong>9:57 AM ET, Monday April 20, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main>
@@ -652,7 +596,7 @@
                 <span class="day-name">Friday, Apr 24</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:52 PM</span><span class="slot">3:08 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
+              <div class="slots"><span class="slot">2:52 PM</span><span class="slot">3:16 PM</span><span class="slot">3:24 PM</span><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -696,7 +640,7 @@
                 <span class="day-name">Friday, Apr 24</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:22 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span><span class="slot">3:10 PM</span><span class="slot">3:18 PM</span><span class="slot">3:42 PM</span><span class="slot">3:50 PM</span><span class="slot">3:58 PM</span></div>
+              <div class="slots"><span class="slot">1:26 PM</span><span class="slot">2:22 PM</span><span class="slot">2:30 PM</span><span class="slot">2:38 PM</span><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span><span class="slot">3:10 PM</span><span class="slot">3:18 PM</span><span class="slot">3:42 PM</span><span class="slot">3:50 PM</span><span class="slot">3:58 PM</span></div>
             </div>
             <div class="day-block">
               <div class="day-header">
@@ -716,10 +660,6 @@
     <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
   </div>
 
-  <div class="check-now-wrap-bottom">
-    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
-  </div>
-
   <footer>
     <span class="footer-fore">⛳ 🏌️ ⛳</span>
     Monitoring 5 courses · Fri–Sun · Times shown in ET<br>
@@ -731,7 +671,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776692745 * 1000);
+      const lastRun = new Date(1776693462 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
