@@ -1035,6 +1035,11 @@ def generate_html():
       --text-dark:    #0d2b1a;
       --text-mid:     #2e4d38;
       --text-light:   #5a7a66;
+      --text-on-brand:#ffffff;
+      --text-on-brand-muted: rgba(255,255,255,0.8);
+      --text-on-brand-subtle: rgba(255,255,255,0.78);
+      --text-on-brand-faint: rgba(255,255,255,0.5);
+      --divider-on-brand: rgba(255,255,255,0.15);
       /* time-of-day slot palettes */
       --early-bg:     #fff8e6;
       --early-border: #f0c060;
@@ -1055,11 +1060,15 @@ def generate_html():
     [data-theme="dark"] {{
       --cream:           #0f1a13;
       --bg:              #0f1a13;
-      --white:           #1a2e20;
       --surface:         #1a2e20;
       --text-dark:       #e8f0eb;
       --text-mid:        #a8c4b0;
       --text-light:      #6a9470;
+      --text-on-brand:   #f3f8f4;
+      --text-on-brand-muted: rgba(243,248,244,0.84);
+      --text-on-brand-subtle: rgba(243,248,244,0.8);
+      --text-on-brand-faint: rgba(243,248,244,0.58);
+      --divider-on-brand: rgba(243,248,244,0.18);
       --green-pale:      #1e3828;
       --border-soft:     #243d2c;
       --early-bg:        #2e2410;
@@ -1170,7 +1179,7 @@ def generate_html():
     h1 {{
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(3.5rem, 10vw, 6rem);
-      color: var(--white);
+      color: var(--text-on-brand);
       letter-spacing: 0.08em;
       padding-left: 0.08em;
       line-height: 0.9;
@@ -1184,7 +1193,7 @@ def generate_html():
     }}
     .subtitle {{
       font-size: 0.9rem;
-      color: rgba(255,255,255,0.8);
+      color: var(--text-on-brand-muted);
       margin-top: 12px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
@@ -1217,11 +1226,11 @@ def generate_html():
       text-align: center;
       padding: 10px 24px;
       font-size: 0.88rem;
-      color: rgba(255,255,255,0.8);
+      color: var(--text-on-brand-muted);
       letter-spacing: 0.04em;
       border-bottom: 3px solid var(--gold);
     }}
-    .updated-bar strong {{ color: var(--white); font-weight: 500; }}
+    .updated-bar strong {{ color: var(--text-on-brand); font-weight: 500; }}
 
     /* ── Main grid ── */
     main {{
@@ -1264,18 +1273,18 @@ def generate_html():
     .course-name {{
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.8rem;
-      color: var(--white);
+      color: var(--text-on-brand);
       letter-spacing: 0.06em;
       line-height: 1;
     }}
     .course-meta {{
       font-size: 0.78rem;
-      color: rgba(255,255,255,0.78);
+      color: var(--text-on-brand-subtle);
       letter-spacing: 0.04em;
       margin-top: 4px;
     }}
     .card-header a {{
-      color: rgba(255,255,255,0.78);
+      color: var(--text-on-brand-subtle);
       text-decoration: none;
     }}
 
@@ -1419,7 +1428,7 @@ def generate_html():
       flex: 1;
     }}
     .callout-quote span {{
-      color: rgba(255,255,255,0.5);
+      color: var(--text-on-brand-faint);
       font-size: 0.55em;
       display: block;
       letter-spacing: 0.2em;
@@ -1430,7 +1439,7 @@ def generate_html():
     .callout-divider {{
       width: 1px;
       height: 28px;
-      background: rgba(255,255,255,0.15);
+      background: var(--divider-on-brand);
       flex-shrink: 0;
     }}
 
@@ -1449,7 +1458,7 @@ def generate_html():
       left: 50%;
       transform: translateX(-50%) translateY(80px);
       background: var(--green-deep);
-      color: var(--white);
+      color: var(--text-on-brand);
       padding: 12px 28px;
       border-radius: 40px;
       font-size: 0.85rem;
