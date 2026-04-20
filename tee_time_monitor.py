@@ -1067,7 +1067,7 @@ def generate_html():
     main {{
       max-width: 1100px;
       margin: 0 auto;
-      padding: 0 20px 20px;
+      padding: 24px 20px 20px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
@@ -1341,7 +1341,7 @@ def generate_html():
       .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
 
       /* Grid */
-      main {{ margin: 15px auto 0; padding: 0 12px; gap: 15px; }}
+      main {{ margin: 15px auto 0; padding: 16px 12px 0; gap: 15px; }}
 
       /* Card */
       .course-card {{ border-radius: 12px; }}
