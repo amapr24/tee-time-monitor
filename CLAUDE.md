@@ -25,7 +25,7 @@ State lives in two places:
 Single file, ~1600 lines, organized as:
 
 - `COURSES` list at the top — the config. Each entry has a `type` that routes to one of three scrapers:
-  - `cpsgolf` → `scrape_cpsgolf` (Miami Lakes; calendar widget, must click month `›` then day). **Known issue:** this scraper has produced zero slots in every run since the repo was created — likely either bot detection on `miamilakes.cps.golf` or a DOM change in the calendar that defeats the `innerText === day_num` leaf-click heuristic. When debugging, set `DEBUG_SCRAPE=1` and add a `page.content()` dump on the zero-slots path.
+  - `cpsgolf` → `scrape_cpsgolf` (Miami Lakes; calendar widget, must click month `›` then day). The site defaults the Players selector to 4 and does not expose a URL param for it, so the tee sheet returned is 4-person-only. If you ever want to broaden it, click the "Any" pill in the Players row before the day-click (previously prototyped and reverted — see git history).
   - `chronogolf` → `scrape_chronogolf` (date passed in URL query; `skip_past_dates: True` because Chronogolf silently redirects past dates to today and would poison the cache).
   - `webtrac` → `scrape_webtrac` (Plantation Preserve; plain GET form — must first load the base page to grab `#_csrf_token`, then navigate to the results URL with `begintime=12:00 am` to get all times regardless of the site's default cutoff).
 - `check_course` launches **one** browser per course and reuses the context across all target dates (shared cookies/UA make it look like a returning human visitor). Each date is in its own try/except so one failure doesn't abort the rest.
