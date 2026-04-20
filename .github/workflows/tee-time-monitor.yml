@@ -33,7 +33,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install playwright requests astral
+          pip install -r requirements.txt
           playwright install chromium
 
       # ── Cache strategy ────────────────────────────────────────────────────

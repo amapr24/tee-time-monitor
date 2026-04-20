@@ -40,21 +40,37 @@ When adding a new course, add a dict to `COURSES` **and** add its `cache_file` t
 
 ## Running
 
-There is no `requirements.txt`. The real stack is Playwright + `requests` + `astral`.
+Dependencies are pinned in `requirements.txt` (runtime) and `requirements-dev.txt` (adds pytest).
 
 To run the scraper locally (rarely needed — usually debug in Actions):
 
 ```bash
-pip install playwright requests astral
+pip install -r requirements.txt
 playwright install chromium
-DEBUG_SCRAPE=1 python tee_time_monitor.py    # DEBUG_SCRAPE prints page snippet when no slots parse
+DEBUG_SCRAPE=1 python tee_time_monitor.py                  # all courses
+python tee_time_monitor.py --course "miami beach"          # filter by substring, repeatable
 ```
+
+A filtered local run deliberately skips `generate_html()` so a partial scrape can't overwrite `index.html` with a subset of course data.
 
 Required env vars for notifications: `PUSHOVER_USER`, `PUSHOVER_TOKEN`, and optionally `EMAIL_SENDER`/`EMAIL_PASSWORD`/`EMAIL_TO` (Gmail SMTP). Missing creds are logged and skipped, not fatal.
 
 To trigger a real run: push to `main` and manually dispatch **Tee Time Monitor Miami** from the Actions tab. The external cron-job.org trigger hits the GitHub API directly with a PAT — no other service is in the chain.
 
-There are no tests, no linter config, and no build step.
+## Tests
+
+Parser logic is pure Python and tested without a browser. The three scrapers' `page.evaluate` blocks only *select* DOM elements and return raw innerText (or table cell arrays); `parse_cpsgolf` / `parse_chronogolf` / `parse_webtrac` do all regex extraction, so `tests/test_parsers.py` can feed fixtures directly.
+
+```bash
+pip install -r requirements-dev.txt
+pytest tests/ -q
+```
+
+Tests run automatically on PRs via `.github/workflows/tests.yml`. If you change a site-parsing regex, update the corresponding tests — they encode the exact current behavior (including quirks like "18 HOLES" capturing as "18 HOLE").
+
+Playwright is imported via a guarded `try/except` so the parsers module stays importable in environments where the Chromium binary isn't installed.
+
+`page.goto` is wrapped by `goto_with_retry` (3 attempts, exponential backoff) to ride through transient timeouts without losing the whole day.
 
 ## Branches / workflows
 

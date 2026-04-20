@@ -4,17 +4,22 @@ Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
 Setup:
-  pip install playwright requests astral
+  pip install -r requirements.txt
   playwright install chromium
 
 To add a new course, just add an entry to the COURSES list below.
 """
 
+from __future__ import annotations
+
+import argparse
 import asyncio
 import json
 import os
 import random
+import re
 import smtplib
+import sys
 from datetime import date, timedelta, datetime
 from email.mime.text import MIMEText
 from functools import lru_cache
@@ -25,7 +30,11 @@ from zoneinfo import ZoneInfo
 import requests
 from astral import LocationInfo
 from astral.sun import sun
-from playwright.async_api import async_playwright
+
+try:
+    from playwright.async_api import async_playwright
+except ImportError:  # playwright optional when only importing parsers (e.g. tests)
+    async_playwright = None  # type: ignore[assignment]
 
 # ── Email / Pushover credentials (from GitHub secrets) ────────────────────────
 
@@ -214,11 +223,170 @@ def _format_hour_window_label(hour_24: int) -> str:
     return f"{h - 12}:00 PM"
 
 
+# ── Parsers (pure functions, testable without a browser) ─────────────────────
+#
+# The JS in each scraper now only *selects* elements and returns their raw
+# innerText (or table cells). All regex extraction happens here so tests can
+# feed saved fixtures to these parsers without launching Chromium.
+
+_CPS_TIME_RE    = re.compile(r"(\d{1,2}:\d{2})\s*P\s*M|(\d{1,2}:\d{2})\s*A\s*M", re.I)
+_CPS_HOLE_RE    = re.compile(r"\d+\s*HOLE", re.I)
+_PRICE_RE       = re.compile(r"\$[\d,.]+")
+_CHRONO_12H_RE  = re.compile(r"(\d{1,2}:\d{2})\s*(AM|PM)", re.I)
+_CHRONO_24H_RE  = re.compile(r"\b([01]?\d|2[0-3]):(\d{2})\b")
+_CHRONO_HOLE_RE = re.compile(r"(\d+)\s*hole", re.I)
+_WEBTRAC_TIME_RE = re.compile(r"\d{1,2}:\d{2}")
+
+
+def _collapse(raw: str) -> str:
+    return re.sub(r"\s+", " ", raw or "").strip()
+
+
+def parse_cpsgolf_card(raw: str) -> dict | None:
+    raw = _collapse(raw)
+    if not raw:
+        return None
+    m = _CPS_TIME_RE.search(raw)
+    if not m:
+        return None
+    time_base = m.group(1) or m.group(2)
+    ampm = "PM" if m.group(1) else "AM"
+    holes = _CPS_HOLE_RE.search(raw)
+    price = _PRICE_RE.search(raw)
+    return {
+        "time":  f"{time_base} {ampm}",
+        "holes": holes.group(0) if holes else "",
+        "price": price.group(0) if price else "",
+    }
+
+
+def parse_cpsgolf(card_texts: list[str], body_text: str = "") -> list[dict]:
+    out, seen = [], set()
+    for raw in card_texts:
+        slot = parse_cpsgolf_card(raw)
+        if not slot:
+            continue
+        key = (slot["time"], slot["holes"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(slot)
+    if out:
+        return out
+    # Fallback: scrape any time-like tokens from full body text.
+    for m in _CPS_TIME_RE.finditer(_collapse(body_text)):
+        time_base = m.group(1) or m.group(2)
+        ampm = "PM" if m.group(1) else "AM"
+        time = f"{time_base} {ampm}"
+        key = (time, "")
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"time": time, "holes": "", "price": ""})
+    return out
+
+
+def parse_chronogolf_card(raw: str) -> dict | None:
+    raw = _collapse(raw)
+    if len(raw) < 3:
+        return None
+    time = ""
+    m12 = _CHRONO_12H_RE.search(raw)
+    if m12:
+        time = f"{m12.group(1)} {m12.group(2).upper()}"
+    else:
+        m24 = _CHRONO_24H_RE.search(raw)
+        if m24:
+            h = int(m24.group(1))
+            minute = m24.group(2)
+            ampm = "PM" if h >= 12 else "AM"
+            if h > 12: h -= 12
+            if h == 0: h = 12
+            time = f"{h}:{minute} {ampm}"
+    if not time:
+        return None
+    hole = _CHRONO_HOLE_RE.search(raw)
+    price = _PRICE_RE.search(raw)
+    return {
+        "time":  time,
+        "holes": f"{hole.group(1)} holes" if hole else "",
+        "price": price.group(0) if price else "",
+    }
+
+
+def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
+    out, seen = [], set()
+    for raw in card_texts:
+        slot = parse_chronogolf_card(raw)
+        if not slot:
+            continue
+        key = (slot["time"], slot["holes"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(slot)
+    if out:
+        return out
+    for m in _CHRONO_12H_RE.finditer(_collapse(body_text)):
+        time = f"{m.group(1)} {m.group(2).upper()}"
+        key = (time, "")
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"time": time, "holes": "", "price": ""})
+    return out
+
+
+def parse_webtrac_row(cells: list[str]) -> dict | None:
+    """cells = innerText of each <td> in a results row (index-aligned)."""
+    if len(cells) < 6:
+        return None
+    try:
+        open_slots = int((cells[5] or "").strip() or 0)
+    except ValueError:
+        open_slots = 0
+    if open_slots == 0:
+        return None
+    time = (cells[1] or "").strip()
+    if not _WEBTRAC_TIME_RE.search(time):
+        return None
+    return {
+        "time":  time,
+        "price": (cells[7] if len(cells) > 7 else "").strip(),
+        "holes": (cells[3] if len(cells) > 3 else "").strip() or "18 Holes",
+    }
+
+
+def parse_webtrac(rows: list[list[str]]) -> list[dict]:
+    out = []
+    for row in rows:
+        slot = parse_webtrac_row(row)
+        if slot:
+            out.append(slot)
+    return out
+
+
 # ── Human-like delay helper ───────────────────────────────────────────────────
 
 async def human_delay(page, min_ms: int = 800, max_ms: int = 2200):
     """Wait a random amount of time, like a human would between actions."""
     await page.wait_for_timeout(random.randint(min_ms, max_ms))
+
+
+async def goto_with_retry(page, url: str, *, attempts: int = 3, **kwargs):
+    """page.goto with exponential backoff on transient network/navigation errors."""
+    last_exc = None
+    for i in range(attempts):
+        try:
+            return await page.goto(url, **kwargs)
+        except Exception as e:
+            last_exc = e
+            if i == attempts - 1:
+                break
+            wait = 2 ** i
+            print(f"  goto failed ({type(e).__name__}: {e}) — retry {i + 1}/{attempts - 1} in {wait}s")
+            await asyncio.sleep(wait)
+    raise last_exc
 
 # ── Notifications ──────────────────────────────────────────────────────────────
 
@@ -311,7 +479,7 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
     tee_times = []
     try:
         print(f"  Loading page...")
-        await page.goto(url, wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, url, wait_until="networkidle", timeout=60_000)
         await human_delay(page, 2000, 4000)
 
         # Navigate to correct month
@@ -397,10 +565,8 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
         print(f"  {clicked}")
         await human_delay(page, 3000, 5000)
 
-        tee_times = await page.evaluate("""
+        card_texts, body_text = await page.evaluate("""
             () => {
-                const results  = [];
-                const seenKeys = new Set();
                 const cardSelectors = [
                     '[class*="teetime"]', '[class*="tee-time"]',
                     '[class*="timeslot"]', '[class*="time-slot"]',
@@ -415,44 +581,11 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
                     const found = document.querySelectorAll(sel);
                     if (found.length > 0) { cards = Array.from(found); break; }
                 }
-                if (cards.length > 0) {
-                    for (const card of cards) {
-                        const raw = (card.innerText || '').replace(/\\s+/g, ' ').trim();
-                        if (!raw) continue;
-                        const timeMatch = raw.match(/(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/i);
-                        const holeMatch = raw.match(/\\d+\\s*HOLE/i);
-                        const priceMatch = raw.match(/\\$[\\d.]+/);
-                        if (timeMatch) {
-                            const timeBase = timeMatch[1] || timeMatch[2];
-                            const ampm     = timeMatch[1] ? 'PM' : 'AM';
-                            const time     = timeBase + ' ' + ampm;
-                            const holes    = holeMatch ? holeMatch[0] : '';
-                            const key      = time + '|' + holes;
-                            if (!seenKeys.has(key)) {
-                                seenKeys.add(key);
-                                results.push({ time, holes, price: priceMatch ? priceMatch[0] : '' });
-                            }
-                        }
-                    }
-                }
-                if (results.length === 0) {
-                    const fullText = document.body.innerText.replace(/\\s+/g, ' ');
-                    const pattern  = /(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/gi;
-                    let match;
-                    while ((match = pattern.exec(fullText)) !== null) {
-                        const base = match[1] || match[2];
-                        const ampm = match[1] ? 'PM' : 'AM';
-                        const time = base + ' ' + ampm;
-                        const key  = time + '|';
-                        if (!seenKeys.has(key)) {
-                            seenKeys.add(key);
-                            results.push({ time, holes: '', price: '' });
-                        }
-                    }
-                }
-                return results;
+                const texts = cards.map(c => (c.innerText || '')).filter(t => t.trim());
+                return [texts, document.body.innerText || ''];
             }
         """)
+        tee_times = parse_cpsgolf(card_texts, body_text)
 
     finally:
         await page.close()
@@ -485,7 +618,7 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
     tee_times = []
     try:
         print(f"  Loading page...")
-        await page.goto(url, wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, url, wait_until="networkidle", timeout=60_000)
         await human_delay(page, 3000, 6000)
 
         try:
@@ -501,10 +634,8 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
         title = await page.title()
         print(f"  Page title: {title}")
 
-        tee_times = await page.evaluate("""
+        card_texts, body_text = await page.evaluate("""
             () => {
-                const results  = [];
-                const seenKeys = new Set();
                 const cardSelectors = [
                     '[class*="teetime-card"]',
                     '[class*="teetime"]',
@@ -523,55 +654,14 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
                     const found = document.querySelectorAll(sel);
                     if (found.length > 0) { cards = Array.from(found); break; }
                 }
-                if (cards.length > 0) {
-                    for (const card of cards) {
-                        const raw = (card.innerText || '').replace(/\\s+/g, ' ').trim();
-                        if (!raw || raw.length < 3) continue;
-                        const timeMatch12 = raw.match(/(\\d{1,2}:\\d{2})\\s*(AM|PM)/i);
-                        const timeMatch24 = raw.match(/\\b([01]?\\d|2[0-3]):(\\d{2})\\b/);
-                        const holeMatch   = raw.match(/(\\d+)\\s*hole/i);
-                        const priceMatch  = raw.match(/\\$[\\d,.]+/);
-                        let time = '';
-                        if (timeMatch12) {
-                            time = timeMatch12[1] + ' ' + timeMatch12[2].toUpperCase();
-                        } else if (timeMatch24) {
-                            let h = parseInt(timeMatch24[1]);
-                            const m = timeMatch24[2];
-                            const ampm = h >= 12 ? 'PM' : 'AM';
-                            if (h > 12) h -= 12;
-                            if (h === 0) h = 12;
-                            time = h + ':' + m + ' ' + ampm;
-                        }
-                        if (time) {
-                            const holes = holeMatch ? holeMatch[1] + ' holes' : '';
-                            const key   = time + '|' + holes;
-                            if (!seenKeys.has(key)) {
-                                seenKeys.add(key);
-                                results.push({ time, holes, price: priceMatch ? priceMatch[0] : '' });
-                            }
-                        }
-                    }
-                }
-                if (results.length === 0) {
-                    const fullText = document.body.innerText.replace(/\\s+/g, ' ');
-                    const pat12 = /(\\d{1,2}:\\d{2})\\s*(AM|PM)/gi;
-                    let m;
-                    while ((m = pat12.exec(fullText)) !== null) {
-                        const time = m[1] + ' ' + m[2].toUpperCase();
-                        const key  = time + '|';
-                        if (!seenKeys.has(key)) {
-                            seenKeys.add(key);
-                            results.push({ time, holes: '', price: '' });
-                        }
-                    }
-                }
-                return results;
+                const texts = cards.map(c => (c.innerText || '')).filter(t => t.trim());
+                return [texts, document.body.innerText || ''];
             }
         """)
+        tee_times = parse_chronogolf(card_texts, body_text)
 
         if not tee_times and os.environ.get("DEBUG_SCRAPE"):
-            snippet = await page.evaluate("() => document.body.innerText.slice(0, 200)")
-            print(f"  DEBUG page text:\n{snippet}\n")
+            print(f"  DEBUG page text:\n{body_text[:200]}\n")
 
     finally:
         await page.close()
@@ -606,7 +696,7 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
     try:
         print(f"  Loading WebTrac base page to acquire session...")
         base_url = course["url"].split("?")[0]
-        await page.goto(base_url + "?module=GR&display=Detail", wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, base_url + "?module=GR&display=Detail", wait_until="networkidle", timeout=60_000)
         await human_delay(page, 1000, 2000)
 
         csrf = await page.evaluate("() => document.querySelector('#_csrf_token')?.value || ''")
@@ -633,7 +723,7 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
             "multiselectlist_value":  "",
             "grwebsearch_buttonsearch": "yes",
         }
-        await page.goto(base_url + "?" + urlencode(params), wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, base_url + "?" + urlencode(params), wait_until="networkidle", timeout=60_000)
 
         try:
             await page.wait_for_selector("#grwebsearch_output_table", timeout=15_000)
@@ -646,26 +736,15 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
 
         await human_delay(page, 500, 1000)
 
-        tee_times = await page.evaluate("""
+        rows = await page.evaluate("""
             () => {
-                const results = [];
                 const rows = document.querySelectorAll('#grwebsearch_output_table tbody tr');
-                rows.forEach(row => {
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length < 6) return;
-                    const openSlots = parseInt(cells[5].innerText.trim()) || 0;
-                    if (openSlots === 0) return;
-                    const time = cells[1].innerText.trim();
-                    if (!time.match(/\\d{1,2}:\\d{2}/)) return;
-                    results.push({
-                        time:  time,
-                        price: cells[7] ? cells[7].innerText.trim() : '',
-                        holes: cells[3] ? cells[3].innerText.trim() : '18 Holes',
-                    });
-                });
-                return results;
+                return Array.from(rows).map(row =>
+                    Array.from(row.querySelectorAll('td')).map(td => (td.innerText || '').trim())
+                );
             }
         """)
+        tee_times = parse_webtrac(rows)
 
     finally:
         await page.close()
@@ -1479,27 +1558,51 @@ def generate_html():
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
-async def main():
+def _select_courses(filter_terms: list[str]) -> list[dict]:
+    """Match case-insensitive substrings against course names. Empty = all."""
+    if not filter_terms:
+        return COURSES
+    terms = [t.lower() for t in filter_terms]
+    picked = [c for c in COURSES if any(t in c["name"].lower() for t in terms)]
+    if not picked:
+        names = ", ".join(c["name"] for c in COURSES)
+        sys.exit(f"No course matched {filter_terms!r}. Known: {names}")
+    return picked
+
+
+async def main(courses: list[dict]):
     dates = get_upcoming_weekend_dates()
 
     print(f"\nTee Time Monitor")
-    print(f"  Courses: {', '.join(c['name'] for c in COURSES)}")
+    print(f"  Courses: {', '.join(c['name'] for c in courses)}")
     print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}\n")
 
     async with async_playwright() as playwright:
         results = await asyncio.gather(
-            *[check_course(playwright, course, dates) for course in COURSES],
+            *[check_course(playwright, course, dates) for course in courses],
             return_exceptions=True,
         )
-        for course, result in zip(COURSES, results):
+        for course, result in zip(courses, results):
             if isinstance(result, Exception):
                 print(f"\n  ⚠️  {course['name']} failed entirely: {type(result).__name__}: {result}")
 
     print("\n" + "="*60)
-    print("Generating index.html...")
-    generate_html()
+    # Skip HTML regen on a filtered local run so the user can't accidentally
+    # commit a stale index.html built from only a subset of caches.
+    if len(courses) == len(COURSES):
+        print("Generating index.html...")
+        generate_html()
+    else:
+        print("Filtered run — skipping index.html regeneration.")
     print("Done.\n")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Tee Time Monitor")
+    parser.add_argument(
+        "--course", "-c", action="append", default=[],
+        help="Filter to courses whose name contains this substring (case-insensitive). "
+             "Repeat to select multiple. Default: all courses.",
+    )
+    args = parser.parse_args()
+    asyncio.run(main(_select_courses(args.course)))
