@@ -324,6 +324,26 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
             if any(m in body_snippet.lower() for m in ["just a moment", "cloudflare", "attention required", "access denied"]):
                 print(f"  [debug] ⚠️ bot-challenge markers present in body text")
 
+        # CPS defaults the Players selector to 4. Any date without a 4-person
+        # opening in our time window then renders "No tee times available".
+        # Click "Any" so the tee sheet is unfiltered by party size.
+        any_clicked = await page.evaluate("""
+            () => {
+                for (const el of document.querySelectorAll('div, span, button, a, li')) {
+                    if ((el.innerText || '').trim() !== 'Any') continue;
+                    if (Array.from(el.children).some(c => (c.innerText || '').trim() === 'Any')) continue;
+                    el.click();
+                    return 'clicked: ' + el.tagName + ' class=' + el.className;
+                }
+                return null;
+            }
+        """)
+        if any_clicked:
+            print(f"  Players → Any ({any_clicked})")
+            await human_delay(page, 800, 1500)
+        else:
+            print(f"  Could not find Players 'Any' button — continuing with default.")
+
         # Navigate to correct month
         target_month_str = target_date.strftime("%B %Y")
         print(f"  Looking for month: {target_month_str}")
