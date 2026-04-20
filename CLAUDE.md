@@ -22,7 +22,7 @@ State lives in two places:
 
 ## `tee_time_monitor.py` architecture
 
-Single file, ~1565 lines, organized as:
+Single file, organized as:
 
 - `COURSES` list at the top — the config. Five courses: **Miami Lakes**, **Miami Beach**, **Normandy Shores**, **Plantation Preserve**, **Miami Shores**. Each entry has a `type` that routes to one of three scrapers:
   - `cpsgolf` → `scrape_cpsgolf` (Miami Lakes; calendar widget, must click month `›` then day). The site defaults the Players selector to 4 and does not expose a URL param for it, so the tee sheet returned is 4-person-only. If you ever want to broaden it, click the "Any" pill in the Players row before the day-click (previously prototyped and reverted — see git history).
@@ -40,7 +40,7 @@ When adding a new course, add a dict to `COURSES` **and** add its `cache_file` t
 
 ## Running
 
-There is no local entry point and no `requirements.txt`. The `README.md` is actively misleading — it references `main.py`, Selenium, BeautifulSoup, `requirements.txt`, `.env`, and Discord webhooks, none of which exist. Ignore it entirely. The real stack is Playwright + `requests` + `astral`. Do not update README to match reality unless explicitly asked.
+There is no `requirements.txt`. The real stack is Playwright + `requests` + `astral`.
 
 To run the scraper locally (rarely needed — usually debug in Actions):
 
@@ -59,7 +59,7 @@ There are no tests, no linter config, and no build step.
 ## Branches / workflows
 
 - `main` → `tee-time-monitor.yml` — production. Covers all 5 courses and pushes `index.html` to `main` (served by Pages).
-- `dev` → `tee-time-monitor-dev.yml` — runs the same script but only caches 3 courses (Miami Lakes, Normandy Shores, Miami Shores); the other 2 (Miami Beach, Plantation Preserve) will always appear as "new" slots on dev because their cache is never restored. **Do not use dev to test notification logic** — you'll get spurious alerts for the uncached courses every run. Keep the two workflows in sync when changing steps.
+- `dev` → `tee-time-monitor-dev.yml` — same script, all 5 courses cached, pushes to `dev` via `git push origin dev`. Keep the two workflows in sync when changing steps.
 
 Both workflows use `if: always()` on the save-cache and commit steps so a partial scrape failure still persists whatever was gathered — preserve this behavior.
 

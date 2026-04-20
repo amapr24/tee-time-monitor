@@ -1,90 +1,53 @@
-# ⛳️ Tee Time Monitor
+# Tee Time Monitor
 
-A robust, automated monitoring system designed to track tee time availability at your favorite golf courses. This application scans booking platforms and sends real-time notifications so you never miss a chance to play.
+Automated monitor for weekend tee time availability at five Miami-area golf courses. Runs on a schedule via GitHub Actions and publishes results as a static page served by GitHub Pages.
 
-## 🚀 Features
+## How it works
 
-- **Automated Scanning:** Regularly checks for available slots based on your preferred dates, times, and player counts.
-- **Multi-Course Support:** Monitor multiple golf courses simultaneously.
-- **Instant Notifications:** Receive alerts via Discord, Email, or SMS (depending on configuration) the moment a matching slot opens up.
-- **Headless Browser Integration:** Uses modern web scraping techniques to navigate dynamic booking sites.
-- **Custom Filters:** Set criteria for "Earliest Start" and "Latest Start" times to ensure you only get notified for rounds that fit your schedule.
+1. `cron-job.org` fires a `workflow_dispatch` trigger against the GitHub API on a schedule.
+2. The **Tee Time Monitor Miami** workflow (`tee-time-monitor.yml`) runs `tee_time_monitor.py`, which scrapes all five courses concurrently using Playwright (headless Chromium).
+3. Per-course JSON caches (`cache_<course>.json`) are restored from Actions cache before the run and saved back after, so only *newly appeared* slots trigger Pushover notifications.
+4. `generate_html()` rebuilds `index.html` from the cache files and the workflow commits it back to `main`.
+5. GitHub Pages serves `index.html`; a `<meta refresh content="300">` reloads it every 5 minutes.
 
-## 🛠 Tech Stack
+## Courses monitored
 
-- **Language:** Python 3.x
-- **Automation:** Selenium / Playwright (for web interaction)
-- **Task Scheduling:** `APScheduler` or `Cron` integration
-- **Data Parsing:** BeautifulSoup4
-- **Environment Management:** `python-dotenv`
+| Course | Booking platform |
+|---|---|
+| Miami Lakes | cpsgolf |
+| Miami Beach | Chronogolf |
+| Normandy Shores | Chronogolf |
+| Plantation Preserve | WebTrac |
+| Miami Shores | Chronogolf |
 
-## 📋 Prerequisites
+## Stack
 
-Before running the application, ensure you have the following installed:
-- [Python 3.8+](https://www.python.org/)
-- [Google Chrome](https://www.google.com/chrome/) or [Firefox](https://www.mozilla.org/en-US/firefox/new/)
-- [WebDriver](https://chromedriver.chromium.org/downloads) (matching your browser version)
+- **Python 3.12** — single script `tee_time_monitor.py`
+- **Playwright** (async, headless Chromium) — scraping
+- **requests** — Pushover notifications
+- **astral** — sunset calculation for upper tee-time cutoff
 
-## 🔧 Installation
+## Running locally
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/amapr24/tee-time-monitor.git
-   cd tee-time-monitor
-   ```
-
-2. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configuration:**
-   Create a `.env` file in the root directory and add your credentials/settings:
-   ```env
-   COURSE_URL=https://example-golf-course.com/booking
-   NOTIFY_WEBHOOK=your_discord_webhook_url
-   CHECK_INTERVAL=300  # Seconds between checks
-   PLAYER_COUNT=4
-   ```
-
-## 🖥 Usage
-
-To start the monitor, run:
 ```bash
-python main.py
+pip install playwright requests astral
+playwright install chromium
+DEBUG_SCRAPE=1 python tee_time_monitor.py
 ```
 
-For background execution on a server:
-```bash
-nohup python main.py &
+`DEBUG_SCRAPE=1` prints a page snippet when no slots are parsed, useful for diagnosing scraper breakage.
+
+Required env vars for notifications (missing vars are logged and skipped, not fatal):
+
+```
+PUSHOVER_USER
+PUSHOVER_TOKEN
+EMAIL_SENDER   # optional Gmail SMTP
+EMAIL_PASSWORD
+EMAIL_TO
 ```
 
-## ⚙️ How It Works
+## Branches
 
-1. **Initialization:** The script loads your target courses and notification settings from the config.
-2. **The Loop:** At every interval, it launches a headless browser instance.
-3. **Scraping:** It navigates to the booking calendar, selects the target date, and parses available times.
-4. **Validation:** It compares found slots against your "desired times" filter.
-5. **Alerting:** If a new slot is found that wasn't present in the previous check, it triggers a notification.
-
-## 🤝 Contributing
-
-Contributions are welcome! If you'd like to add support for a new booking platform or improve the notification system:
-1. Fork the Project.
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the Branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
-
-## ⚖️ License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-*Disclaimer: This tool is intended for personal use only. Ensure you comply with the Terms of Service of any website you monitor.*
+- `main` — production; workflow pushes `index.html` to `main` (served by Pages)
+- `dev` — development; uses `tee-time-monitor-dev.yml`, pushes to `dev`
