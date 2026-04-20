@@ -6,11 +6,17 @@
   <meta http-equiv="refresh" content="300">
   <meta name="format-detection" content="telephone=no">
   <title>Tee Time Watch</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛳</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d2b1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Tee Time Watch">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* ── Design tokens (light mode) ── */
     :root {
       --green-deep:   #0d2b1a;
       --green-mid:    #1a5c32;
@@ -22,16 +28,60 @@
       --gold:         #e8b94a;
       --gold-dark:    #c49a28;
       --text-dark:    #0d2b1a;
-      --text-mid:     #3a5c42;
-      --text-light:   #7a9485;
+      --text-mid:     #2e4d38;
+      --text-light:   #5a7a66;
+      /* time-of-day slot palettes */
+      --early-bg:     #fff8e6;
+      --early-border: #f0c060;
+      --early-text:   #5c3a00;
+      --midday-bg:    #d4eddc;
+      --midday-border:rgba(46,139,79,0.28);
+      --midday-text:  #0d2b1a;
+      --afternoon-bg: #ddeeff;
+      --afternoon-border:#7aaedd;
+      --afternoon-text:#0d2448;
+      /* surfaces */
+      --surface:      #ffffff;
+      --bg:           #f5f0e8;
+      --border-soft:  #edf5f0;
+    }
+
+    /* ── Dark mode overrides ── */
+    [data-theme="dark"] {
+      --cream:           #0f1a13;
+      --bg:              #0f1a13;
+      --white:           #1a2e20;
+      --surface:         #1a2e20;
+      --text-dark:       #e8f0eb;
+      --text-mid:        #a8c4b0;
+      --text-light:      #6a9470;
+      --green-pale:      #1e3828;
+      --border-soft:     #243d2c;
+      --early-bg:        #2e2410;
+      --early-border:    #7a5a10;
+      --early-text:      #f0c060;
+      --midday-bg:       #1e3828;
+      --midday-border:   rgba(46,139,79,0.4);
+      --midday-text:     #a8e0b8;
+      --afternoon-bg:    #0d1f2e;
+      --afternoon-border:#3a6a9e;
+      --afternoon-text:  #90c0ee;
     }
 
     body {
       font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
+      background: var(--bg);
       color: var(--text-dark);
       min-height: 100vh;
       overflow-x: hidden;
+      transition: background 0.25s, color 0.25s;
+    }
+
+    /* ── Screen-reader only utility ── */
+    .sr-only {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
     }
 
     /* ── Scrolling ticker ── */
@@ -48,7 +98,10 @@
     .ticker-inner {
       display: inline-block;
       animation: ticker 36s linear infinite;
+      will-change: transform;
     }
+    .ticker:hover .ticker-inner,
+    .ticker:focus-within .ticker-inner { animation-play-state: paused; }
     .ticker-inner span { margin: 0 48px; }
     @keyframes ticker {
       0%   { transform: translateX(0); }
@@ -126,7 +179,7 @@
     }
     .subtitle {
       font-size: 0.9rem;
-      color: rgba(255,255,255,0.5);
+      color: rgba(255,255,255,0.8);
       margin-top: 12px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
@@ -141,7 +194,7 @@
       display: block;
     }
 
-    /* ── Sunset pill highlight ── */
+    /* ── Sunset pill ── */
     .sunset-pill {
       background: var(--gold);
       color: var(--green-deep);
@@ -159,7 +212,7 @@
       text-align: center;
       padding: 10px 24px;
       font-size: 0.88rem;
-      color: rgba(255,255,255,0.65);
+      color: rgba(255,255,255,0.8);
       letter-spacing: 0.04em;
       border-bottom: 3px solid var(--gold);
     }
@@ -178,7 +231,7 @@
 
     /* ── Course card ── */
     .course-card {
-      background: var(--white);
+      background: var(--surface);
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
@@ -212,20 +265,21 @@
     }
     .course-meta {
       font-size: 0.78rem;
-      color: rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.78);
       letter-spacing: 0.04em;
       margin-top: 4px;
     }
     .card-header a {
-      color: rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.78);
       text-decoration: none;
     }
 
     /* ── Day block ── */
     .day-block {
       padding: 14px 20px;
-      border-bottom: 1px solid #edf5f0;
-      background: var(--white);
+      border-bottom: 1px solid var(--border-soft);
+      background: var(--surface);
+      transition: background 0.25s;
     }
     .day-block:last-child { border-bottom: none; }
     .day-header {
@@ -235,11 +289,11 @@
       margin-bottom: 15px;
     }
     .day-name {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-mid);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: var(--text-dark);
     }
     .book-btn {
       font-size: 0.72rem;
@@ -250,29 +304,87 @@
       padding: 5px 12px;
       border-radius: 20px;
       border: 1px solid rgba(232, 185, 74, 0.35);
-      transition: all 0.15s;
+      transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
       letter-spacing: 0.04em;
     }
-    .book-btn:hover { background: var(--gold); color: var(--green-deep); border-color: var(--gold); }
+    .book-btn:hover {
+      background: var(--gold);
+      color: var(--green-deep);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }
+    .book-btn:focus-visible {
+      outline: 2.5px solid var(--gold);
+      outline-offset: 2px;
+    }
 
-    /* ── Slots ── */
+    /* ── Slots list ── */
     .slots {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      list-style: none;
+      padding: 0;
     }
     .slot {
-      background: var(--green-pale);
-      color: var(--green-deep);
       font-size: 0.82rem;
       font-weight: 600;
       padding: 5px 12px;
       border-radius: 6px;
+      border: 1px solid;
       font-variant-numeric: tabular-nums;
-      border: 1px solid rgba(46,139,79,0.2);
       min-width: 82px;
       text-align: center;
+      transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
+      cursor: default;
     }
+    .slot:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      filter: brightness(0.94);
+    }
+    .slot:focus-visible {
+      outline: 2.5px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    /* time-of-day variants */
+    .slot--early {
+      background: var(--early-bg);
+      border-color: var(--early-border);
+      color: var(--early-text);
+    }
+    .slot--midday {
+      background: var(--midday-bg);
+      border-color: var(--midday-border);
+      color: var(--midday-text);
+    }
+    .slot--afternoon {
+      background: var(--afternoon-bg);
+      border-color: var(--afternoon-border);
+      color: var(--afternoon-text);
+    }
+
+    /* new-slot highlight */
+    .slot--new {
+      box-shadow: 0 0 0 1.5px var(--gold);
+      animation: pulse-new 2s ease-in-out 3;
+    }
+    .new-badge {
+      font-size: 0.6rem;
+      background: var(--gold);
+      color: var(--green-deep);
+      border-radius: 3px;
+      padding: 0 4px;
+      margin-right: 5px;
+      font-weight: 800;
+      vertical-align: middle;
+    }
+    @keyframes pulse-new {
+      0%, 100% { box-shadow: 0 0 0 1.5px var(--gold); }
+      50%       { box-shadow: 0 0 0 5px rgba(232,185,74,0.35); }
+    }
+
     .no-times {
       font-size: 0.82rem;
       color: var(--text-light);
@@ -302,7 +414,7 @@
       flex: 1;
     }
     .callout-quote span {
-      color: rgba(255,255,255,0.4);
+      color: rgba(255,255,255,0.5);
       font-size: 0.55em;
       display: block;
       letter-spacing: 0.2em;
@@ -350,6 +462,32 @@
       opacity: 1;
     }
 
+    /* ── Dark mode toggle button ── */
+    #theme-toggle {
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      background: var(--green-deep);
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 1.15rem;
+      cursor: pointer;
+      z-index: 200;
+      transition: transform 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }
+    #theme-toggle:hover { transform: scale(1.12) rotate(15deg); }
+    #theme-toggle:focus-visible {
+      outline: 2.5px solid var(--gold);
+      outline-offset: 3px;
+    }
+
     /* ── Footer ── */
     footer {
       text-align: center;
@@ -381,7 +519,6 @@
       header { padding: 14px 0; }
       header::after { height: 6px; }
 
-      /* Switch to block layout so center text owns full width */
       .header-inner {
         display: block;
         position: relative;
@@ -390,7 +527,6 @@
         max-width: 100%;
       }
 
-      /* Pin emojis to absolute edges */
       .header-flag {
         position: absolute;
         left: 10px;
@@ -411,20 +547,17 @@
         animation-direction: reverse;
       }
 
-      /* Keyframe includes translateY so it doesn't fight the animation */
       @keyframes flagwave-mobile {
         0%, 100% { transform: translateY(-28%) rotate(-3deg); }
         50%       { transform: translateY(-28%) rotate(3deg); }
       }
 
-      /* Force inner text div to full width so subtitle centers correctly */
       .header-inner > div {
         width: 100%;
         text-align: center;
         display: block;
       }
 
-      /* Force subtitle to truly center */
       header .subtitle {
         white-space: nowrap !important;
         text-align: center !important;
@@ -439,13 +572,10 @@
       .window-tag { font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }
       .sunset-pill { font-size: 0.68rem; padding: 1px 5px; }
 
-      /* Updated bar */
       .updated-bar { font-size: 0.78rem; padding: 6px 15px; }
 
-      /* Grid */
       main { margin: 15px auto 0; padding: 16px 12px 0; gap: 15px; }
 
-      /* Card */
       .course-card { border-radius: 12px; }
       .course-card:hover { transform: none; }
       .card-header { padding: 12px 15px; }
@@ -453,12 +583,10 @@
       .course-name { font-size: 1.5rem; }
       .course-meta { font-size: 0.68rem; }
 
-      /* Day block */
       .day-block { padding: 10px 15px; min-height: 58px; position: relative; }
       .day-header { margin-bottom: 6px; }
-      .day-name { font-size: 0.75rem; }
+      .day-name { font-size: 0.88rem; }
 
-      /* Book button */
       .book-btn {
         position: absolute;
         top: 10px;
@@ -477,7 +605,6 @@
         color: var(--green-deep);
       }
 
-      /* Slots */
       .slots { gap: 4px; padding-right: 50px; }
       .slot {
         font-size: 0.75rem;
@@ -487,21 +614,21 @@
       }
       .no-times { font-size: 0.75rem; }
 
-      /* Hide callout strip on mobile */
       .callout-strip { display: none; }
 
-      /* Footer */
       footer { padding: 20px; font-size: 0.7rem; margin-top: 12px; }
       .footer-fore { display: none; }
 
-      /* Toast */
-      .toast { bottom: 24px; font-size: 0.8rem; padding: 10px 20px; }
+      .toast { bottom: 80px; font-size: 0.8rem; padding: 10px 20px; }
+
+      #theme-toggle { bottom: 20px; right: 14px; width: 40px; height: 40px; font-size: 1rem; }
     }
   </style>
 </head>
 <body>
 
-  <div class="ticker">
+  <span class="sr-only">Tee Time Watch — Miami area golf weekend availability</span>
+  <div class="ticker" aria-hidden="true">
     <div class="ticker-inner">
       <span>FORE! ⛳</span>
       <span>TEE TIME WATCH 🏌️</span>
@@ -535,119 +662,119 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>5:20 PM ET, Monday April 20, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>5:46 PM ET, Monday April 20, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
-  <main>
+  <main aria-label="Course tee times">
     
-        <div class="course-card">
+        <div class="course-card" aria-label="Miami Lakes">
           <div class="card-header">
             <div class="course-name">Miami Lakes</div>
             <div class="course-meta">6801 Miami Lakes Dr, Miami Lakes</div>
             <div class="course-meta"><a href="tel:(305) 558-4653">(305) 558-4653</a></div>
           </div>
           
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Friday, Apr 24">
               <div class="day-header">
                 <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book →</a>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
-              <div class="slots"><span class="slot">3:56 PM</span></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
             </div>
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
                 <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book →</a>
+                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
               </div>
               <p class="no-times">No times available</p>
             </div>
         </div>
-        <div class="course-card">
+        <div class="course-card" aria-label="Miami Beach">
           <div class="card-header">
             <div class="course-name">Miami Beach</div>
             <div class="course-meta">2301 Alton Rd, Miami Beach</div>
             <div class="course-meta"><a href="tel:(305) 532-3350">(305) 532-3350</a></div>
           </div>
           
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Friday, Apr 24">
               <div class="day-header">
                 <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
               <p class="no-times">No times available</p>
             </div>
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
                 <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
               </div>
-              <div class="slots"><span class="slot">3:48 PM</span><span class="slot">3:56 PM</span></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:48 PM</li><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
             </div>
         </div>
-        <div class="course-card">
+        <div class="course-card" aria-label="Normandy Shores">
           <div class="card-header">
             <div class="course-name">Normandy Shores</div>
             <div class="course-meta">2401 Biarritz Dr, Miami Beach</div>
             <div class="course-meta"><a href="tel:(305) 868-6502">(305) 868-6502</a></div>
           </div>
           
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Friday, Apr 24">
               <div class="day-header">
                 <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
-              <div class="slots"><span class="slot">3:32 PM</span><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
                 <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
               </div>
-              <div class="slots"><span class="slot">3:40 PM</span><span class="slot">3:48 PM</span></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
         </div>
-        <div class="course-card">
+        <div class="course-card" aria-label="Plantation Preserve">
           <div class="card-header">
             <div class="course-name">Plantation Preserve</div>
             <div class="course-meta">7050 W Broward Blvd, Plantation</div>
             <div class="course-meta"><a href="tel:(954) 585-5020">(954) 585-5020</a></div>
           </div>
           
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Friday, Apr 24">
               <div class="day-header">
                 <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
-              <div class="slots"><span class="slot">11:57 am</span><span class="slot">1:54 pm</span><span class="slot">2:21 pm</span><span class="slot">2:30 pm</span><span class="slot">2:39 pm</span><span class="slot">2:48 pm</span><span class="slot">3:15 pm</span><span class="slot">3:24 pm</span><span class="slot">3:33 pm</span><span class="slot">3:51 pm</span></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:57 am</li><li class="slot slot--afternoon" role="listitem">1:54 pm</li><li class="slot slot--afternoon" role="listitem">2:21 pm</li><li class="slot slot--afternoon" role="listitem">2:30 pm</li><li class="slot slot--afternoon" role="listitem">2:39 pm</li><li class="slot slot--afternoon" role="listitem">2:48 pm</li><li class="slot slot--afternoon" role="listitem">3:15 pm</li><li class="slot slot--afternoon" role="listitem">3:24 pm</li><li class="slot slot--afternoon" role="listitem">3:33 pm</li><li class="slot slot--afternoon" role="listitem">3:51 pm</li></ul>
             </div>
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
                 <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:30 pm</span><span class="slot">2:39 pm</span><span class="slot">3:24 pm</span><span class="slot">3:42 pm</span><span class="slot">3:51 pm</span></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">2:30 pm</li><li class="slot slot--afternoon" role="listitem">2:39 pm</li><li class="slot slot--afternoon" role="listitem">3:24 pm</li><li class="slot slot--afternoon" role="listitem">3:42 pm</li><li class="slot slot--afternoon" role="listitem">3:51 pm</li></ul>
             </div>
         </div>
-        <div class="course-card">
+        <div class="course-card" aria-label="Miami Shores">
           <div class="card-header">
             <div class="course-name">Miami Shores</div>
             <div class="course-meta">10000 Biscayne Blvd, Miami Shores</div>
             <div class="course-meta"><a href="tel:(305) 795-2369">(305) 795-2369</a></div>
           </div>
           
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Friday, Apr 24">
               <div class="day-header">
                 <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
-              <div class="slots"><span class="slot">11:02 AM</span><span class="slot">11:10 AM</span><span class="slot">11:18 AM</span><span class="slot">11:26 AM</span><span class="slot">11:34 AM</span><span class="slot">11:42 AM</span><span class="slot">11:50 AM</span><span class="slot">11:58 AM</span><span class="slot">12:06 PM</span><span class="slot">12:14 PM</span><span class="slot">12:22 PM</span><span class="slot">12:30 PM</span><span class="slot">12:38 PM</span><span class="slot">12:46 PM</span><span class="slot">12:54 PM</span><span class="slot">1:02 PM</span><span class="slot">1:10 PM</span><span class="slot">2:38 PM</span><span class="slot">2:54 PM</span><span class="slot">3:10 PM</span><span class="slot">3:18 PM</span><span class="slot">3:42 PM</span><span class="slot">3:50 PM</span><span class="slot">3:58 PM</span></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:02 AM</li><li class="slot slot--midday" role="listitem">11:10 AM</li><li class="slot slot--midday" role="listitem">11:18 AM</li><li class="slot slot--midday" role="listitem">11:26 AM</li><li class="slot slot--midday" role="listitem">11:34 AM</li><li class="slot slot--midday" role="listitem">11:42 AM</li><li class="slot slot--midday" role="listitem">11:50 AM</li><li class="slot slot--midday" role="listitem">11:58 AM</li><li class="slot slot--afternoon" role="listitem">12:06 PM</li><li class="slot slot--afternoon" role="listitem">12:14 PM</li><li class="slot slot--afternoon" role="listitem">12:22 PM</li><li class="slot slot--afternoon" role="listitem">12:30 PM</li><li class="slot slot--afternoon" role="listitem">12:38 PM</li><li class="slot slot--afternoon" role="listitem">12:46 PM</li><li class="slot slot--afternoon" role="listitem">12:54 PM</li><li class="slot slot--afternoon" role="listitem">1:02 PM</li><li class="slot slot--afternoon" role="listitem">1:10 PM</li><li class="slot slot--afternoon" role="listitem">2:38 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
                 <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book →</a>
+                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
               </div>
-              <div class="slots"><span class="slot">2:46 PM</span><span class="slot">2:54 PM</span><span class="slot">3:10 PM</span><span class="slot">3:18 PM</span><span class="slot">3:26 PM</span><span class="slot">3:34 PM</span><span class="slot">3:42 PM</span><span class="slot">3:50 PM</span><span class="slot">3:58 PM</span></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">2:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
         </div>
   </main>
@@ -666,12 +793,28 @@
     © 2026 Tee Time Watch
   </footer>
 
+  <button id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+
   <script>
+    // ── Dark mode ──
+    (function() {
+      const btn  = document.getElementById('theme-toggle');
+      const root = document.documentElement;
+      const saved = localStorage.getItem('ttw-theme');
+      if (saved === 'dark') { root.dataset.theme = 'dark'; btn.textContent = '☀️'; }
+      btn.addEventListener('click', function() {
+        const isDark = root.dataset.theme === 'dark';
+        root.dataset.theme = isDark ? '' : 'dark';
+        btn.textContent = isDark ? '🌙' : '☀️';
+        localStorage.setItem('ttw-theme', isDark ? '' : 'dark');
+      });
+    })();
+
     // ── Minutes ago counter ──
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776720043 * 1000);
+      const lastRun = new Date(1776721571 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
