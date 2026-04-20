@@ -53,7 +53,8 @@ PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
 # type "chronogolf" -- date-in-URL site (Chronogolf courses; change the url slug)
 #
 # TEE_TIME_MIN / TEE_TIME_MAX: 24h hours. 0=midnight, 7=7AM, 18=6PM
-# skip_past_dates: True for Chronogolf (it silently redirects past dates to today)
+# skip_past_dates: only needed for sites like Chronogolf that redirect past
+# dates to today and would otherwise poison the cache.
 
 COURSES = [
     {
@@ -65,7 +66,6 @@ COURSES = [
         "tee_time_min":   6,
         "tee_time_max":   15,
         "cache_file":     "cache_miami_lakes.json",
-        "skip_past_dates": False,
     },
     {
         "name":           "Miami Beach",
@@ -102,7 +102,6 @@ COURSES = [
         "tee_time_min":   8,
         "tee_time_max":   14,
         "cache_file":     "cache_plantation.json",
-        "skip_past_dates": False,
     },
     {
         "name":           "Miami Shores",
