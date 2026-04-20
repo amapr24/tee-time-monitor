@@ -309,10 +309,20 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
 
     page = await context.new_page()
     tee_times = []
+    debug = os.environ.get("DEBUG_SCRAPE")
+    debug_slug = target_date.isoformat()
     try:
         print(f"  Loading page...")
         await page.goto(url, wait_until="networkidle", timeout=60_000)
         await human_delay(page, 2000, 4000)
+
+        if debug:
+            title = await page.title()
+            body_snippet = await page.evaluate("() => (document.body?.innerText || '').slice(0, 400)")
+            print(f"  [debug] title: {title!r}")
+            print(f"  [debug] body[:400]: {body_snippet!r}")
+            if any(m in body_snippet.lower() for m in ["just a moment", "cloudflare", "attention required", "access denied"]):
+                print(f"  [debug] ⚠️ bot-challenge markers present in body text")
 
         # Navigate to correct month
         target_month_str = target_date.strftime("%B %Y")
@@ -392,6 +402,28 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
 
         if not clicked:
             print(f"  Could not find day {day_num}.")
+            if debug:
+                candidates = await page.evaluate(f"""
+                    () => {{
+                        const target = '{day_num}';
+                        const out = [];
+                        for (const el of document.querySelectorAll('div, span, a, button, li, td')) {{
+                            const t = (el.innerText || '').trim();
+                            if (t === target || t.includes(' ' + target + ' ') || t.startsWith(target + ' ')) {{
+                                out.push({{tag: el.tagName, cls: el.className || '', text: t.slice(0, 40)}});
+                                if (out.length >= 20) break;
+                            }}
+                        }}
+                        return out;
+                    }}
+                """)
+                print(f"  [debug] day-{day_num} candidates (up to 20): {candidates}")
+                try:
+                    await page.screenshot(path=f"debug_cpsgolf_{debug_slug}_noday.png", full_page=True)
+                    Path(f"debug_cpsgolf_{debug_slug}_noday.html").write_text(await page.content())
+                    print(f"  [debug] wrote debug_cpsgolf_{debug_slug}_noday.{{png,html}}")
+                except Exception as e:
+                    print(f"  [debug] failed to write debug artifacts: {e}")
             return []
 
         print(f"  {clicked}")
@@ -453,6 +485,14 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
                 return results;
             }
         """)
+
+        if not tee_times and debug:
+            try:
+                await page.screenshot(path=f"debug_cpsgolf_{debug_slug}_noslots.png", full_page=True)
+                Path(f"debug_cpsgolf_{debug_slug}_noslots.html").write_text(await page.content())
+                print(f"  [debug] wrote debug_cpsgolf_{debug_slug}_noslots.{{png,html}}")
+            except Exception as e:
+                print(f"  [debug] failed to write debug artifacts: {e}")
 
     finally:
         await page.close()

@@ -2,6 +2,11 @@ name: Tee Time Monitor Miami
 
 on:
   workflow_dispatch:  # triggered externally by cron-job.org
+    inputs:
+      debug:
+        description: "Enable DEBUG_SCRAPE (screenshots + HTML dumps on failing scrapes)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write   # needed to commit index.html back to repo
@@ -60,8 +65,20 @@ jobs:
           EMAIL_TO:       ${{ secrets.EMAIL_TO }}
           PUSHOVER_USER:  ${{ secrets.PUSHOVER_USER }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          DEBUG_SCRAPE:   ${{ inputs.debug && '1' || '' }}
         run: |
           python tee_time_monitor.py
+
+      - name: Upload debug artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper-debug
+          path: |
+            debug_*.png
+            debug_*.html
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Save updated cache
         uses: actions/cache/save@v4
