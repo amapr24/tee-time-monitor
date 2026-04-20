@@ -1489,7 +1489,6 @@ def generate_html():
   </div>
 
   <div class="check-now-wrap-top">
-    <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
   </div>
 
@@ -1506,7 +1505,6 @@ def generate_html():
   </div>
 
   <div class="check-now-wrap-bottom">
-    <button class="check-now-btn" onclick="triggerCheck()">CHECK NOW ⛳</button>
     <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
   </div>
 
@@ -1515,8 +1513,6 @@ def generate_html():
     Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET<br>
     © {datetime.now(ET).year} Tee Time Watch
   </footer>
-
-  <div class="toast" id="toast"></div>
 
   <script>
     // ── Minutes ago counter ──
@@ -1533,33 +1529,6 @@ def generate_html():
       update();
       setInterval(update, 30000);
     }})();
-
-    // ── Toast helper ──
-    function showToast(msg, duration = 3500) {{
-      const t = document.getElementById('toast');
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), duration);
-    }}
-
-    // ── Check Now ──
-    async function triggerCheck() {{
-      const btns = document.querySelectorAll('.check-now-btn');
-      btns.forEach(b => {{ b.disabled = true; }});
-      btns.forEach(b => {{ if (b.textContent.includes('CHECK')) b.textContent = 'TRIGGERING… ⛳'; }});
-      try {{
-        const resp = await fetch('/api/trigger', {{ method: 'POST' }});
-        const data = await resp.json();
-        if (resp.ok) {{
-          showToast('✓ Check triggered! Results update in ~2 mins.');
-        }} else {{
-          showToast('Error: ' + (data.error || 'unknown'));
-        }}
-      }} catch (e) {{
-        showToast('Network error — try again.');
-      }}
-      btns.forEach(b => {{ b.disabled = false; if (b.textContent.includes('TRIGGERING')) b.textContent = 'CHECK NOW ⛳'; }});
-    }}
   </script>
 
 </body>
