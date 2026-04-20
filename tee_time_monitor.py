@@ -4,17 +4,22 @@ Checks multiple golf courses and sends email + Pushover push notifications
 when new tee times appear.
 
 Setup:
-  pip install playwright requests astral
+  pip install -r requirements.txt
   playwright install chromium
 
 To add a new course, just add an entry to the COURSES list below.
 """
 
+from __future__ import annotations
+
+import argparse
 import asyncio
 import json
 import os
 import random
+import re
 import smtplib
+import sys
 from datetime import date, timedelta, datetime
 from email.mime.text import MIMEText
 from functools import lru_cache
@@ -25,7 +30,11 @@ from zoneinfo import ZoneInfo
 import requests
 from astral import LocationInfo
 from astral.sun import sun
-from playwright.async_api import async_playwright
+
+try:
+    from playwright.async_api import async_playwright
+except ImportError:  # playwright optional when only importing parsers (e.g. tests)
+    async_playwright = None  # type: ignore[assignment]
 
 # ── Email / Pushover credentials (from GitHub secrets) ────────────────────────
 
@@ -44,7 +53,8 @@ PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
 # type "chronogolf" -- date-in-URL site (Chronogolf courses; change the url slug)
 #
 # TEE_TIME_MIN / TEE_TIME_MAX: 24h hours. 0=midnight, 7=7AM, 18=6PM
-# skip_past_dates: True for Chronogolf (it silently redirects past dates to today)
+# skip_past_dates: only needed for sites like Chronogolf that redirect past
+# dates to today and would otherwise poison the cache.
 
 COURSES = [
     {
@@ -56,7 +66,6 @@ COURSES = [
         "tee_time_min":   6,
         "tee_time_max":   15,
         "cache_file":     "cache_miami_lakes.json",
-        "skip_past_dates": False,
     },
     {
         "name":           "Miami Beach",
@@ -93,7 +102,6 @@ COURSES = [
         "tee_time_min":   8,
         "tee_time_max":   14,
         "cache_file":     "cache_plantation.json",
-        "skip_past_dates": False,
     },
     {
         "name":           "Miami Shores",
@@ -214,11 +222,177 @@ def _format_hour_window_label(hour_24: int) -> str:
     return f"{h - 12}:00 PM"
 
 
+# ── Parsers (pure functions, testable without a browser) ─────────────────────
+#
+# The JS in each scraper now only *selects* elements and returns their raw
+# innerText (or table cells). All regex extraction happens here so tests can
+# feed saved fixtures to these parsers without launching Chromium.
+
+_CPS_TIME_RE    = re.compile(r"(\d{1,2}:\d{2})\s*P\s*M|(\d{1,2}:\d{2})\s*A\s*M", re.I)
+_CPS_HOLE_RE    = re.compile(r"\d+\s*HOLE", re.I)
+_PRICE_RE       = re.compile(r"\$[\d,.]+")
+_CHRONO_12H_RE  = re.compile(r"(\d{1,2}:\d{2})\s*(AM|PM)", re.I)
+_CHRONO_24H_RE  = re.compile(r"\b([01]?\d|2[0-3]):(\d{2})\b")
+_CHRONO_HOLE_RE = re.compile(r"(\d+)\s*hole", re.I)
+_WEBTRAC_TIME_RE = re.compile(r"\d{1,2}:\d{2}")
+_LEADING_INT_RE  = re.compile(r"\d+")
+
+
+def _collapse(raw: str) -> str:
+    return re.sub(r"\s+", " ", raw or "").strip()
+
+
+def _normalize_time_label(time_str: str) -> str:
+    """Normalize AM/PM casing so all sources render times consistently."""
+    t = _collapse(time_str)
+    return re.sub(r"\b(am|pm)\b", lambda m: m.group(1).upper(), t, flags=re.I)
+
+
+def parse_cpsgolf_card(raw: str) -> dict | None:
+    raw = _collapse(raw)
+    if not raw:
+        return None
+    m = _CPS_TIME_RE.search(raw)
+    if not m:
+        return None
+    time_base = m.group(1) or m.group(2)
+    ampm = "PM" if m.group(1) else "AM"
+    holes = _CPS_HOLE_RE.search(raw)
+    price = _PRICE_RE.search(raw)
+    return {
+        "time":  f"{time_base} {ampm}",
+        "holes": holes.group(0) if holes else "",
+        "price": price.group(0) if price else "",
+    }
+
+
+def parse_cpsgolf(card_texts: list[str], body_text: str = "") -> list[dict]:
+    out, seen = [], set()
+    for raw in card_texts:
+        slot = parse_cpsgolf_card(raw)
+        if not slot:
+            continue
+        key = (slot["time"], slot["holes"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(slot)
+    if out:
+        return out
+    # Fallback: scrape any time-like tokens from full body text.
+    for m in _CPS_TIME_RE.finditer(_collapse(body_text)):
+        time_base = m.group(1) or m.group(2)
+        ampm = "PM" if m.group(1) else "AM"
+        time = f"{time_base} {ampm}"
+        key = (time, "")
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"time": time, "holes": "", "price": ""})
+    return out
+
+
+def parse_chronogolf_card(raw: str) -> dict | None:
+    raw = _collapse(raw)
+    if len(raw) < 3:
+        return None
+    time = ""
+    m12 = _CHRONO_12H_RE.search(raw)
+    if m12:
+        time = f"{m12.group(1)} {m12.group(2).upper()}"
+    else:
+        m24 = _CHRONO_24H_RE.search(raw)
+        if m24:
+            h = int(m24.group(1))
+            minute = m24.group(2)
+            ampm = "PM" if h >= 12 else "AM"
+            if h > 12: h -= 12
+            if h == 0: h = 12
+            time = f"{h}:{minute} {ampm}"
+    if not time:
+        return None
+    hole = _CHRONO_HOLE_RE.search(raw)
+    price = _PRICE_RE.search(raw)
+    return {
+        "time":  time,
+        "holes": f"{hole.group(1)} holes" if hole else "",
+        "price": price.group(0) if price else "",
+    }
+
+
+def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
+    out, seen = [], set()
+    for raw in card_texts:
+        slot = parse_chronogolf_card(raw)
+        if not slot:
+            continue
+        key = (slot["time"], slot["holes"])
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(slot)
+    if out:
+        return out
+    for m in _CHRONO_12H_RE.finditer(_collapse(body_text)):
+        time = f"{m.group(1)} {m.group(2).upper()}"
+        key = (time, "")
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append({"time": time, "holes": "", "price": ""})
+    return out
+
+
+def parse_webtrac_row(cells: list[str]) -> dict | None:
+    """cells = innerText of each <td> in a results row (index-aligned)."""
+    if len(cells) < 6:
+        return None
+    # Match JS parseInt's leniency — cell may contain icons/labels after the
+    # number ("4 Open", "4\nof\n4"). Extract the first integer we see.
+    m = _LEADING_INT_RE.search(cells[5] or "")
+    open_slots = int(m.group(0)) if m else 0
+    if open_slots == 0:
+        return None
+    time = _normalize_time_label(cells[1] or "")
+    if not _WEBTRAC_TIME_RE.search(time):
+        return None
+    return {
+        "time":  time,
+        "price": (cells[7] if len(cells) > 7 else "").strip(),
+        "holes": (cells[3] if len(cells) > 3 else "").strip() or "18 Holes",
+    }
+
+
+def parse_webtrac(rows: list[list[str]]) -> list[dict]:
+    out = []
+    for row in rows:
+        slot = parse_webtrac_row(row)
+        if slot:
+            out.append(slot)
+    return out
+
+
 # ── Human-like delay helper ───────────────────────────────────────────────────
 
 async def human_delay(page, min_ms: int = 800, max_ms: int = 2200):
     """Wait a random amount of time, like a human would between actions."""
     await page.wait_for_timeout(random.randint(min_ms, max_ms))
+
+
+async def goto_with_retry(page, url: str, *, attempts: int = 3, **kwargs):
+    """page.goto with exponential backoff on transient network/navigation errors."""
+    last_exc = None
+    for i in range(attempts):
+        try:
+            return await page.goto(url, **kwargs)
+        except Exception as e:
+            last_exc = e
+            if i == attempts - 1:
+                break
+            wait = 2 ** i
+            print(f"  goto failed ({type(e).__name__}: {e}) — retry {i + 1}/{attempts - 1} in {wait}s")
+            await asyncio.sleep(wait)
+    raise last_exc
 
 # ── Notifications ──────────────────────────────────────────────────────────────
 
@@ -311,7 +485,7 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
     tee_times = []
     try:
         print(f"  Loading page...")
-        await page.goto(url, wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, url, wait_until="networkidle", timeout=60_000)
         await human_delay(page, 2000, 4000)
 
         # Navigate to correct month
@@ -397,10 +571,8 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
         print(f"  {clicked}")
         await human_delay(page, 3000, 5000)
 
-        tee_times = await page.evaluate("""
+        card_texts, body_text = await page.evaluate("""
             () => {
-                const results  = [];
-                const seenKeys = new Set();
                 const cardSelectors = [
                     '[class*="teetime"]', '[class*="tee-time"]',
                     '[class*="timeslot"]', '[class*="time-slot"]',
@@ -415,44 +587,11 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
                     const found = document.querySelectorAll(sel);
                     if (found.length > 0) { cards = Array.from(found); break; }
                 }
-                if (cards.length > 0) {
-                    for (const card of cards) {
-                        const raw = (card.innerText || '').replace(/\\s+/g, ' ').trim();
-                        if (!raw) continue;
-                        const timeMatch = raw.match(/(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/i);
-                        const holeMatch = raw.match(/\\d+\\s*HOLE/i);
-                        const priceMatch = raw.match(/\\$[\\d.]+/);
-                        if (timeMatch) {
-                            const timeBase = timeMatch[1] || timeMatch[2];
-                            const ampm     = timeMatch[1] ? 'PM' : 'AM';
-                            const time     = timeBase + ' ' + ampm;
-                            const holes    = holeMatch ? holeMatch[0] : '';
-                            const key      = time + '|' + holes;
-                            if (!seenKeys.has(key)) {
-                                seenKeys.add(key);
-                                results.push({ time, holes, price: priceMatch ? priceMatch[0] : '' });
-                            }
-                        }
-                    }
-                }
-                if (results.length === 0) {
-                    const fullText = document.body.innerText.replace(/\\s+/g, ' ');
-                    const pattern  = /(\\d{1,2}:\\d{2})\\s*P\\s*M|(\\d{1,2}:\\d{2})\\s*A\\s*M/gi;
-                    let match;
-                    while ((match = pattern.exec(fullText)) !== null) {
-                        const base = match[1] || match[2];
-                        const ampm = match[1] ? 'PM' : 'AM';
-                        const time = base + ' ' + ampm;
-                        const key  = time + '|';
-                        if (!seenKeys.has(key)) {
-                            seenKeys.add(key);
-                            results.push({ time, holes: '', price: '' });
-                        }
-                    }
-                }
-                return results;
+                const texts = cards.map(c => (c.innerText || '')).filter(t => t.trim());
+                return [texts, document.body.innerText || ''];
             }
         """)
+        tee_times = parse_cpsgolf(card_texts, body_text)
 
     finally:
         await page.close()
@@ -485,7 +624,7 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
     tee_times = []
     try:
         print(f"  Loading page...")
-        await page.goto(url, wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, url, wait_until="networkidle", timeout=60_000)
         await human_delay(page, 3000, 6000)
 
         try:
@@ -501,10 +640,8 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
         title = await page.title()
         print(f"  Page title: {title}")
 
-        tee_times = await page.evaluate("""
+        card_texts, body_text = await page.evaluate("""
             () => {
-                const results  = [];
-                const seenKeys = new Set();
                 const cardSelectors = [
                     '[class*="teetime-card"]',
                     '[class*="teetime"]',
@@ -523,55 +660,14 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
                     const found = document.querySelectorAll(sel);
                     if (found.length > 0) { cards = Array.from(found); break; }
                 }
-                if (cards.length > 0) {
-                    for (const card of cards) {
-                        const raw = (card.innerText || '').replace(/\\s+/g, ' ').trim();
-                        if (!raw || raw.length < 3) continue;
-                        const timeMatch12 = raw.match(/(\\d{1,2}:\\d{2})\\s*(AM|PM)/i);
-                        const timeMatch24 = raw.match(/\\b([01]?\\d|2[0-3]):(\\d{2})\\b/);
-                        const holeMatch   = raw.match(/(\\d+)\\s*hole/i);
-                        const priceMatch  = raw.match(/\\$[\\d,.]+/);
-                        let time = '';
-                        if (timeMatch12) {
-                            time = timeMatch12[1] + ' ' + timeMatch12[2].toUpperCase();
-                        } else if (timeMatch24) {
-                            let h = parseInt(timeMatch24[1]);
-                            const m = timeMatch24[2];
-                            const ampm = h >= 12 ? 'PM' : 'AM';
-                            if (h > 12) h -= 12;
-                            if (h === 0) h = 12;
-                            time = h + ':' + m + ' ' + ampm;
-                        }
-                        if (time) {
-                            const holes = holeMatch ? holeMatch[1] + ' holes' : '';
-                            const key   = time + '|' + holes;
-                            if (!seenKeys.has(key)) {
-                                seenKeys.add(key);
-                                results.push({ time, holes, price: priceMatch ? priceMatch[0] : '' });
-                            }
-                        }
-                    }
-                }
-                if (results.length === 0) {
-                    const fullText = document.body.innerText.replace(/\\s+/g, ' ');
-                    const pat12 = /(\\d{1,2}:\\d{2})\\s*(AM|PM)/gi;
-                    let m;
-                    while ((m = pat12.exec(fullText)) !== null) {
-                        const time = m[1] + ' ' + m[2].toUpperCase();
-                        const key  = time + '|';
-                        if (!seenKeys.has(key)) {
-                            seenKeys.add(key);
-                            results.push({ time, holes: '', price: '' });
-                        }
-                    }
-                }
-                return results;
+                const texts = cards.map(c => (c.innerText || '')).filter(t => t.trim());
+                return [texts, document.body.innerText || ''];
             }
         """)
+        tee_times = parse_chronogolf(card_texts, body_text)
 
         if not tee_times and os.environ.get("DEBUG_SCRAPE"):
-            snippet = await page.evaluate("() => document.body.innerText.slice(0, 200)")
-            print(f"  DEBUG page text:\n{snippet}\n")
+            print(f"  DEBUG page text:\n{body_text[:200]}\n")
 
     finally:
         await page.close()
@@ -606,7 +702,7 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
     try:
         print(f"  Loading WebTrac base page to acquire session...")
         base_url = course["url"].split("?")[0]
-        await page.goto(base_url + "?module=GR&display=Detail", wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, base_url + "?module=GR&display=Detail", wait_until="networkidle", timeout=60_000)
         await human_delay(page, 1000, 2000)
 
         csrf = await page.evaluate("() => document.querySelector('#_csrf_token')?.value || ''")
@@ -633,7 +729,7 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
             "multiselectlist_value":  "",
             "grwebsearch_buttonsearch": "yes",
         }
-        await page.goto(base_url + "?" + urlencode(params), wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, base_url + "?" + urlencode(params), wait_until="networkidle", timeout=60_000)
 
         try:
             await page.wait_for_selector("#grwebsearch_output_table", timeout=15_000)
@@ -646,26 +742,15 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
 
         await human_delay(page, 500, 1000)
 
-        tee_times = await page.evaluate("""
+        rows = await page.evaluate("""
             () => {
-                const results = [];
                 const rows = document.querySelectorAll('#grwebsearch_output_table tbody tr');
-                rows.forEach(row => {
-                    const cells = row.querySelectorAll('td');
-                    if (cells.length < 6) return;
-                    const openSlots = parseInt(cells[5].innerText.trim()) || 0;
-                    if (openSlots === 0) return;
-                    const time = cells[1].innerText.trim();
-                    if (!time.match(/\\d{1,2}:\\d{2}/)) return;
-                    results.push({
-                        time:  time,
-                        price: cells[7] ? cells[7].innerText.trim() : '',
-                        holes: cells[3] ? cells[3].innerText.trim() : '18 Holes',
-                    });
-                });
-                return results;
+                return Array.from(rows).map(row =>
+                    Array.from(row.querySelectorAll('td')).map(td => (td.innerText || '').trim())
+                );
             }
         """)
+        tee_times = parse_webtrac(rows)
 
     finally:
         await page.close()
@@ -745,8 +830,11 @@ async def check_day(context, course: dict, target_date: date):
     current_slots = deduplicate_slots(raw, t_min, t_max)
     print(f"  Found {len(current_slots)} unique slot(s) after dedup.")
 
-    cached_slots = load_cache(cache_file, target_date)
-    new_slots    = find_new_slots(cached_slots, current_slots)
+    cached_slots   = load_cache(cache_file, target_date)
+    new_slots      = find_new_slots(cached_slots, current_slots)
+    new_slot_times = {s.get("time", "").strip().upper() for s in new_slots}
+    for s in current_slots:
+        s["is_new"] = s.get("time", "").strip().upper() in new_slot_times
 
     save_cache(cache_file, target_date, current_slots)
 
@@ -816,6 +904,26 @@ async def check_course(playwright, course: dict, dates: list[date]):
 
 # ── HTML generator ────────────────────────────────────────────────────────────
 
+def _slot_time_class(time_str: str) -> str:
+    """Return CSS class based on time of day: early (<9 AM), midday (9–11:59), afternoon (12+)."""
+    try:
+        t = time_str.strip().upper()
+        is_pm = t.endswith("PM")
+        digits = t.replace("AM", "").replace("PM", "").strip()
+        h = int(digits.split(":")[0])
+        if is_pm and h != 12:
+            h += 12
+        elif not is_pm and h == 12:
+            h = 0
+        if h < 9:
+            return "slot slot--early"
+        if h < 12:
+            return "slot slot--midday"
+        return "slot slot--afternoon"
+    except Exception:
+        return "slot"
+
+
 def generate_html():
     dates = get_upcoming_weekend_dates()
     now_str = datetime.now(ET).strftime("%-I:%M %p ET, %A %B %-d, %Y")
@@ -868,26 +976,30 @@ def generate_html():
         days_html = ""
         for day in cd["days"]:
             if day["slots"]:
-                times_html = "".join(
-                    f'<span class="slot">{s.get("time","?")}'
-                    f'{(" · " + s["price"]) if s.get("price") else ""}</span>'
-                    for s in day["slots"]
-                )
-                day_body = f'<div class="slots">{times_html}</div>'
+                items_html = ""
+                for s in day["slots"]:
+                    t    = s.get("time", "?")
+                    cls  = _slot_time_class(t)
+                    if s.get("is_new"):
+                        cls += " slot--new"
+                    badge = '<span class="new-badge" aria-label="New">NEW</span>' if s.get("is_new") else ""
+                    price = (" · " + s["price"]) if s.get("price") else ""
+                    items_html += f'<li class="{cls}" role="listitem">{badge}{t}{price}</li>'
+                day_body = f'<ul class="slots" role="list" aria-label="Available tee times">{items_html}</ul>'
             else:
                 day_body = '<p class="no-times">No times available</p>'
 
             days_html += f"""
-            <div class="day-block">
+            <div class="day-block" aria-label="Times for {day['label']}">
               <div class="day-header">
                 <span class="day-name">{day["label"]}</span>
-                <a class="book-btn" href="{day["book_url"]}" target="_blank">Book →</a>
+                <a class="book-btn" href="{day["book_url"]}" target="_blank" aria-label="Book tee time for {day['label']}">Book →</a>
               </div>
               {day_body}
             </div>"""
 
         cards_html += f"""
-        <div class="course-card">
+        <div class="course-card" aria-label="{course['name']}">
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
             <div class="course-meta">{course.get("address","")}</div>
@@ -904,11 +1016,17 @@ def generate_html():
   <meta http-equiv="refresh" content="300">
   <meta name="format-detection" content="telephone=no">
   <title>Tee Time Watch</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛳</text></svg>">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d2b1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Tee Time Watch">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
+    /* ── Design tokens (light mode) ── */
     :root {{
       --green-deep:   #0d2b1a;
       --green-mid:    #1a5c32;
@@ -920,16 +1038,69 @@ def generate_html():
       --gold:         #e8b94a;
       --gold-dark:    #c49a28;
       --text-dark:    #0d2b1a;
-      --text-mid:     #3a5c42;
-      --text-light:   #7a9485;
+      --text-mid:     #2e4d38;
+      --text-light:   #5a7a66;
+      --text-on-brand:#ffffff;
+      --text-on-brand-muted: rgba(255,255,255,0.8);
+      --text-on-brand-subtle: rgba(255,255,255,0.78);
+      --text-on-brand-faint: rgba(255,255,255,0.5);
+      --divider-on-brand: rgba(255,255,255,0.15);
+      /* time-of-day slot palettes */
+      --early-bg:     #fff8e6;
+      --early-border: #f0c060;
+      --early-text:   #5c3a00;
+      --midday-bg:    #d4eddc;
+      --midday-border:rgba(46,139,79,0.28);
+      --midday-text:  #0d2b1a;
+      --afternoon-bg: #ddeeff;
+      --afternoon-border:#7aaedd;
+      --afternoon-text:#0d2448;
+      /* surfaces */
+      --surface:      #ffffff;
+      --bg:           #f5f0e8;
+      --border-soft:  #edf5f0;
+    }}
+
+    /* ── Dark mode overrides ── */
+    [data-theme="dark"] {{
+      --cream:           #0f1a13;
+      --bg:              #0f1a13;
+      --surface:         #1a2e20;
+      --text-dark:       #e8f0eb;
+      --text-mid:        #a8c4b0;
+      --text-light:      #6a9470;
+      --text-on-brand:   #f3f8f4;
+      --text-on-brand-muted: rgba(243,248,244,0.84);
+      --text-on-brand-subtle: rgba(243,248,244,0.8);
+      --text-on-brand-faint: rgba(243,248,244,0.58);
+      --divider-on-brand: rgba(243,248,244,0.18);
+      --green-pale:      #1e3828;
+      --border-soft:     #243d2c;
+      --early-bg:        #2e2410;
+      --early-border:    #7a5a10;
+      --early-text:      #f0c060;
+      --midday-bg:       #1e3828;
+      --midday-border:   rgba(46,139,79,0.4);
+      --midday-text:     #a8e0b8;
+      --afternoon-bg:    #0d1f2e;
+      --afternoon-border:#3a6a9e;
+      --afternoon-text:  #90c0ee;
     }}
 
     body {{
       font-family: 'DM Sans', sans-serif;
-      background: var(--cream);
+      background: var(--bg);
       color: var(--text-dark);
       min-height: 100vh;
       overflow-x: hidden;
+      transition: background 0.25s, color 0.25s;
+    }}
+
+    /* ── Screen-reader only utility ── */
+    .sr-only {{
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
     }}
 
     /* ── Scrolling ticker ── */
@@ -946,7 +1117,10 @@ def generate_html():
     .ticker-inner {{
       display: inline-block;
       animation: ticker 36s linear infinite;
+      will-change: transform;
     }}
+    .ticker:hover .ticker-inner,
+    .ticker:focus-within .ticker-inner {{ animation-play-state: paused; }}
     .ticker-inner span {{ margin: 0 48px; }}
     @keyframes ticker {{
       0%   {{ transform: translateX(0); }}
@@ -1010,7 +1184,7 @@ def generate_html():
     h1 {{
       font-family: 'Bebas Neue', sans-serif;
       font-size: clamp(3.5rem, 10vw, 6rem);
-      color: var(--white);
+      color: var(--text-on-brand);
       letter-spacing: 0.08em;
       padding-left: 0.08em;
       line-height: 0.9;
@@ -1024,7 +1198,7 @@ def generate_html():
     }}
     .subtitle {{
       font-size: 0.9rem;
-      color: rgba(255,255,255,0.5);
+      color: var(--text-on-brand-muted);
       margin-top: 12px;
       letter-spacing: 0.2em;
       text-transform: uppercase;
@@ -1039,7 +1213,7 @@ def generate_html():
       display: block;
     }}
 
-    /* ── Sunset pill highlight ── */
+    /* ── Sunset pill ── */
     .sunset-pill {{
       background: var(--gold);
       color: var(--green-deep);
@@ -1057,11 +1231,11 @@ def generate_html():
       text-align: center;
       padding: 10px 24px;
       font-size: 0.88rem;
-      color: rgba(255,255,255,0.65);
+      color: var(--text-on-brand-muted);
       letter-spacing: 0.04em;
       border-bottom: 3px solid var(--gold);
     }}
-    .updated-bar strong {{ color: var(--white); font-weight: 500; }}
+    .updated-bar strong {{ color: var(--text-on-brand); font-weight: 500; }}
 
     /* ── Main grid ── */
     main {{
@@ -1076,7 +1250,7 @@ def generate_html():
 
     /* ── Course card ── */
     .course-card {{
-      background: var(--white);
+      background: var(--surface);
       border-radius: 16px;
       overflow: hidden;
       box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
@@ -1104,26 +1278,27 @@ def generate_html():
     .course-name {{
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.8rem;
-      color: var(--white);
+      color: var(--text-on-brand);
       letter-spacing: 0.06em;
       line-height: 1;
     }}
     .course-meta {{
       font-size: 0.78rem;
-      color: rgba(255,255,255,0.55);
+      color: var(--text-on-brand-subtle);
       letter-spacing: 0.04em;
       margin-top: 4px;
     }}
     .card-header a {{
-      color: rgba(255,255,255,0.55);
+      color: var(--text-on-brand-subtle);
       text-decoration: none;
     }}
 
     /* ── Day block ── */
     .day-block {{
       padding: 14px 20px;
-      border-bottom: 1px solid #edf5f0;
-      background: var(--white);
+      border-bottom: 1px solid var(--border-soft);
+      background: var(--surface);
+      transition: background 0.25s;
     }}
     .day-block:last-child {{ border-bottom: none; }}
     .day-header {{
@@ -1133,11 +1308,11 @@ def generate_html():
       margin-bottom: 15px;
     }}
     .day-name {{
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--text-mid);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 400;
+      letter-spacing: 0.08em;
+      color: var(--text-dark);
     }}
     .book-btn {{
       font-size: 0.72rem;
@@ -1148,29 +1323,87 @@ def generate_html():
       padding: 5px 12px;
       border-radius: 20px;
       border: 1px solid rgba(232, 185, 74, 0.35);
-      transition: all 0.15s;
+      transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
       letter-spacing: 0.04em;
     }}
-    .book-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
+    .book-btn:hover {{
+      background: var(--gold);
+      color: var(--green-deep);
+      border-color: var(--gold);
+      transform: translateY(-1px);
+    }}
+    .book-btn:focus-visible {{
+      outline: 2.5px solid var(--gold);
+      outline-offset: 2px;
+    }}
 
-    /* ── Slots ── */
+    /* ── Slots list ── */
     .slots {{
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
+      list-style: none;
+      padding: 0;
     }}
     .slot {{
-      background: var(--green-pale);
-      color: var(--green-deep);
       font-size: 0.82rem;
       font-weight: 600;
       padding: 5px 12px;
       border-radius: 6px;
+      border: 1px solid;
       font-variant-numeric: tabular-nums;
-      border: 1px solid rgba(46,139,79,0.2);
       min-width: 82px;
       text-align: center;
+      transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
+      cursor: default;
     }}
+    .slot:hover {{
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+      filter: brightness(0.94);
+    }}
+    .slot:focus-visible {{
+      outline: 2.5px solid var(--gold);
+      outline-offset: 2px;
+    }}
+
+    /* time-of-day variants */
+    .slot--early {{
+      background: var(--early-bg);
+      border-color: var(--early-border);
+      color: var(--early-text);
+    }}
+    .slot--midday {{
+      background: var(--midday-bg);
+      border-color: var(--midday-border);
+      color: var(--midday-text);
+    }}
+    .slot--afternoon {{
+      background: var(--afternoon-bg);
+      border-color: var(--afternoon-border);
+      color: var(--afternoon-text);
+    }}
+
+    /* new-slot highlight */
+    .slot--new {{
+      box-shadow: 0 0 0 1.5px var(--gold);
+      animation: pulse-new 2s ease-in-out 3;
+    }}
+    .new-badge {{
+      font-size: 0.6rem;
+      background: var(--gold);
+      color: var(--green-deep);
+      border-radius: 3px;
+      padding: 0 4px;
+      margin-right: 5px;
+      font-weight: 800;
+      vertical-align: middle;
+    }}
+    @keyframes pulse-new {{
+      0%, 100% {{ box-shadow: 0 0 0 1.5px var(--gold); }}
+      50%       {{ box-shadow: 0 0 0 5px rgba(232,185,74,0.35); }}
+    }}
+
     .no-times {{
       font-size: 0.82rem;
       color: var(--text-light);
@@ -1200,7 +1433,7 @@ def generate_html():
       flex: 1;
     }}
     .callout-quote span {{
-      color: rgba(255,255,255,0.4);
+      color: var(--text-on-brand-faint);
       font-size: 0.55em;
       display: block;
       letter-spacing: 0.2em;
@@ -1211,7 +1444,7 @@ def generate_html():
     .callout-divider {{
       width: 1px;
       height: 28px;
-      background: rgba(255,255,255,0.15);
+      background: var(--divider-on-brand);
       flex-shrink: 0;
     }}
 
@@ -1230,7 +1463,7 @@ def generate_html():
       left: 50%;
       transform: translateX(-50%) translateY(80px);
       background: var(--green-deep);
-      color: var(--white);
+      color: var(--text-on-brand);
       padding: 12px 28px;
       border-radius: 40px;
       font-size: 0.85rem;
@@ -1246,6 +1479,32 @@ def generate_html():
     .toast.show {{
       transform: translateX(-50%) translateY(0);
       opacity: 1;
+    }}
+
+    /* ── Dark mode toggle button ── */
+    #theme-toggle {{
+      position: fixed;
+      bottom: 24px;
+      right: 20px;
+      background: var(--green-deep);
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      font-size: 1.15rem;
+      cursor: pointer;
+      z-index: 200;
+      transition: transform 0.2s, background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+    }}
+    #theme-toggle:hover {{ transform: scale(1.12) rotate(15deg); }}
+    #theme-toggle:focus-visible {{
+      outline: 2.5px solid var(--gold);
+      outline-offset: 3px;
     }}
 
     /* ── Footer ── */
@@ -1279,7 +1538,6 @@ def generate_html():
       header {{ padding: 14px 0; }}
       header::after {{ height: 6px; }}
 
-      /* Switch to block layout so center text owns full width */
       .header-inner {{
         display: block;
         position: relative;
@@ -1288,7 +1546,6 @@ def generate_html():
         max-width: 100%;
       }}
 
-      /* Pin emojis to absolute edges */
       .header-flag {{
         position: absolute;
         left: 10px;
@@ -1309,20 +1566,17 @@ def generate_html():
         animation-direction: reverse;
       }}
 
-      /* Keyframe includes translateY so it doesn't fight the animation */
       @keyframes flagwave-mobile {{
         0%, 100% {{ transform: translateY(-28%) rotate(-3deg); }}
         50%       {{ transform: translateY(-28%) rotate(3deg); }}
       }}
 
-      /* Force inner text div to full width so subtitle centers correctly */
       .header-inner > div {{
         width: 100%;
         text-align: center;
         display: block;
       }}
 
-      /* Force subtitle to truly center */
       header .subtitle {{
         white-space: nowrap !important;
         text-align: center !important;
@@ -1337,13 +1591,10 @@ def generate_html():
       .window-tag {{ font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }}
       .sunset-pill {{ font-size: 0.68rem; padding: 1px 5px; }}
 
-      /* Updated bar */
       .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
 
-      /* Grid */
       main {{ margin: 15px auto 0; padding: 16px 12px 0; gap: 15px; }}
 
-      /* Card */
       .course-card {{ border-radius: 12px; }}
       .course-card:hover {{ transform: none; }}
       .card-header {{ padding: 12px 15px; }}
@@ -1351,12 +1602,10 @@ def generate_html():
       .course-name {{ font-size: 1.5rem; }}
       .course-meta {{ font-size: 0.68rem; }}
 
-      /* Day block */
       .day-block {{ padding: 10px 15px; min-height: 58px; position: relative; }}
       .day-header {{ margin-bottom: 6px; }}
-      .day-name {{ font-size: 0.75rem; }}
+      .day-name {{ font-size: 0.88rem; }}
 
-      /* Book button */
       .book-btn {{
         position: absolute;
         top: 10px;
@@ -1375,7 +1624,6 @@ def generate_html():
         color: var(--green-deep);
       }}
 
-      /* Slots */
       .slots {{ gap: 4px; padding-right: 50px; }}
       .slot {{
         font-size: 0.75rem;
@@ -1385,21 +1633,21 @@ def generate_html():
       }}
       .no-times {{ font-size: 0.75rem; }}
 
-      /* Hide callout strip on mobile */
       .callout-strip {{ display: none; }}
 
-      /* Footer */
       footer {{ padding: 20px; font-size: 0.7rem; margin-top: 12px; }}
       .footer-fore {{ display: none; }}
 
-      /* Toast */
-      .toast {{ bottom: 24px; font-size: 0.8rem; padding: 10px 20px; }}
+      .toast {{ bottom: 80px; font-size: 0.8rem; padding: 10px 20px; }}
+
+      #theme-toggle {{ bottom: 20px; right: 14px; width: 40px; height: 40px; font-size: 1rem; }}
     }}
   </style>
 </head>
 <body>
 
-  <div class="ticker">
+  <span class="sr-only">Tee Time Watch — Miami area golf weekend availability</span>
+  <div class="ticker" aria-hidden="true">
     <div class="ticker-inner">
       <span>FORE! ⛳</span>
       <span>TEE TIME WATCH 🏌️</span>
@@ -1436,7 +1684,7 @@ def generate_html():
     Checked every 15 minutes <br>Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
-  <main>
+  <main aria-label="Course tee times">
     {cards_html}
   </main>
 
@@ -1454,7 +1702,23 @@ def generate_html():
     © {datetime.now(ET).year} Tee Time Watch
   </footer>
 
+  <button id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+
   <script>
+    // ── Dark mode ──
+    (function() {{
+      const btn  = document.getElementById('theme-toggle');
+      const root = document.documentElement;
+      const saved = localStorage.getItem('ttw-theme');
+      if (saved === 'dark') {{ root.dataset.theme = 'dark'; btn.textContent = '☀️'; }}
+      btn.addEventListener('click', function() {{
+        const isDark = root.dataset.theme === 'dark';
+        root.dataset.theme = isDark ? '' : 'dark';
+        btn.textContent = isDark ? '🌙' : '☀️';
+        localStorage.setItem('ttw-theme', isDark ? '' : 'dark');
+      }});
+    }})();
+
     // ── Minutes ago counter ──
     (function() {{
       const el = document.getElementById('mins-ago');
@@ -1479,27 +1743,51 @@ def generate_html():
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
-async def main():
+def _select_courses(filter_terms: list[str]) -> list[dict]:
+    """Match case-insensitive substrings against course names. Empty = all."""
+    if not filter_terms:
+        return COURSES
+    terms = [t.lower() for t in filter_terms]
+    picked = [c for c in COURSES if any(t in c["name"].lower() for t in terms)]
+    if not picked:
+        names = ", ".join(c["name"] for c in COURSES)
+        sys.exit(f"No course matched {filter_terms!r}. Known: {names}")
+    return picked
+
+
+async def main(courses: list[dict]):
     dates = get_upcoming_weekend_dates()
 
     print(f"\nTee Time Monitor")
-    print(f"  Courses: {', '.join(c['name'] for c in COURSES)}")
+    print(f"  Courses: {', '.join(c['name'] for c in courses)}")
     print(f"  Dates:   {', '.join(d.strftime('%a %b %-d') for d in dates)}\n")
 
     async with async_playwright() as playwright:
         results = await asyncio.gather(
-            *[check_course(playwright, course, dates) for course in COURSES],
+            *[check_course(playwright, course, dates) for course in courses],
             return_exceptions=True,
         )
-        for course, result in zip(COURSES, results):
+        for course, result in zip(courses, results):
             if isinstance(result, Exception):
                 print(f"\n  ⚠️  {course['name']} failed entirely: {type(result).__name__}: {result}")
 
     print("\n" + "="*60)
-    print("Generating index.html...")
-    generate_html()
+    # Skip HTML regen on a filtered local run so the user can't accidentally
+    # commit a stale index.html built from only a subset of caches.
+    if len(courses) == len(COURSES):
+        print("Generating index.html...")
+        generate_html()
+    else:
+        print("Filtered run — skipping index.html regeneration.")
     print("Done.\n")
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    parser = argparse.ArgumentParser(description="Tee Time Monitor")
+    parser.add_argument(
+        "--course", "-c", action="append", default=[],
+        help="Filter to courses whose name contains this substring (case-insensitive). "
+             "Repeat to select multiple. Default: all courses.",
+    )
+    args = parser.parse_args()
+    asyncio.run(main(_select_courses(args.course)))
