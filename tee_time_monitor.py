@@ -236,6 +236,7 @@ _CHRONO_12H_RE  = re.compile(r"(\d{1,2}:\d{2})\s*(AM|PM)", re.I)
 _CHRONO_24H_RE  = re.compile(r"\b([01]?\d|2[0-3]):(\d{2})\b")
 _CHRONO_HOLE_RE = re.compile(r"(\d+)\s*hole", re.I)
 _WEBTRAC_TIME_RE = re.compile(r"\d{1,2}:\d{2}")
+_LEADING_INT_RE  = re.compile(r"\d+")
 
 
 def _collapse(raw: str) -> str:
@@ -341,10 +342,10 @@ def parse_webtrac_row(cells: list[str]) -> dict | None:
     """cells = innerText of each <td> in a results row (index-aligned)."""
     if len(cells) < 6:
         return None
-    try:
-        open_slots = int((cells[5] or "").strip() or 0)
-    except ValueError:
-        open_slots = 0
+    # Match JS parseInt's leniency — cell may contain icons/labels after the
+    # number ("4 Open", "4\nof\n4"). Extract the first integer we see.
+    m = _LEADING_INT_RE.search(cells[5] or "")
+    open_slots = int(m.group(0)) if m else 0
     if open_slots == 0:
         return None
     time = (cells[1] or "").strip()
