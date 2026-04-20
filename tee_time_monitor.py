@@ -1215,38 +1215,6 @@ def generate_html():
       flex-shrink: 0;
     }}
 
-    /* ── Check Now buttons ── */
-    .check-now-wrap-top {{
-      text-align: center;
-      padding: 14px 24px 14px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-    }}
-    .check-now-wrap-bottom {{
-      display: none;
-    }}
-    .check-now-btn {{
-      background: rgba(13, 43, 26, 0.5);
-      color: var(--gold);
-      border: 1px solid rgba(232,185,74,0.55);
-      height: 32px;
-      width: 180px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.12em;
-      border-radius: 40px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }}
-    .check-now-btn:hover {{ background: var(--gold); color: var(--green-deep); border-color: var(--gold); }}
-    .check-now-btn:disabled {{ opacity: 0.6; cursor: not-allowed; }}
-
     /* ── Minutes ago ── */
     .mins-ago {{
       font-size: 0.72rem;
@@ -1420,26 +1388,6 @@ def generate_html():
       /* Hide callout strip on mobile */
       .callout-strip {{ display: none; }}
 
-      /* Hide top buttons on mobile, show bottom ones instead */
-      .check-now-wrap-top {{ display: none; }}
-      .check-now-wrap-bottom {{
-        display: flex;
-        justify-content: center;
-        padding: 20px;
-        gap: 10px;
-      }}
-      .check-now-btn {{
-        background: var(--green-deep);
-        color: var(--white);
-        border: 1px solid var(--gold);
-        padding: 10px 24px;
-        width: auto;
-        font-size: 1rem;
-        border-radius: 30px;
-        box-shadow: none;
-      }}
-      .check-now-btn:hover {{ transform: none; background: var(--green-mid); }}
-
       /* Footer */
       footer {{ padding: 20px; font-size: 0.7rem; margin-top: 12px; }}
       .footer-fore {{ display: none; }}
@@ -1488,10 +1436,6 @@ def generate_html():
     Checked every 15 minutes <br>Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
-  <div class="check-now-wrap-top">
-    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
-  </div>
-
   <main>
     {cards_html}
   </main>
@@ -1502,10 +1446,6 @@ def generate_html():
     <div class="callout-quote">BOOK FAST<span>they go quick</span></div>
     <div class="callout-divider"></div>
     <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
-  </div>
-
-  <div class="check-now-wrap-bottom">
-    <button class="check-now-btn" onclick="this.textContent='RELOADING… ↺'; location.reload()">REFRESH ↺</button>
   </div>
 
   <footer>
