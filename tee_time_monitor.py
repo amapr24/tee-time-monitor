@@ -243,6 +243,12 @@ def _collapse(raw: str) -> str:
     return re.sub(r"\s+", " ", raw or "").strip()
 
 
+def _normalize_time_label(time_str: str) -> str:
+    """Normalize AM/PM casing so all sources render times consistently."""
+    t = _collapse(time_str)
+    return re.sub(r"\b(am|pm)\b", lambda m: m.group(1).upper(), t, flags=re.I)
+
+
 def parse_cpsgolf_card(raw: str) -> dict | None:
     raw = _collapse(raw)
     if not raw:
@@ -348,7 +354,7 @@ def parse_webtrac_row(cells: list[str]) -> dict | None:
     open_slots = int(m.group(0)) if m else 0
     if open_slots == 0:
         return None
-    time = (cells[1] or "").strip()
+    time = _normalize_time_label(cells[1] or "")
     if not _WEBTRAC_TIME_RE.search(time):
         return None
     return {

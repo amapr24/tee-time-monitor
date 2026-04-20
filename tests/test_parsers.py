@@ -132,7 +132,7 @@ def _webtrac_row(time, date, holes, course, open_slots, status="", cost=""):
 def test_webtrac_row_basic():
     row = _webtrac_row("7:00 am", "04/18/2026", "18 (Front)", "Plantation", 4, "", "$42.00")
     assert parse_webtrac_row(row) == {
-        "time":  "7:00 am",
+        "time":  "7:00 AM",
         "holes": "18 (Front)",
         "price": "$42.00",
     }
@@ -162,16 +162,16 @@ def test_webtrac_row_missing_cost_cell():
     row = ["", "7:00 am", "04/18/2026", "18", "P", "2", ""]
     slot = parse_webtrac_row(row)
     assert slot["price"] == ""
-    assert slot["time"] == "7:00 am"
+    assert slot["time"] == "7:00 AM"
 
 
 def test_webtrac_row_open_slots_with_trailing_text():
     # WebTrac sometimes renders open-slots cell with decorations/icons after
     # the number ("4 Open", "4\nof\n4"). parseInt-style leniency: grab leading int.
     row = ["", "7:00 am", "04/18/2026", "18", "P", "4 Open", "", "$42"]
-    assert parse_webtrac_row(row)["time"] == "7:00 am"
+    assert parse_webtrac_row(row)["time"] == "7:00 AM"
     row2 = ["", "7:15 am", "04/18/2026", "18", "P", "3\nof\n4", "", "$42"]
-    assert parse_webtrac_row(row2)["time"] == "7:15 am"
+    assert parse_webtrac_row(row2)["time"] == "7:15 AM"
 
 
 def test_webtrac_parses_multiple_rows_filtering_zero():
@@ -181,4 +181,4 @@ def test_webtrac_parses_multiple_rows_filtering_zero():
         _webtrac_row("7:30 am", "04/18/2026", "18", "P", 2, "", "$42"),
     ]
     slots = parse_webtrac(rows)
-    assert [s["time"] for s in slots] == ["7:00 am", "7:30 am"]
+    assert [s["time"] for s in slots] == ["7:00 AM", "7:30 AM"]
