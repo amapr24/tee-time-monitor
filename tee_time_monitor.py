@@ -904,8 +904,9 @@ async def check_course(playwright, course: dict, dates: list[date]):
 
 # ── HTML generator ────────────────────────────────────────────────────────────
 
+
 def _slot_time_class(time_str: str) -> str:
-    """Return CSS class based on time of day: early (<9 AM), midday (9–11:59), afternoon (12+)."""
+    """Return CSS class based on time of day to match the new screenshot palette."""
     try:
         t = time_str.strip().upper()
         is_pm = t.endswith("PM")
@@ -915,32 +916,36 @@ def _slot_time_class(time_str: str) -> str:
             h += 12
         elif not is_pm and h == 12:
             h = 0
-        if h < 9:
-            return "slot slot--early"
+            
+        if h < 10:
+            return "slot slot--early"    # Yellowish
         if h < 12:
-            return "slot slot--midday"
-        return "slot slot--afternoon"
+            return "slot slot--midday"   # Bluish
+        return "slot slot--afternoon"    # Greenish
     except Exception:
         return "slot"
-
 
 def generate_html():
     dates = get_upcoming_weekend_dates()
     now_str = datetime.now(ET).strftime("%-I:%M %p ET, %A %B %-d, %Y")
     now_ts  = int(datetime.now(ET).timestamp())
 
-    # Build data structure: course -> date -> slots
-    course_data = []
-    for course in COURSES:
-        cache_file = CACHE_DIR / course["cache_file"]
-        days = []
-        for d in dates:
+    # Build data structure grouped by DATE
+    date_data = []
+    for d in dates:
+        day_label = d.strftime("%a, %b %-d")
+        day_weekday_name = d.strftime("%A")
+        courses_for_day = []
+        
+        for course in COURSES:
+            cache_file = CACHE_DIR / course["cache_file"]
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             raw_slots = load_cache(cache_file, d)
             slots = [
                 s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
                 if not is_slot_in_past(s.get("time", ""), d)
             ]
+            
             if course["type"] == "cpsgolf":
                 book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
             else:
@@ -949,15 +954,21 @@ def generate_html():
                     f"&step=teetimes&holes={course.get('holes', 18)}"
                     f"&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
                 )
-            days.append({
-                "date":     d,
-                "label":    d.strftime("%A, %b %-d"),
-                "slots":    slots,
-                "book_url": book_url,
+            
+            courses_for_day.append({
+                "name": course["name"],
+                "slots": slots,
+                "book_url": book_url
             })
-        course_data.append({"course": course, "days": days})
+        
+        date_data.append({
+            "date": d,
+            "label": day_label,
+            "weekday": day_weekday_name,
+            "courses": courses_for_day
+        })
 
-    # Sunset info for header
+    # Header calculations
     first_date = dates[0]
     s = sun(MIAMI.observer, date=first_date, tzinfo=ET)
     actual_sunset = s["sunset"].strftime("%-I:%M %p")
@@ -969,64 +980,55 @@ def generate_html():
     end_ampm = _format_hour_window_label(end_hour)
     start_ampm = _format_hour_window_label(min_start_hour)
 
-    # Build course cards HTML
+    # Build Filter Bar
+    filter_html = ""
+    for day in date_data:
+        filter_html += f'<button class="day-toggle" data-filter="{day["weekday"]}" aria-pressed="true">{day["label"]}</button>\n'
+
+    # Build HTML Cards
     cards_html = ""
-    for cd in course_data:
-        course = cd["course"]
-        days_html = ""
-        for day in cd["days"]:
-            # Derive a short weekday key for JS filtering: "Friday", "Saturday", "Sunday"
-            day_weekday_name = day["date"].strftime("%A")  # e.g. "Friday"
-            day_label = day["label"]
-            book_url  = day["book_url"]
-
-            if day["slots"]:
+    for day in date_data:
+        day_label = day["label"]
+        weekday = day["weekday"]
+        
+        cards_html += f'\n<section class="day-section" data-day="{weekday}">'
+        cards_html += f'\n  <h2 class="date-header">{day_label}</h2>'
+        
+        for c in day["courses"]:
+            name = c["name"]
+            slots = c["slots"]
+            book_url = c["book_url"]
+            
+            if slots:
                 items_html = ""
-                for s in day["slots"]:
-                    t    = s.get("time", "?")
-                    cls  = _slot_time_class(t)
-                    if s.get("is_new"):
-                        cls += " slot--new"
-                    badge = '<span class="new-badge" aria-label="New">NEW</span>' if s.get("is_new") else ""
-                    price = (" · " + s["price"]) if s.get("price") else ""
-                    items_html += f'<li class="{cls}" role="listitem">{badge}{t}{price}</li>'
-                day_body = f'<ul class="slots" role="list" aria-label="Available tee times">{items_html}</ul>'
-                header_book = f'<a class="book-btn" href="{book_url}" target="_blank" aria-label="Book tee time for {day_label}">Book &#8594;</a>'
-                extra_class = ""
-                day_header_html = f'<div class="day-header"><span class="day-name">{day_label}</span>{header_book}</div>'
-                block_content = f'{day_header_html}\n              {day_body}'
+                for s in slots:
+                    t = s.get("time", "?")
+                    cls = _slot_time_class(t)
+                    items_html += f'<li class="{cls}" role="listitem">{t}</li>'
+                
+                body_html = f'<ul class="slots" role="list">{items_html}</ul>'
             else:
-                extra_class = " day-block--booked"
-                day_header_html = f'<div class="day-header day-header--booked"><span class="day-name">{day_label}</span></div>'
-                booked_row = (
-                    f'<div class="fully-booked-row">'
-                    f'<span class="fully-booked-label">&#9940; Fully Booked</span>'
-                    f'<a class="book-btn" href="{book_url}" target="_blank" '
-                    f'aria-label="Book tee time for {day_label}">Book &#8594;</a>'
-                    f'</div>'
-                )
-                block_content = f'{day_header_html}\n              {booked_row}'
-
-            days_html += (
-                f'\n            <div class="day-block{extra_class}" data-day="{day_weekday_name}"'
-                f' aria-label="Times for {day_label}">'
-                f'\n              {block_content}'
-                f'\n            </div>'
-            )
-
-        # ── CHANGED: added collapse-btn inside card-header, wrapped days in card-body ──
-        cards_html += f"""
-        <div class="course-card" aria-label="{course['name']}">
-          <div class="card-header">
-            <div class="course-name">{course["name"]}</div>
-            <div class="course-meta">{course.get("address","")}</div>
-            <div class="course-meta"><a href="tel:{course.get('phone','')}">{course.get('phone','')}</a></div>
-            <button class="collapse-btn" aria-label="Collapse {course['name']}" title="Collapse">▲</button>
-          </div>
-          <div class="card-body">
-            {days_html}
-          </div>
-        </div>"""
+                body_html = ""
+            
+            header_book = f'<a class="book-btn" href="{book_url}" target="_blank" onclick="event.stopPropagation()">Book &rarr;</a>'
+            
+            # Note: the double braces are for f-string escaping in the final HTML
+            cards_html += f"""
+            <div class="course-card">
+              <div class="card-header collapsible-header">
+                <div class="header-title-group">
+                  {{'<span class="collapse-icon">▼</span>' if slots else '<span class="collapse-icon empty-icon"></span>'}}
+                  <div>
+                    <div class="course-name {{'course-booked' if not slots else ''}}">{name}</div>
+                    {{'' if slots else '<div class="booked-text">FULLY BOOKED</div>'}}
+                  </div>
+                </div>
+                {header_book}
+              </div>
+              {{f'<div class="card-body">{body_html}</div>' if slots else ''}}
+            </div>"""
+            
+        cards_html += '\n</section>'
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1034,809 +1036,135 @@ def generate_html():
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="refresh" content="300">
-  <meta name="format-detection" content="telephone=no">
-  <title>Tee Time Watch</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⛳</text></svg>">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0d2b1a">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Tee Time Watch">
+  <title>Tee Time Monitor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
-    /* ── Design tokens (light mode) ── */
     :root {{
-      --green-deep:   #0d2b1a;
-      --green-mid:    #1a5c32;
-      --green-light:  #2e8b4f;
-      --green-pale:   #d4eddc;
-      --fairway:      #3a7d44;
+      --green-deep:   #386641;
+      --green-mid:    #2E5335;
       --white:        #ffffff;
-      --cream:        #f5f0e8;
-      --gold:         #e8b94a;
-      --gold-dark:    #c49a28;
-      --text-dark:    #0d2b1a;
-      --text-mid:     #2e4d38;
-      --text-light:   #5a7a66;
-      --text-on-brand:#ffffff;
-      --text-on-brand-muted: rgba(255,255,255,0.8);
-      --text-on-brand-subtle: rgba(255,255,255,0.78);
-      --text-on-brand-faint: rgba(255,255,255,0.5);
-      --divider-on-brand: rgba(255,255,255,0.15);
-      /* time-of-day slot palettes */
-      --early-bg:     #fff8e6;
-      --early-border: #f0c060;
-      --early-text:   #5c3a00;
-      --midday-bg:    #d4eddc;
-      --midday-border:rgba(46,139,79,0.28);
-      --midday-text:  #0d2b1a;
-      --afternoon-bg: #ddeeff;
-      --afternoon-border:#7aaedd;
-      --afternoon-text:#0d2448;
-      /* surfaces */
+      --cream:        #F8F9FA;
+      --gold:         #F2C94C;
+      --text-dark:    #212529;
+      --text-mid:     #495057;
+      --text-light:   #9CA3AF;
+      
+      --early-bg:     #FEF9E7;
+      --early-border: #F2C94C;
+      --early-text:   #212529;
+      
+      --midday-bg:    #EBF5FB;
+      --midday-border:#AED6F1;
+      --midday-text:  #212529;
+      
+      --afternoon-bg: #E8F5E9;
+      --afternoon-border:#A5D6A7;
+      --afternoon-text:#212529;
+      
       --surface:      #ffffff;
-      --bg:           #f5f0e8;
-      --border-soft:  #edf5f0;
+      --bg:           #F8F9FA;
+      --border-soft:  #E5E7EB;
     }}
 
-    /* ── Dark mode overrides ── */
     [data-theme="dark"] {{
-      --cream:           #0f1a13;
-      --bg:              #0f1a13;
-      --surface:         #1a2e20;
-      --text-dark:       #e8f0eb;
-      --text-mid:        #a8c4b0;
-      --text-light:      #6a9470;
-      --text-on-brand:   #f3f8f4;
-      --text-on-brand-muted: rgba(243,248,244,0.84);
-      --text-on-brand-subtle: rgba(243,248,244,0.8);
-      --text-on-brand-faint: rgba(243,248,244,0.58);
-      --divider-on-brand: rgba(243,248,244,0.18);
-      --green-pale:      #1e3828;
-      --border-soft:     #243d2c;
-      --early-bg:        #2e2410;
-      --early-border:    #7a5a10;
-      --early-text:      #f0c060;
-      --midday-bg:       #1e3828;
-      --midday-border:   rgba(46,139,79,0.4);
-      --midday-text:     #a8e0b8;
-      --afternoon-bg:    #0d1f2e;
-      --afternoon-border:#3a6a9e;
-      --afternoon-text:  #90c0ee;
+      --bg:              #121212;
+      --surface:         #1C1C1E;
+      --text-dark:       #FFFFFF;
+      --text-mid:        #D1D5DB;
+      --text-light:      #6B7280;
+      --border-soft:     #2C2C2E;
+      
+      --early-bg:        #2C2301;
+      --early-border:    #7A5C00;
+      --early-text:      #FDE68A;
+      
+      --midday-bg:       #15202B;
+      --midday-border:   #2C3E50;
+      --midday-text:     #BFDBFE;
+      
+      --afternoon-bg:    #1B2E1E;
+      --afternoon-border:#2E4A33;
+      --afternoon-text:  #BBF7D0;
     }}
 
-    body {{
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text-dark);
-      min-height: 100vh;
-      overflow-x: hidden;
-      transition: background 0.25s, color 0.25s;
-    }}
+    body {{ background: var(--bg); color: var(--text-dark); font-family: 'Inter', sans-serif; transition: background 0.2s, color 0.2s; padding-bottom: 80px; }}
+    
+    header {{ background: var(--green-deep); padding: 30px 20px 20px; text-align: center; }}
+    .subtitle {{ color: var(--white); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; margin-bottom: 5px; opacity: 0.9; }}
+    h1 {{ font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: var(--white); letter-spacing: 0.05em; margin: 0; }}
+    .window-tag {{ color: var(--gold); font-size: 0.75rem; font-weight: 600; display: block; margin-top: 10px; }}
+    
+    .updated-bar {{ background: var(--green-deep); border-bottom: 3px solid var(--gold); text-align: center; padding: 10px; font-size: 0.75rem; color: var(--white); opacity: 0.8; }}
+    
+    .day-filter-bar {{ display: flex; justify-content: center; gap: 10px; padding: 20px; background: var(--surface); border-bottom: 1px solid var(--border-soft); position: sticky; top: 0; z-index: 100; }}
+    .day-toggle {{ background: var(--green-deep); color: white; border: none; padding: 10px 18px; border-radius: 24px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: 0.2s; }}
+    .day-toggle.off {{ background: transparent; border: 1px solid var(--border-soft); color: var(--text-mid); }}
+    
+    main {{ max-width: 600px; margin: 0 auto; padding: 0 20px; }}
+    
+    .date-header {{ text-align: center; font-size: 1.4rem; font-weight: 700; color: var(--green-deep); margin: 30px 0 15px; }}
+    [data-theme="dark"] .date-header {{ color: #6A994E; }}
+    
+    .course-card {{ background: var(--surface); border: 1px solid var(--border-soft); border-radius: 12px; margin-bottom: 16px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }}
+    .card-header {{ display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid var(--border-soft); }}
+    .course-card:not(:has(.card-body)) .card-header {{ border-bottom: none; }}
+    
+    /* Accordion Logic */
+    .collapsible-header {{ cursor: pointer; transition: background-color 0.2s; }}
+    .collapsible-header:hover {{ background-color: var(--bg); }}
+    .header-title-group {{ display: flex; align-items: center; gap: 12px; }}
+    .collapse-icon {{ font-size: 0.7rem; color: var(--text-mid); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: inline-block; transform: rotate(0deg); }}
+    .empty-icon {{ opacity: 0; pointer-events: none; }}
+    .course-card.is-collapsed .collapse-icon {{ transform: rotate(-90deg); }}
+    .course-card.is-collapsed .card-body {{ display: none; }}
+    .course-card.is-collapsed .card-header {{ border-bottom: none; }}
 
-    /* ── Screen-reader only utility ── */
-    .sr-only {{
-      position: absolute; width: 1px; height: 1px;
-      padding: 0; margin: -1px; overflow: hidden;
-      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
-    }}
-
-    /* ── Scrolling ticker ── */
-    .ticker {{
-      background: var(--gold);
-      color: var(--green-deep);
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.15em;
-      padding: 6px 0;
-      overflow: hidden;
-      white-space: nowrap;
-    }}
-    .ticker-inner {{
-      display: inline-block;
-      animation: ticker 36s linear infinite;
-      will-change: transform;
-    }}
-    .ticker:hover .ticker-inner,
-    .ticker:focus-within .ticker-inner {{ animation-play-state: paused; }}
-    .ticker-inner span {{ margin: 0 48px; }}
-    @keyframes ticker {{
-      0%   {{ transform: translateX(0); }}
-      100% {{ transform: translateX(-50%); }}
-    }}
-
-    /* ── Header ── */
-    header {{
-      background: var(--green-deep);
-      padding: 32px 30px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }}
-    header::after {{
-      content: '';
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 12px;
-      background: repeating-linear-gradient(
-        90deg,
-        var(--fairway) 0px, var(--fairway) 8px,
-        var(--green-mid) 8px, var(--green-mid) 16px
-      );
-    }}
-    header::before {{
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
-      background-size: 24px 24px;
-    }}
-    .header-inner {{
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-      align-items: center;
-      position: relative;
-      width: 100%;
-      max-width: 760px;
-      margin: 0 auto;
-    }}
-    .header-flag {{
-      font-size: 4.5rem;
-      animation: flagwave 3s ease-in-out infinite;
-      transform-origin: bottom center;
-      justify-self: end;
-      padding-right: 20px;
-    }}
-    .header-golfer {{
-      font-size: 4.5rem;
-      animation: flagwave 3s ease-in-out infinite;
-      transform-origin: bottom center;
-      animation-direction: reverse;
-      justify-self: start;
-      padding-left: 20px;
-    }}
-    @keyframes flagwave {{
-      0%, 100% {{ transform: rotate(-3deg); }}
-      50%       {{ transform: rotate(3deg); }}
-    }}
-    h1 {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(3.5rem, 10vw, 6rem);
-      color: var(--text-on-brand);
-      letter-spacing: 0.08em;
-      padding-left: 0.08em;
-      line-height: 0.9;
-      position: relative;
-      white-space: nowrap;
-    }}
-    h1 br {{ display: none; }}
-    h1 em {{
-      color: var(--gold);
-      font-style: normal;
-    }}
-    .subtitle {{
-      font-size: 0.9rem;
-      color: var(--text-on-brand-muted);
-      margin-top: 12px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      position: relative;
-    }}
-    .window-tag {{
-      color: var(--gold);
-      font-size: 0.8rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 14px 0 0px;
-      display: block;
-    }}
-
-    /* ── Sunset pill ── */
-    .sunset-pill {{
-      background: var(--gold);
-      color: var(--green-deep);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-weight: 800;
-      margin-left: 5px;
-      display: inline-block;
-      vertical-align: baseline;
-    }}
-
-    /* ── Updated bar ── */
-    .updated-bar {{
-      background: var(--green-mid);
-      text-align: center;
-      padding: 10px 24px;
-      font-size: 0.88rem;
-      color: var(--text-on-brand-muted);
-      letter-spacing: 0.04em;
-      border-bottom: 3px solid var(--gold);
-    }}
-    .updated-bar strong {{ color: var(--text-on-brand); font-weight: 500; }}
-
-    /* ── Main grid ── */
-    main {{
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 20px 20px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      align-items: start;
-    }}
-
-    /* ── Course card ── */
-    .course-card {{
-      background: var(--surface);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
-      transition: transform 0.2s, box-shadow 0.2s;
-      border: 1px solid rgba(13,43,26,0.06);
-    }}
-    .course-card:hover {{
-      transform: translateY(-4px);
-      box-shadow: 0 12px 40px rgba(13,43,26,0.18), 0 2px 8px rgba(13,43,26,0.1);
-    }}
-    .course-card.collapsed:hover {{
-      transform: none;
-      box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
-    }}
-    .card-header {{
-      background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
-      padding: 20px 24px 12px;
-      position: relative;
-      overflow: hidden;
-      cursor: pointer;
-    }}
-    .card-header::before {{
-      content: '⛳';
-      position: absolute;
-      right: 16px;
-      top: 12px;
-      font-size: 2.5rem;
-      opacity: 0.15;
-    }}
-
-    /* ── Collapse toggle ── */
-    .collapse-btn {{
-      position: absolute;
-      bottom: 12px;
-      right: 14px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: var(--gold);
-      border-radius: 50%;
-      width: 28px;
-      height: 28px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.15s, transform 0.3s ease;
-      z-index: 1;
-      line-height: 1;
-    }}
-    .collapse-btn:hover {{ background: rgba(255,255,255,0.22); }}
-    .collapse-btn:focus-visible {{ outline: 2px solid var(--gold); outline-offset: 2px; }}
-    .course-card.collapsed .collapse-btn {{ transform: rotate(180deg); }}
-    .card-body {{
-      overflow: hidden;
-      transition: max-height 0.35s ease, opacity 0.25s ease;
-      max-height: 2000px;
-      opacity: 1;
-    }}
-    .course-card.collapsed .card-body {{
-      max-height: 0;
-      opacity: 0;
-    }}
-    .course-card.collapsed .card-header::before {{ opacity: 0.08; }}
-
-    .course-name {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.8rem;
-      color: var(--text-on-brand);
-      letter-spacing: 0.06em;
-      line-height: 1;
-    }}
-    .course-meta {{
-      font-size: 0.78rem;
-      color: var(--text-on-brand-subtle);
-      letter-spacing: 0.04em;
-      margin-top: 4px;
-    }}
-    .card-header a {{
-      color: var(--text-on-brand-subtle);
-      text-decoration: none;
-    }}
-
-    /* ── Day block ── */
-    .day-block {{
-      padding: 14px 20px;
-      border-bottom: 1px solid var(--border-soft);
-      background: var(--surface);
-      transition: background 0.25s;
-    }}
-    .day-block:last-child {{ border-bottom: none; }}
-    .day-header {{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 15px;
-    }}
-    .day-name {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.05rem;
-      font-weight: 400;
-      letter-spacing: 0.08em;
-      color: var(--text-dark);
-    }}
-    .book-btn {{
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--gold-dark);
-      background: rgba(232, 185, 74, 0.12);
-      text-decoration: none;
-      padding: 5px 12px;
-      border-radius: 20px;
-      border: 1px solid rgba(232, 185, 74, 0.35);
-      transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
-      letter-spacing: 0.04em;
-    }}
-    .book-btn:hover {{
-      background: var(--gold);
-      color: var(--green-deep);
-      border-color: var(--gold);
-      transform: translateY(-1px);
-    }}
-    .book-btn:focus-visible {{
-      outline: 2.5px solid var(--gold);
-      outline-offset: 2px;
-    }}
-
-    /* ── Slots list ── */
-    .slots {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      list-style: none;
-      padding: 0;
-    }}
-    .slot {{
-      font-size: 0.82rem;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 6px;
-      border: 1px solid;
-      font-variant-numeric: tabular-nums;
-      min-width: 82px;
-      text-align: center;
-      transition: background 0.15s, color 0.15s, transform 0.1s, box-shadow 0.15s;
-      cursor: default;
-    }}
-    .slot:hover {{
-      transform: translateY(-1px);
-      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-      filter: brightness(0.94);
-    }}
-    .slot:focus-visible {{
-      outline: 2.5px solid var(--gold);
-      outline-offset: 2px;
-    }}
-
-    /* time-of-day variants */
-    .slot--early {{
-      background: var(--early-bg);
-      border-color: var(--early-border);
-      color: var(--early-text);
-    }}
-    .slot--midday {{
-      background: var(--midday-bg);
-      border-color: var(--midday-border);
-      color: var(--midday-text);
-    }}
-    .slot--afternoon {{
-      background: var(--afternoon-bg);
-      border-color: var(--afternoon-border);
-      color: var(--afternoon-text);
-    }}
-
-    /* new-slot highlight */
-    .slot--new {{
-      box-shadow: 0 0 0 1.5px var(--gold);
-      animation: pulse-new 2s ease-in-out 3;
-    }}
-    .new-badge {{
-      font-size: 0.6rem;
-      background: var(--gold);
-      color: var(--green-deep);
-      border-radius: 3px;
-      padding: 0 4px;
-      margin-right: 5px;
-      font-weight: 800;
-      vertical-align: middle;
-    }}
-    @keyframes pulse-new {{
-      0%, 100% {{ box-shadow: 0 0 0 1.5px var(--gold); }}
-      50%       {{ box-shadow: 0 0 0 5px rgba(232,185,74,0.35); }}
-    }}
-
-    .no-times {{
-      font-size: 0.82rem;
-      color: var(--text-light);
-      font-style: italic;
-    }}
-
-    /* ── Callout strip ── */
-    .callout-strip {{
-      background: var(--green-deep);
-      padding: 14px 24px;
-      margin: 20px 20px 0;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-      max-width: 1060px;
-      margin-left: auto;
-      margin-right: auto;
-    }}
-    .callout-quote {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: clamp(1rem, 3vw, 1.5rem);
-      color: var(--gold);
-      letter-spacing: 0.1em;
-      text-align: center;
-      flex: 1;
-    }}
-    .callout-quote span {{
-      color: var(--text-on-brand-faint);
-      font-size: 0.55em;
-      display: block;
-      letter-spacing: 0.2em;
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 300;
-      margin-top: 2px;
-    }}
-    .callout-divider {{
-      width: 1px;
-      height: 28px;
-      background: var(--divider-on-brand);
-      flex-shrink: 0;
-    }}
-
-    /* ── Minutes ago ── */
-    .mins-ago {{
-      font-size: 0.72rem;
-      color: var(--gold);
-      margin-left: 6px;
-      font-weight: 500;
-    }}
-
-    /* ── Toast ── */
-    .toast {{
-      position: fixed;
-      bottom: 32px;
-      left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: var(--green-deep);
-      color: var(--text-on-brand);
-      padding: 12px 28px;
-      border-radius: 40px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      letter-spacing: 0.04em;
-      border: 1px solid var(--gold);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-      transition: transform 0.3s ease, opacity 0.3s ease;
-      opacity: 0;
-      z-index: 999;
-      white-space: nowrap;
-    }}
-    .toast.show {{
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }}
-
-    /* ── Dark mode toggle button ── */
-    #theme-toggle {{
-      position: fixed;
-      bottom: 24px;
-      right: 20px;
-      background: var(--green-deep);
-      border: 1.5px solid var(--gold);
-      color: var(--gold);
-      border-radius: 50%;
-      width: 44px;
-      height: 44px;
-      font-size: 1.15rem;
-      cursor: pointer;
-      z-index: 200;
-      transition: transform 0.2s, background 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.25);
-    }}
-    #theme-toggle:hover {{ transform: scale(1.12) rotate(15deg); }}
-    #theme-toggle:focus-visible {{
-      outline: 2.5px solid var(--gold);
-      outline-offset: 3px;
-    }}
-
-    /* ── Footer ── */
-    footer {{
-      text-align: center;
-      padding: 32px 24px;
-      font-size: 0.75rem;
-      color: var(--text-light);
-      border-top: 2px solid rgba(13,43,26,0.08);
-      margin-top: 24px;
-    }}
-    .footer-fore {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1.4rem;
-      color: var(--green-light);
-      letter-spacing: 0.2em;
-      display: block;
-      margin-bottom: 8px;
-      opacity: 0.4;
-    }}
-
-    /* ── Day filter toggle bar ── */
-    .day-filter-bar {{
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      padding: 14px 20px 14px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }}
-    .day-toggle {{
-      font-family: 'Bebas Neue', sans-serif;
-      font-size: 1rem;
-      letter-spacing: 0.12em;
-      padding: 7px 22px;
-      border-radius: 24px;
-      border: 2px solid var(--green-mid);
-      background: var(--green-mid);
-      color: var(--text-on-brand);
-      cursor: pointer;
-      transition: background 0.18s, color 0.18s, border-color 0.18s, opacity 0.18s, transform 0.1s;
-      user-select: none;
-    }}
-    .day-toggle:hover {{ transform: translateY(-1px); filter: brightness(1.1); }}
-    .day-toggle:focus-visible {{ outline: 2.5px solid var(--gold); outline-offset: 3px; }}
-    .day-toggle.off {{
-      background: transparent;
-      color: var(--text-mid);
-      border-color: var(--border-soft);
-      opacity: 0.55;
-    }}
-    [data-theme="dark"] .day-toggle.off {{
-      color: var(--text-light);
-      border-color: var(--border-soft);
-    }}
-
-    /* ── Fully booked compact row ── */
-    .day-block--booked {{
-      padding: 10px 20px;
-      background: var(--surface);
-      opacity: 0.72;
-    }}
-    .day-header--booked {{
-      margin-bottom: 6px;
-    }}
-    .fully-booked-row {{
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-    }}
-    .fully-booked-label {{
-      font-size: 0.75rem;
-      font-style: italic;
-      color: var(--text-light);
-      letter-spacing: 0.04em;
-    }}
-
-    /* ════════════════════════════════════════════
-       MOBILE OVERRIDES  (≤ 767px)
-       ════════════════════════════════════════════ */
-    @media (max-width: 767px) {{
-
-      /* Ticker */
-      .ticker {{ font-size: 0.82rem; }}
-
-      /* Header */
-      header {{ padding: 14px 0; }}
-      header::after {{ height: 6px; }}
-
-      .header-inner {{
-        display: block;
-        position: relative;
-        text-align: center;
-        padding: 0 55px;
-        max-width: 100%;
-      }}
-
-      .header-flag {{
-        position: absolute;
-        left: 10px;
-        top: 28%;
-        font-size: 2.4rem;
-        padding: 0;
-        margin: 0;
-        animation: flagwave-mobile 3s ease-in-out infinite;
-      }}
-      .header-golfer {{
-        position: absolute;
-        right: 10px;
-        top: 28%;
-        font-size: 2.4rem;
-        padding: 0;
-        margin: 0;
-        animation: flagwave-mobile 3s ease-in-out infinite;
-        animation-direction: reverse;
-      }}
-
-      @keyframes flagwave-mobile {{
-        0%, 100% {{ transform: translateY(-28%) rotate(-3deg); }}
-        50%       {{ transform: translateY(-28%) rotate(3deg); }}
-      }}
-
-      .header-inner > div {{
-        width: 100%;
-        text-align: center;
-        display: block;
-      }}
-
-      header .subtitle {{
-        white-space: nowrap !important;
-        text-align: center !important;
-        width: 100% !important;
-        display: block !important;
-        font-size: 0.75rem;
-        letter-spacing: 0.08em;
-      }}
-
-      h1 {{ font-size: 3rem; letter-spacing: 0.12em; white-space: normal; }}
-      h1 br {{ display: inline; }}
-      .window-tag {{ font-size: 0.78rem; letter-spacing: 0.05em; padding: 3px 0 4px; white-space: nowrap; }}
-      .sunset-pill {{ font-size: 0.68rem; padding: 1px 5px; }}
-
-      .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
-
-      main {{ margin: 0 auto 0; padding: 0 12px 0; gap: 15px; }}
-
-      .course-card {{ border-radius: 12px; }}
-      .course-card:hover {{ transform: none; }}
-      .card-header {{ padding: 12px 15px; }}
-      .card-header::before {{ font-size: 1.8rem; opacity: 0.12; top: 8px; right: 12px; }}
-      .course-name {{ font-size: 1.5rem; }}
-      .course-meta {{ font-size: 0.68rem; }}
-
-      .collapse-btn {{ bottom: 10px; right: 10px; width: 24px; height: 24px; font-size: 0.65rem; }}
-
-      .day-block {{ padding: 10px 15px; min-height: 58px; position: relative; }}
-      .day-header {{ margin-bottom: 6px; }}
-      .day-name {{ font-size: 0.88rem; }}
-
-      .book-btn {{
-        position: absolute;
-        top: 10px;
-        right: 12px;
-        font-size: 0.6rem;
-        font-weight: 700;
-        background: var(--gold);
-        color: var(--green-deep);
-        padding: 3px 10px;
-        border-radius: 20px;
-        border: none;
-        width: auto;
-      }}
-      .book-btn:hover {{
-        background: var(--gold-dark);
-        color: var(--green-deep);
-      }}
-
-      .slots {{ gap: 4px; padding-right: 50px; }}
-      .slot {{
-        font-size: 0.75rem;
-        padding: 4px 8px;
-        border-radius: 4px;
-        min-width: auto;
-      }}
-      .no-times {{ font-size: 0.75rem; }}
-
-      .callout-strip {{ display: none; }}
-
-      footer {{ padding: 20px; font-size: 0.7rem; margin-top: 12px; }}
-      .footer-fore {{ display: none; }}
-
-      .toast {{ bottom: 80px; font-size: 0.8rem; padding: 10px 20px; }}
-
-      #theme-toggle {{ bottom: 20px; right: 14px; width: 40px; height: 40px; font-size: 1rem; }}
-
-      .day-filter-bar {{ gap: 7px; padding: 12px 14px 12px; }}
-      .day-toggle {{ font-size: 0.88rem; padding: 6px 16px; }}
-    }}
+    .course-name {{ font-weight: 600; font-size: 1.05rem; }}
+    .course-booked {{ color: var(--text-light); }}
+    .booked-text {{ font-size: 0.7rem; color: var(--text-light); font-weight: 700; margin-top: 4px; letter-spacing: 0.05em; text-transform: uppercase; }}
+    
+    .book-btn {{ background: transparent; border: 1px solid var(--text-mid); color: var(--text-dark); padding: 6px 14px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; text-decoration: none; transition: 0.2s; }}
+    .book-btn:hover {{ background: var(--border-soft); }}
+    
+    .card-body {{ padding: 16px; }}
+    .slots {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; list-style: none; padding: 0; }}
+    .slot {{ padding: 12px; text-align: center; border-radius: 6px; border: 1px solid; font-weight: 600; font-size: 0.9rem; }}
+    
+    .slot--early {{ background: var(--early-bg); border-color: var(--early-border); color: var(--early-text); }}
+    .slot--midday {{ background: var(--midday-bg); border-color: var(--midday-border); color: var(--midday-text); }}
+    .slot--afternoon {{ background: var(--afternoon-bg); border-color: var(--afternoon-border); color: var(--afternoon-text); }}
+    
+    #theme-toggle {{ position: fixed; bottom: 20px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: var(--green-deep); color: var(--gold); border: none; font-size: 1.4rem; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.25); display: flex; align-items: center; justify-content: center; z-index: 1000; }}
   </style>
 </head>
 <body>
-
-  <span class="sr-only">Tee Time Watch — Miami area golf weekend availability</span>
-  <div class="ticker" aria-hidden="true">
-    <div class="ticker-inner">
-      <span>FORE! ⛳</span>
-      <span>TEE TIME WATCH 🏌️</span>
-      <span>MIAMI AREA GOLF ⛳</span>
-      <span>BOOK BEFORE THEY'RE GONE 🏌️</span>
-      <span>DON'T THREE PUTT ⛳</span>
-      <span>WEEKEND AVAILABILITY 🏌️</span>
-      <span>AVOID THREE PUTTS! ⛳</span>
-      <span>JUST BOOK THE TEE TIME 🏌️</span>
-      <span>FORE! ⛳</span>
-      <span>TEE TIME WATCH 🏌️</span>
-      <span>MIAMI AREA GOLF ⛳</span>
-      <span>BOOK BEFORE THEY'RE GONE 🏌️</span>
-      <span>DON'T THREE PUTT ⛳</span>
-      <span>WEEKEND AVAILABILITY 🏌️</span>
-      <span>AVOID THREE PUTTS! ⛳</span>
-      <span>JUST BOOK THE TEE TIME 🏌️</span>
-    </div>
-  </div>
-
   <header>
-    <div class="header-inner">
-      <span class="header-flag">⛳</span>
-      <div>
-        <h1>TEE <em>TIME</em><br> WATCH</h1>
-        <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
-        <span class="window-tag">⏱ {start_ampm} – {end_ampm} <span class="sunset-pill">SUNSET: {actual_sunset}</span></span>
-      </div>
-      <span class="header-golfer">🏌️</span>
-    </div>
+    <p class="subtitle">Miami Area Golf &nbsp;·&nbsp; Weekend Availability</p>
+    <h1>TEE TIME MONITOR</h1>
+    <span class="window-tag">⏱ {start_ampm} – {end_ampm} &nbsp;&nbsp; SUNSET: {actual_sunset}</span>
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes · Last run: <strong>{now_str}</strong>
   </div>
 
-  <div class="day-filter-bar" role="group" aria-label="Filter by day">
-    <button class="day-toggle" data-filter="Friday"   aria-pressed="true">Friday</button>
-    <button class="day-toggle" data-filter="Saturday" aria-pressed="true">Saturday</button>
-    <button class="day-toggle" data-filter="Sunday"   aria-pressed="true">Sunday</button>
+  <div class="day-filter-bar">
+    {filter_html}
   </div>
 
-  <main aria-label="Course tee times">
+  <main>
     {cards_html}
   </main>
 
-  <div class="callout-strip">
-    <div class="callout-quote">FORE!<span>heads up</span></div>
-    <div class="callout-divider"></div>
-    <div class="callout-quote">BOOK FAST<span>they go quick</span></div>
-    <div class="callout-divider"></div>
-    <div class="callout-quote">TEE IT UP<span>weekend's calling</span></div>
-  </div>
-
-  <footer>
-    <span class="footer-fore">⛳ 🏌️ ⛳</span>
-    Monitoring {len(COURSES)} courses · Fri–Sun · Times shown in ET<br>
-    © {datetime.now(ET).year} Tee Time Watch
-  </footer>
-
-  <button id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+  <button id="theme-toggle" aria-label="Toggle dark mode">🌙</button>
 
   <script>
     // ── Dark mode ──
     (function() {{
-      const btn  = document.getElementById('theme-toggle');
+      const btn = document.getElementById('theme-toggle');
       const root = document.documentElement;
       const saved = localStorage.getItem('ttw-theme');
       if (saved === 'dark') {{ root.dataset.theme = 'dark'; btn.textContent = '☀️'; }}
@@ -1854,9 +1182,9 @@ def generate_html():
       const active = new Set(['Friday', 'Saturday', 'Sunday']);
 
       function applyFilter() {{
-        document.querySelectorAll('.day-block').forEach(function(block) {{
-          const day = block.getAttribute('data-day');
-          block.style.display = active.has(day) ? '' : 'none';
+        document.querySelectorAll('.day-section').forEach(function(section) {{
+          const day = section.getAttribute('data-day');
+          section.style.display = active.has(day) ? '' : 'none';
         }});
       }}
 
@@ -1875,53 +1203,22 @@ def generate_html():
           applyFilter();
         }});
       }});
-
-      applyFilter(); // run on load (all on by default)
     }})();
 
-    // ── Collapsible course cards ──
+    // ── Accordion Toggle ──
     (function() {{
-      document.querySelectorAll('.collapse-btn').forEach(function(btn) {{
-        btn.addEventListener('click', function(e) {{
-          e.stopPropagation();
-          const card = btn.closest('.course-card');
-          const isCollapsed = card.classList.toggle('collapsed');
-          btn.setAttribute('aria-label', (isCollapsed ? 'Expand ' : 'Collapse ') + card.getAttribute('aria-label'));
-          btn.setAttribute('title', isCollapsed ? 'Expand' : 'Collapse');
-        }});
-      }});
-      // Also allow clicking the card-header itself to toggle
-      document.querySelectorAll('.card-header').forEach(function(header) {{
-        header.addEventListener('click', function(e) {{
-          // Don't fire if a link inside the header was clicked
-          if (e.target.closest('a')) return;
-          const card = header.closest('.course-card');
-          const btn  = card.querySelector('.collapse-btn');
-          const isCollapsed = card.classList.toggle('collapsed');
-          if (btn) {{
-            btn.setAttribute('aria-label', (isCollapsed ? 'Expand ' : 'Collapse ') + card.getAttribute('aria-label'));
-            btn.setAttribute('title', isCollapsed ? 'Expand' : 'Collapse');
-          }}
-        }});
+      document.addEventListener('click', function(e) {{
+        const header = e.target.closest('.collapsible-header');
+        if (!header) return;
+        
+        const card = header.closest('.course-card');
+        if (card.querySelector('.card-body')) {{
+          card.classList.toggle('is-collapsed');
+        }}
       }});
     }})();
 
-    // ── Minutes ago counter ──
-    (function() {{
-      const el = document.getElementById('mins-ago');
-      if (!el) return;
-      const lastRun = new Date({now_ts} * 1000);
-      function update() {{
-        const mins = Math.floor((Date.now() - lastRun) / 60000);
-        if (mins < 1)       el.textContent = ' · just now';
-        else if (mins < 60) el.textContent = ' · ' + mins + ' min' + (mins === 1 ? '' : 's') + ' ago';
-        else                el.textContent = ' · ' + Math.floor(mins/60) + 'h ago';
-      }}
-      update();
-      setInterval(update, 30000);
-    }})();
-
-    // ── Auto-reload when GitHub Actions publishes a new version ──
+    // Auto-reload 
     (function() {{
       const currentTs = {now_ts};
       setInterval(async function() {{
@@ -1934,18 +1231,12 @@ def generate_html():
       }}, 30000);
     }})();
   </script>
-
 </body>
 </html>"""
 
     Path("index.html").write_text(html)
-    print("  index.html generated.")
-
     Path("version.json").write_text(json.dumps({"ts": now_ts}))
-    print("  version.json generated.")
-
-# ── Main ───────────────────────────────────────────────────────────────────────
-
+    print("  index.html and version.json generated.")
 def _select_courses(filter_terms: list[str]) -> list[dict]:
     """Match case-insensitive substrings against course names. Empty = all."""
     if not filter_terms:
