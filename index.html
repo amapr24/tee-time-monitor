@@ -516,6 +516,63 @@
       opacity: 0.4;
     }
 
+    /* ── Day filter toggle bar ── */
+    .day-filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 20px 0;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .day-toggle {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      padding: 7px 22px;
+      border-radius: 24px;
+      border: 2px solid var(--green-mid);
+      background: var(--green-mid);
+      color: var(--text-on-brand);
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, opacity 0.18s, transform 0.1s;
+      user-select: none;
+    }
+    .day-toggle:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .day-toggle:focus-visible { outline: 2.5px solid var(--gold); outline-offset: 3px; }
+    .day-toggle.off {
+      background: transparent;
+      color: var(--text-mid);
+      border-color: var(--border-soft);
+      opacity: 0.55;
+    }
+    [data-theme="dark"] .day-toggle.off {
+      color: var(--text-light);
+      border-color: var(--border-soft);
+    }
+
+    /* ── Fully booked compact row ── */
+    .day-block--booked {
+      padding: 10px 20px;
+      background: var(--surface);
+      opacity: 0.72;
+    }
+    .day-header--booked {
+      margin-bottom: 6px;
+    }
+    .fully-booked-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .fully-booked-label {
+      font-size: 0.75rem;
+      font-style: italic;
+      color: var(--text-light);
+      letter-spacing: 0.04em;
+    }
+
     /* ════════════════════════════════════════════
        MOBILE OVERRIDES  (≤ 767px)
        ════════════════════════════════════════════ */
@@ -631,6 +688,9 @@
       .toast { bottom: 80px; font-size: 0.8rem; padding: 10px 20px; }
 
       #theme-toggle { bottom: 20px; right: 14px; width: 40px; height: 40px; font-size: 1rem; }
+
+      .day-filter-bar { gap: 7px; padding: 12px 14px 0; }
+      .day-toggle { font-size: 0.88rem; padding: 6px 16px; }
     }
   </style>
 </head>
@@ -671,7 +731,13 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>1:07 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>1:12 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+  </div>
+
+  <div class="day-filter-bar" role="group" aria-label="Filter by day">
+    <button class="day-toggle" data-filter="Friday"   aria-pressed="true">Friday</button>
+    <button class="day-toggle" data-filter="Saturday" aria-pressed="true">Saturday</button>
+    <button class="day-toggle" data-filter="Sunday"   aria-pressed="true">Sunday</button>
   </div>
 
   <main aria-label="Course tee times">
@@ -683,26 +749,17 @@
             <div class="course-meta"><a href="tel:(305) 558-4653">(305) 558-4653</a></div>
           </div>
           
-            <div class="day-block" aria-label="Times for Friday, Apr 24">
-              <div class="day-header">
-                <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
-              </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li></ul>
+            <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
+              <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon slot--new" role="listitem"><span class="new-badge" aria-label="New">NEW</span>3:32 PM</li></ul>
             </div>
-            <div class="day-block" aria-label="Times for Saturday, Apr 25">
-              <div class="day-header">
-                <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
-              </div>
-              <p class="no-times">No times available</p>
+            <div class="day-block day-block--booked" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
+              <div class="day-header day-header--booked"><span class="day-name">Saturday, Apr 25</span></div>
+              <div class="fully-booked-row"><span class="fully-booked-label">&#9940; Fully Booked</span><a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
             </div>
-            <div class="day-block" aria-label="Times for Sunday, Apr 26">
-              <div class="day-header">
-                <span class="day-name">Sunday, Apr 26</span>
-                <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book →</a>
-              </div>
-              <p class="no-times">No times available</p>
+            <div class="day-block day-block--booked" data-day="Sunday" aria-label="Times for Sunday, Apr 26">
+              <div class="day-header day-header--booked"><span class="day-name">Sunday, Apr 26</span></div>
+              <div class="fully-booked-row"><span class="fully-booked-label">&#9940; Fully Booked</span><a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
             </div>
         </div>
         <div class="course-card" aria-label="Miami Beach">
@@ -712,25 +769,16 @@
             <div class="course-meta"><a href="tel:(305) 532-3350">(305) 532-3350</a></div>
           </div>
           
-            <div class="day-block" aria-label="Times for Friday, Apr 24">
-              <div class="day-header">
-                <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
-              </div>
-              <p class="no-times">No times available</p>
+            <div class="day-block day-block--booked" data-day="Friday" aria-label="Times for Friday, Apr 24">
+              <div class="day-header day-header--booked"><span class="day-name">Friday, Apr 24</span></div>
+              <div class="fully-booked-row"><span class="fully-booked-label">&#9940; Fully Booked</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
             </div>
-            <div class="day-block" aria-label="Times for Saturday, Apr 25">
-              <div class="day-header">
-                <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
-              </div>
+            <div class="day-block" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
+              <div class="day-header"><span class="day-name">Saturday, Apr 25</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
             </div>
-            <div class="day-block" aria-label="Times for Sunday, Apr 26">
-              <div class="day-header">
-                <span class="day-name">Sunday, Apr 26</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book →</a>
-              </div>
+            <div class="day-block" data-day="Sunday" aria-label="Times for Sunday, Apr 26">
+              <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
             </div>
         </div>
@@ -741,26 +789,17 @@
             <div class="course-meta"><a href="tel:(305) 868-6502">(305) 868-6502</a></div>
           </div>
           
-            <div class="day-block" aria-label="Times for Friday, Apr 24">
-              <div class="day-header">
-                <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
-              </div>
+            <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
+              <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
-            <div class="day-block" aria-label="Times for Saturday, Apr 25">
-              <div class="day-header">
-                <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
-              </div>
+            <div class="day-block" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
+              <div class="day-header"><span class="day-name">Saturday, Apr 25</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
-            <div class="day-block" aria-label="Times for Sunday, Apr 26">
-              <div class="day-header">
-                <span class="day-name">Sunday, Apr 26</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book →</a>
-              </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:08 PM</li><li class="slot slot--afternoon" role="listitem">3:16 PM</li><li class="slot slot--afternoon" role="listitem">3:24 PM</li><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
+            <div class="day-block" data-day="Sunday" aria-label="Times for Sunday, Apr 26">
+              <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:16 PM</li><li class="slot slot--afternoon" role="listitem">3:24 PM</li><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
         </div>
         <div class="course-card" aria-label="Plantation Preserve">
@@ -770,25 +809,16 @@
             <div class="course-meta"><a href="tel:(954) 585-5020">(954) 585-5020</a></div>
           </div>
           
-            <div class="day-block" aria-label="Times for Friday, Apr 24">
-              <div class="day-header">
-                <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
-              </div>
+            <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
+              <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">2:30 PM</li><li class="slot slot--afternoon" role="listitem">3:15 PM</li><li class="slot slot--afternoon" role="listitem">3:33 PM</li><li class="slot slot--afternoon" role="listitem">3:51 PM</li></ul>
             </div>
-            <div class="day-block" aria-label="Times for Saturday, Apr 25">
-              <div class="day-header">
-                <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
-              </div>
+            <div class="day-block" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
+              <div class="day-header"><span class="day-name">Saturday, Apr 25</span><a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">2:39 PM</li><li class="slot slot--afternoon" role="listitem">3:24 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:51 PM</li></ul>
             </div>
-            <div class="day-block" aria-label="Times for Sunday, Apr 26">
-              <div class="day-header">
-                <span class="day-name">Sunday, Apr 26</span>
-                <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book →</a>
-              </div>
+            <div class="day-block" data-day="Sunday" aria-label="Times for Sunday, Apr 26">
+              <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">9:06 AM</li><li class="slot slot--midday" role="listitem">9:24 AM</li></ul>
             </div>
         </div>
@@ -799,25 +829,16 @@
             <div class="course-meta"><a href="tel:(305) 795-2369">(305) 795-2369</a></div>
           </div>
           
-            <div class="day-block" aria-label="Times for Friday, Apr 24">
-              <div class="day-header">
-                <span class="day-name">Friday, Apr 24</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
-              </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:50 AM</li><li class="slot slot--midday" role="listitem">11:58 AM</li><li class="slot slot--afternoon" role="listitem">12:06 PM</li><li class="slot slot--afternoon" role="listitem">12:14 PM</li><li class="slot slot--afternoon" role="listitem">12:22 PM</li><li class="slot slot--afternoon" role="listitem">12:30 PM</li><li class="slot slot--afternoon" role="listitem">12:38 PM</li><li class="slot slot--afternoon" role="listitem">12:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
+            <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
+              <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:50 AM</li><li class="slot slot--midday" role="listitem">11:58 AM</li><li class="slot slot--afternoon" role="listitem">12:06 PM</li><li class="slot slot--afternoon" role="listitem">12:14 PM</li><li class="slot slot--afternoon" role="listitem">12:22 PM</li><li class="slot slot--afternoon" role="listitem">12:30 PM</li><li class="slot slot--afternoon" role="listitem">12:38 PM</li><li class="slot slot--afternoon" role="listitem">12:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon slot--new" role="listitem"><span class="new-badge" aria-label="New">NEW</span>3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
-            <div class="day-block" aria-label="Times for Saturday, Apr 25">
-              <div class="day-header">
-                <span class="day-name">Saturday, Apr 25</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book →</a>
-              </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">1:34 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
+            <div class="day-block" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
+              <div class="day-header"><span class="day-name">Saturday, Apr 25</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon slot--new" role="listitem"><span class="new-badge" aria-label="New">NEW</span>1:34 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
-            <div class="day-block" aria-label="Times for Sunday, Apr 26">
-              <div class="day-header">
-                <span class="day-name">Sunday, Apr 26</span>
-                <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book →</a>
-              </div>
+            <div class="day-block" data-day="Sunday" aria-label="Times for Sunday, Apr 26">
+              <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">1:50 PM</li><li class="slot slot--afternoon" role="listitem">1:58 PM</li><li class="slot slot--afternoon" role="listitem">2:06 PM</li><li class="slot slot--afternoon" role="listitem">2:14 PM</li><li class="slot slot--afternoon" role="listitem">2:22 PM</li><li class="slot slot--afternoon" role="listitem">2:30 PM</li><li class="slot slot--afternoon" role="listitem">2:38 PM</li><li class="slot slot--afternoon" role="listitem">2:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:02 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
         </div>
@@ -854,11 +875,42 @@
       });
     })();
 
+    // ── Day filter toggles ──
+    (function() {
+      const toggles = document.querySelectorAll('.day-toggle');
+      const active = new Set(['Friday', 'Saturday', 'Sunday']);
+
+      function applyFilter() {
+        document.querySelectorAll('.day-block').forEach(function(block) {
+          const day = block.getAttribute('data-day');
+          block.style.display = active.has(day) ? '' : 'none';
+        });
+      }
+
+      toggles.forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          const day = btn.getAttribute('data-filter');
+          if (active.has(day)) {
+            active.delete(day);
+            btn.classList.add('off');
+            btn.setAttribute('aria-pressed', 'false');
+          } else {
+            active.add(day);
+            btn.classList.remove('off');
+            btn.setAttribute('aria-pressed', 'true');
+          }
+          applyFilter();
+        });
+      });
+
+      applyFilter(); // run on load (all on by default)
+    })();
+
     // ── Minutes ago counter ──
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776791262 * 1000);
+      const lastRun = new Date(1776791561 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
