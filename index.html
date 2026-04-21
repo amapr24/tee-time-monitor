@@ -231,7 +231,7 @@
     main {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 24px 20px 20px;
+      padding: 0 20px 20px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
@@ -251,11 +251,16 @@
       transform: translateY(-4px);
       box-shadow: 0 12px 40px rgba(13,43,26,0.18), 0 2px 8px rgba(13,43,26,0.1);
     }
+    .course-card.collapsed:hover {
+      transform: none;
+      box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
+    }
     .card-header {
       background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
       padding: 20px 24px 12px;
       position: relative;
       overflow: hidden;
+      cursor: pointer;
     }
     .card-header::before {
       content: '⛳';
@@ -265,6 +270,42 @@
       font-size: 2.5rem;
       opacity: 0.15;
     }
+
+    /* ── Collapse toggle ── */
+    .collapse-btn {
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--gold);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.3s ease;
+      z-index: 1;
+      line-height: 1;
+    }
+    .collapse-btn:hover { background: rgba(255,255,255,0.22); }
+    .collapse-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+    .course-card.collapsed .collapse-btn { transform: rotate(180deg); }
+    .card-body {
+      overflow: hidden;
+      transition: max-height 0.35s ease, opacity 0.25s ease;
+      max-height: 2000px;
+      opacity: 1;
+    }
+    .course-card.collapsed .card-body {
+      max-height: 0;
+      opacity: 0;
+    }
+    .course-card.collapsed .card-header::before { opacity: 0.08; }
+
     .course-name {
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.8rem;
@@ -521,7 +562,7 @@
       display: flex;
       justify-content: center;
       gap: 10px;
-      padding: 14px 20px 0;
+      padding: 14px 20px 14px;
       max-width: 1100px;
       margin: 0 auto;
     }
@@ -649,6 +690,8 @@
       .course-name { font-size: 1.5rem; }
       .course-meta { font-size: 0.68rem; }
 
+      .collapse-btn { bottom: 10px; right: 10px; width: 24px; height: 24px; font-size: 0.65rem; }
+
       .day-block { padding: 10px 15px; min-height: 58px; position: relative; }
       .day-header { margin-bottom: 6px; }
       .day-name { font-size: 0.88rem; }
@@ -731,7 +774,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>2:15 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>2:18 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="day-filter-bar" role="group" aria-label="Filter by day">
@@ -747,8 +790,10 @@
             <div class="course-name">Miami Lakes</div>
             <div class="course-meta">6801 Miami Lakes Dr, Miami Lakes</div>
             <div class="course-meta"><a href="tel:(305) 558-4653">(305) 558-4653</a></div>
+            <button class="collapse-btn" aria-label="Collapse Miami Lakes" title="Collapse">▲</button>
           </div>
-          
+          <div class="card-body">
+            
             <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
               <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li></ul>
@@ -761,14 +806,17 @@
               <div class="day-header day-header--booked"><span class="day-name">Sunday, Apr 26</span></div>
               <div class="fully-booked-row"><span class="fully-booked-label">&#9940; Fully Booked</span><a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
             </div>
+          </div>
         </div>
         <div class="course-card" aria-label="Miami Beach">
           <div class="card-header">
             <div class="course-name">Miami Beach</div>
             <div class="course-meta">2301 Alton Rd, Miami Beach</div>
             <div class="course-meta"><a href="tel:(305) 532-3350">(305) 532-3350</a></div>
+            <button class="collapse-btn" aria-label="Collapse Miami Beach" title="Collapse">▲</button>
           </div>
-          
+          <div class="card-body">
+            
             <div class="day-block day-block--booked" data-day="Friday" aria-label="Times for Friday, Apr 24">
               <div class="day-header day-header--booked"><span class="day-name">Friday, Apr 24</span></div>
               <div class="fully-booked-row"><span class="fully-booked-label">&#9940; Fully Booked</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
@@ -781,14 +829,17 @@
               <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
             </div>
+          </div>
         </div>
         <div class="course-card" aria-label="Normandy Shores">
           <div class="card-header">
             <div class="course-name">Normandy Shores</div>
             <div class="course-meta">2401 Biarritz Dr, Miami Beach</div>
             <div class="course-meta"><a href="tel:(305) 868-6502">(305) 868-6502</a></div>
+            <button class="collapse-btn" aria-label="Collapse Normandy Shores" title="Collapse">▲</button>
           </div>
-          
+          <div class="card-body">
+            
             <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
               <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
@@ -801,14 +852,17 @@
               <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:16 PM</li><li class="slot slot--afternoon" role="listitem">3:24 PM</li><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
+          </div>
         </div>
         <div class="course-card" aria-label="Plantation Preserve">
           <div class="card-header">
             <div class="course-name">Plantation Preserve</div>
             <div class="course-meta">7050 W Broward Blvd, Plantation</div>
             <div class="course-meta"><a href="tel:(954) 585-5020">(954) 585-5020</a></div>
+            <button class="collapse-btn" aria-label="Collapse Plantation Preserve" title="Collapse">▲</button>
           </div>
-          
+          <div class="card-body">
+            
             <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
               <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">2:30 PM</li><li class="slot slot--afternoon" role="listitem">3:15 PM</li><li class="slot slot--afternoon" role="listitem">3:33 PM</li><li class="slot slot--afternoon" role="listitem">3:51 PM</li></ul>
@@ -821,14 +875,17 @@
               <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">9:06 AM</li><li class="slot slot--midday" role="listitem">9:24 AM</li></ul>
             </div>
+          </div>
         </div>
         <div class="course-card" aria-label="Miami Shores">
           <div class="card-header">
             <div class="course-name">Miami Shores</div>
             <div class="course-meta">10000 Biscayne Blvd, Miami Shores</div>
             <div class="course-meta"><a href="tel:(305) 795-2369">(305) 795-2369</a></div>
+            <button class="collapse-btn" aria-label="Collapse Miami Shores" title="Collapse">▲</button>
           </div>
-          
+          <div class="card-body">
+            
             <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
               <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:50 AM</li><li class="slot slot--midday" role="listitem">11:58 AM</li><li class="slot slot--afternoon" role="listitem">12:06 PM</li><li class="slot slot--afternoon" role="listitem">12:22 PM</li><li class="slot slot--afternoon" role="listitem">12:30 PM</li><li class="slot slot--afternoon" role="listitem">12:38 PM</li><li class="slot slot--afternoon" role="listitem">12:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
@@ -841,6 +898,7 @@
               <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
               <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">1:50 PM</li><li class="slot slot--afternoon" role="listitem">1:58 PM</li><li class="slot slot--afternoon" role="listitem">2:06 PM</li><li class="slot slot--afternoon" role="listitem">2:14 PM</li><li class="slot slot--afternoon" role="listitem">2:22 PM</li><li class="slot slot--afternoon" role="listitem">2:30 PM</li><li class="slot slot--afternoon" role="listitem">2:38 PM</li><li class="slot slot--afternoon" role="listitem">2:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:02 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
+          </div>
         </div>
   </main>
 
@@ -906,11 +964,38 @@
       applyFilter(); // run on load (all on by default)
     })();
 
+    // ── Collapsible course cards ──
+    (function() {
+      document.querySelectorAll('.collapse-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const card = btn.closest('.course-card');
+          const isCollapsed = card.classList.toggle('collapsed');
+          btn.setAttribute('aria-label', (isCollapsed ? 'Expand ' : 'Collapse ') + card.getAttribute('aria-label'));
+          btn.setAttribute('title', isCollapsed ? 'Expand' : 'Collapse');
+        });
+      });
+      // Also allow clicking the card-header itself to toggle
+      document.querySelectorAll('.card-header').forEach(function(header) {
+        header.addEventListener('click', function(e) {
+          // Don't fire if a link inside the header was clicked
+          if (e.target.closest('a')) return;
+          const card = header.closest('.course-card');
+          const btn  = card.querySelector('.collapse-btn');
+          const isCollapsed = card.classList.toggle('collapsed');
+          if (btn) {
+            btn.setAttribute('aria-label', (isCollapsed ? 'Expand ' : 'Collapse ') + card.getAttribute('aria-label'));
+            btn.setAttribute('title', isCollapsed ? 'Expand' : 'Collapse');
+          }
+        });
+      });
+    })();
+
     // ── Minutes ago counter ──
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776795357 * 1000);
+      const lastRun = new Date(1776795523 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
@@ -923,7 +1008,7 @@
 
     // ── Auto-reload when GitHub Actions publishes a new version ──
     (function() {
-      const currentTs = 1776795357;
+      const currentTs = 1776795523;
       setInterval(async function() {
         try {
           const r = await fetch('version.json?_=' + Date.now());
