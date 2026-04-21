@@ -1049,9 +1049,9 @@ def generate_html():
       --early-bg:     #fff8e6;
       --early-border: #f0c060;
       --early-text:   #5c3a00;
-      --midday-bg:    #1e3828;
-      --midday-border:rgba(46,139,79,0.4);
-      --midday-text:  #a8e0b8;
+      --midday-bg:    #d4eddc;
+      --midday-border:rgba(46,139,79,0.28);
+      --midday-text:  #0d2b1a;
       --afternoon-bg: #ddeeff;
       --afternoon-border:#7aaedd;
       --afternoon-text:#0d2448;
@@ -1079,9 +1079,9 @@ def generate_html():
       --early-bg:        #2e2410;
       --early-border:    #7a5a10;
       --early-text:      #f0c060;
-      --midday-bg:       #173322;
-      --midday-border:   rgba(104, 184, 130, 0.55);
-      --midday-text:     #e6f5ea;
+      --midday-bg:       #1e3828;
+      --midday-border:   rgba(46,139,79,0.4);
+      --midday-text:     #a8e0b8;
       --afternoon-bg:    #0d1f2e;
       --afternoon-border:#3a6a9e;
       --afternoon-text:  #90c0ee;
