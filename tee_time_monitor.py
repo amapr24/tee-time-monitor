@@ -1071,7 +1071,7 @@ def generate_html():
       --slot-text:    #ffffff;
       --border:       #334155;
       /* Cream-ish Morning Slot for Dark Mode */
-      --early-bg:     #fef3c7; --early-brd: #fbbf24;
+      --early-bg:     #ffe479; --early-brd: #fbbf24;
       --mid-bg:       #1e3a8a; --mid-brd:   #3b82f6;
       --late-bg:      #064e3b; --late-brd:  #10b981;
       --twilight-bg:  #3b0764; 
@@ -1170,9 +1170,9 @@ def generate_html():
     <h1>TEE TIME MONITOR</h1>
     <div class="sunset-box">☀️ SUNSET: {actual_sunset}</div>
     <div class="header-status">
-        <div><b>Checked every 15 minutes</b></div>
-        <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">{now_str}</span>)</div>
-    </div>
+      <div style="margin-bottom: 4px;"><b>Checked every 15 minutes</b></div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">{now_str}</span>)</div>
+  </div>
   </header>
 
   <div class="filter-bar">
