@@ -1846,6 +1846,19 @@ def generate_html():
       update();
       setInterval(update, 30000);
     }})();
+
+    // ── Auto-reload when GitHub Actions publishes a new version ──
+    (function() {{
+      const currentTs = {now_ts};
+      setInterval(async function() {{
+        try {{
+          const r = await fetch('version.json?_=' + Date.now());
+          if (!r.ok) return;
+          const data = await r.json();
+          if (data.ts > currentTs) location.reload();
+        }} catch(e) {{}}
+      }}, 30000);
+    }})();
   </script>
 
 </body>
@@ -1853,6 +1866,9 @@ def generate_html():
 
     Path("index.html").write_text(html)
     print("  index.html generated.")
+
+    Path("version.json").write_text(json.dumps({"ts": now_ts}))
+    print("  version.json generated.")
 
 # ── Main ───────────────────────────────────────────────────────────────────────
 
