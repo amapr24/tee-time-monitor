@@ -118,8 +118,30 @@
     .slot--twilight { background: var(--twilight-bg); border-color: var(--twilight-brd); }
     .no-slots { font-size: 0.7rem; color: var(--text-sub); font-style: italic; text-align: center; padding: 5px 0; }
 
-    #theme-toggle { position: fixed; bottom: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    /* --- NEW SLOT HIGHLIGHTING CSS --- */
+    .slot--new {
+        box-shadow: 0 0 0 1.5px var(--gold);
+        animation: pulse-new 2s ease-in-out 3;
+    }
+    .new-badge {
+        font-size: 0.6rem;
+        background: var(--gold);
+        color: #000; /* Dark text ensures readability against the gold background */
+        border-radius: 3px;
+        padding: 1px 4px;
+        margin-right: 5px;
+        font-weight: 800;
+        vertical-align: middle;
+    }
+    @keyframes pulse-new {
+        0%, 100% { box-shadow: 0 0 0 1.5px var(--gold); }
+        /* Using rgba based on your --gold hex #ffb703 */
+        50%      { box-shadow: 0 0 0 5px rgba(255, 183, 3, 0.4); }
+    }
+    /* --- END OF NEW SLOT HIGHLIGHTING CSS --- */
 
+    #theme-toggle { position: fixed; bottom: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    
     @media (max-width: 480px) {
         main { grid-template-columns: 1fr; padding: 8px; }
         h1 { font-size: 2.2rem; }
@@ -133,7 +155,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:48 PM</div>
     <div class="header-status">
       <div style="margin-bottom: 4px;"><b>Checked every 15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:16 PM ET, Tue Apr 21</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:52 PM ET, Tue Apr 21</span>)</div>
   </div>
   </header>
 
@@ -198,7 +220,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Sun Apr 26</span>
                     <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--afternoon">2:12 PM</li><li class="slot--afternoon">3:16 PM</li><li class="slot--twilight">3:24 PM</li><li class="slot--twilight">3:32 PM</li><li class="slot--twilight">3:40 PM</li><li class="slot--twilight">3:48 PM</li></ul></div></div></div>
+                  </div><ul class="slots"><li class="slot--afternoon slot--new"><span class="new-badge">NEW</span>2:12 PM</li><li class="slot--afternoon">3:16 PM</li><li class="slot--twilight">3:24 PM</li><li class="slot--twilight">3:32 PM</li><li class="slot--twilight">3:40 PM</li><li class="slot--twilight">3:48 PM</li></ul></div></div></div>
         <div class="course-card " id="card-plantation-preserve">
           <div class="card-header collapsible-header">
             <div class="header-title-group">
@@ -234,7 +256,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Fri Apr 24</span>
                     <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--afternoon">12:06 PM</li><li class="slot--afternoon">12:22 PM</li><li class="slot--afternoon">12:30 PM</li><li class="slot--afternoon">12:38 PM</li><li class="slot--afternoon">12:46 PM</li><li class="slot--afternoon">3:10 PM</li><li class="slot--afternoon">3:18 PM</li><li class="slot--twilight">3:26 PM</li><li class="slot--twilight">3:42 PM</li><li class="slot--twilight">3:50 PM</li><li class="slot--twilight">3:58 PM</li></ul></div>
+                  </div><ul class="slots"><li class="slot--afternoon">12:06 PM</li><li class="slot--afternoon">12:22 PM</li><li class="slot--afternoon">12:30 PM</li><li class="slot--afternoon">12:38 PM</li><li class="slot--afternoon">12:46 PM</li><li class="slot--afternoon">3:10 PM</li><li class="slot--afternoon">3:18 PM</li><li class="slot--twilight slot--new"><span class="new-badge">NEW</span>3:26 PM</li><li class="slot--twilight">3:42 PM</li><li class="slot--twilight">3:50 PM</li><li class="slot--twilight">3:58 PM</li></ul></div>
                 <div class="day-row" data-day="Saturday">
                   <div class="day-row-header">
                     <span class="day-label">Sat Apr 25</span>
@@ -250,7 +272,7 @@
   <button id="theme-toggle">🌙</button>
 
   <script>
-    const updateTs = 1776809793;
+    const updateTs = 1776811939;
     
     function updateTime() {
       const now = Math.floor(Date.now() / 1000);
