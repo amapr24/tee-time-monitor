@@ -904,19 +904,39 @@ async def check_course(playwright, course: dict, dates: list[date]):
 
 # ── HTML generator ────────────────────────────────────────────────────────────
 
-
-def _slot_time_class(time_str: str) -> str:
+def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> str:
+    """
+    Returns the CSS class based on time of day and proximity to sunset.
+    Priority: Twilight (within 4h of sunset) > Afternoon > Midday > Early.
+    """
     try:
-        t = time_str.strip().upper()
-        is_pm = t.endswith("PM")
-        digits = t.replace("AM", "").replace("PM", "").strip()
-        h = int(digits.split(":")[0])
-        if is_pm and h != 12: h += 12
-        elif not is_pm and h == 12: h = 0
-        if h < 10: return "slot--early"
-        if h < 12: return "slot--midday"
+        t_str = time_str.strip().upper()
+        is_pm = t_str.endswith("PM")
+        time_parts = t_str.replace("AM", "").replace("PM", "").strip().split(":")
+        h = int(time_parts[0])
+        m = int(time_parts[1]) if len(time_parts) > 1 else 0
+        
+        # Convert to 24h for simple morning/midday logic
+        h_24 = h
+        if is_pm and h != 12: h_24 += 12
+        elif not is_pm and h == 12: h_24 = 0
+        
+        # Create a datetime for this specific slot to compare against sunset
+        slot_dt = datetime.combine(target_date, datetime.min.time()).replace(
+            hour=h_24, minute=m, tzinfo=ET
+        )
+        
+        # 1. Twilight Check (Primary Priority)
+        # If the slot is within 4 hours (14400 seconds) of sunset
+        if (sunset_dt - slot_dt).total_seconds() <= 14400:
+            return "slot--twilight"
+            
+        # 2. Standard Time-of-Day logic
+        if h_24 < 10: return "slot--early"
+        if h_24 < 12: return "slot--midday"
         return "slot--afternoon"
-    except: return ""
+    except:
+        return ""
 
 def generate_html():
     dates = get_upcoming_weekend_dates()
@@ -924,19 +944,26 @@ def generate_html():
     now_str = now_dt.strftime("%-I:%M %p ET, %a %b %-d")
     now_ts  = int(now_dt.timestamp())
 
-    # Build data structure
     course_data = []
     for course in COURSES:
         days_for_course = []
         for d in dates:
             cache_file = CACHE_DIR / course["cache_file"]
+            
+            # Get actual sunset for this specific day
+            s_info = sun(MIAMI.observer, date=d, tzinfo=ET)
+            sunset_dt = s_info["sunset"]
+            
+            # Use the existing cutoff logic for filtering
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             raw_slots = load_cache(cache_file, d)
+            
             slots = [
                 s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
                 if not is_slot_in_past(s.get("time", ""), d)
             ]
             
+            # Generate booking URL
             if course["type"] == "cpsgolf":
                 book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
             else:
@@ -948,6 +975,7 @@ def generate_html():
             
             days_for_course.append({
                 "date_obj": d,
+                "sunset_dt": sunset_dt, # Store for class helper
                 "label": d.strftime("%a %b %-d"),
                 "weekday": d.strftime("%A"),
                 "slots": slots,
@@ -959,10 +987,8 @@ def generate_html():
             "days": days_for_course
         })
 
-    # Header calculations
-    first_date = dates[0]
-    s = sun(MIAMI.observer, date=first_date, tzinfo=ET)
-    actual_sunset = s["sunset"].strftime("%-I:%M %p")
+    # Global sunset for the header (using the first date)
+    first_sunset = sun(MIAMI.observer, date=dates[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
 
     cards_html = ""
     for c in course_data:
@@ -986,17 +1012,21 @@ def generate_html():
         if any_slots:
             for day in c["days"]:
                 slots = day["slots"]
-                weekday = day["weekday"]
                 
                 cards_html += f'''
-                <div class="day-row" data-day="{weekday}">
+                <div class="day-row" data-day="{day['weekday']}">
                   <div class="day-row-header">
                     <span class="day-label">{day["label"]}</span>
                     <a class="book-btn" href="{day["book_url"]}" target="_blank">Book</a>
                   </div>'''
                 
                 if slots:
-                    items_html = "".join([f'<li class="{_slot_time_class(s.get("time", ""))}">{s.get("time", "?")}</li>' for s in slots])
+                    items_html = ""
+                    for s in slots:
+                        time_val = s.get("time", "?")
+                        # Pass target_date and sunset_dt to the helper
+                        cls = _slot_time_class(time_val, day["date_obj"], day["sunset_dt"])
+                        items_html += f'<li class="{cls}">{time_val}</li>'
                     cards_html += f'<ul class="slots">{items_html}</ul>'
                 else:
                     cards_html += '<div class="no-slots">No times available</div>'
@@ -1029,6 +1059,8 @@ def generate_html():
       --early-bg:     #fef9c3; --early-brd: #facc15;
       --mid-bg:       #dbeafe; --mid-brd:   #60a5fa;
       --late-bg:      #dcfce7; --late-brd:  #4ade80;
+      --twilight-bg:  #f3e8ff; 
+      --twilight-brd: #c084fc;
     }}
 
     [data-theme="dark"] {{
@@ -1042,6 +1074,8 @@ def generate_html():
       --early-bg:     #fef3c7; --early-brd: #fbbf24;
       --mid-bg:       #1e3a8a; --mid-brd:   #3b82f6;
       --late-bg:      #064e3b; --late-brd:  #10b981;
+      --twilight-bg:  #3b0764; 
+      --twilight-brd: #a855f7;
     }}
 
     body {{ background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 50px; }}
@@ -1119,6 +1153,7 @@ def generate_html():
     
     .slot--midday {{ background: var(--mid-bg); border-color: var(--mid-brd); }}
     .slot--afternoon {{ background: var(--late-bg); border-color: var(--late-brd); }}
+    .slot--twilight {{ background: var(--twilight-bg); border-color: var(--twilight-brd); }}
     .no-slots {{ font-size: 0.7rem; color: var(--text-sub); font-style: italic; text-align: center; padding: 5px 0; }}
 
     #theme-toggle {{ position: fixed; bottom: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }}
