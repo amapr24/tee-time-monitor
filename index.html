@@ -731,7 +731,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>1:46 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>1:51 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="day-filter-bar" role="group" aria-label="Filter by day">
@@ -791,7 +791,7 @@
           
             <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
               <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon slot--new" role="listitem"><span class="new-badge" aria-label="New">NEW</span>3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
             <div class="day-block" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
               <div class="day-header"><span class="day-name">Saturday, Apr 25</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
@@ -910,7 +910,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776793588 * 1000);
+      const lastRun = new Date(1776793919 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
@@ -923,7 +923,7 @@
 
     // ── Auto-reload when GitHub Actions publishes a new version ──
     (function() {
-      const currentTs = 1776793588;
+      const currentTs = 1776793919;
       setInterval(async function() {
         try {
           const r = await fetch('version.json?_=' + Date.now());
