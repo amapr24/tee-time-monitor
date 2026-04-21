@@ -1666,7 +1666,7 @@ def generate_html():
 
       .updated-bar {{ font-size: 0.78rem; padding: 6px 15px; }}
 
-      main {{ margin: 15px auto 0; padding: 16px 12px 0; gap: 15px; }}
+      main {{ margin: 0 auto 0; padding: 0 12px 0; gap: 15px; }}
 
       .course-card {{ border-radius: 12px; }}
       .course-card:hover {{ transform: none; }}
@@ -1715,7 +1715,7 @@ def generate_html():
 
       #theme-toggle {{ bottom: 20px; right: 14px; width: 40px; height: 40px; font-size: 1rem; }}
 
-      .day-filter-bar {{ gap: 7px; padding: 12px 14px 0; }}
+      .day-filter-bar {{ gap: 7px; padding: 12px 14px 12px; }}
       .day-toggle {{ font-size: 0.88rem; padding: 6px 16px; }}
     }}
   </style>
