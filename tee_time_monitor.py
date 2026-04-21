@@ -924,7 +924,7 @@ def generate_html():
     now_str = now_dt.strftime("%-I:%M %p ET, %A %B %-d, %Y")
     now_ts  = int(now_dt.timestamp())
 
-    # Build data structure grouped by COURSE first
+    # Build data structure grouped by COURSE
     course_data = []
     for course in COURSES:
         days_for_course = []
@@ -970,15 +970,9 @@ def generate_html():
     start_ampm = _format_hour_window_label(min_start_hour)
     end_ampm = _format_hour_window_label(repr_cutoff + 1)
 
-    # Build HTML Cards
     cards_html = ""
     for c in course_data:
         name = c["name"]
-        
-        # Check if the course has ANY slots at all across all days
-        any_slots = any(day["slots"] for day in c["days"])
-        
-        # We'll use a unique ID for each card to handle toggling
         safe_id = name.replace(" ", "-").lower()
         
         cards_html += f'''
@@ -986,9 +980,7 @@ def generate_html():
           <div class="card-header collapsible-header">
             <div class="header-title-group">
               <span class="collapse-icon">▼</span>
-              <div>
-                <div class="course-name">{name}</div>
-              </div>
+              <span class="course-name">{name}</span>
             </div>
           </div>
           <div class="card-body">'''
@@ -997,12 +989,11 @@ def generate_html():
             slots = day["slots"]
             weekday = day["weekday"]
             
-            # Each day section within the course card
             cards_html += f'''
             <div class="day-row" data-day="{weekday}">
               <div class="day-row-header">
                 <span class="day-label">{day["label"]}</span>
-                <a class="book-btn" href="{day["book_url"]}" target="_blank">Book &rarr;</a>
+                <a class="book-btn" href="{day["book_url"]}" target="_blank">Book</a>
               </div>'''
             
             if slots:
@@ -1015,9 +1006,9 @@ def generate_html():
             else:
                 cards_html += '<div class="no-slots">No times available</div>'
             
-            cards_html += '</div>' # end day-row
+            cards_html += '</div>'
             
-        cards_html += '</div></div>' # end card-body and course-card
+        cards_html += '</div></div>'
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -1029,80 +1020,119 @@ def generate_html():
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {{
-      --green-deep:   #386641;
-      --gold:         #F2C94C;
-      --text-dark:    #212529;
-      --text-mid:     #495057;
-      --text-light:   #9CA3AF;
+      --green-deep:   #1b4332;
+      --gold:         #ffb703;
+      --sunset-bg:    #fb8500;
+      --text-dark:    #1a1a1a;
+      --text-mid:     #4a4a4a;
+      --text-light:   #9ca3af;
       --surface:      #ffffff;
-      --bg:           #F8F9FA;
-      --border-soft:  #E5E7EB;
+      --bg:           #f0f2f5;
+      --border-soft:  #dee2e6;
       
-      --early-bg:     #FEF9E7;
-      --early-border: #F2C94C;
-      --midday-bg:    #EBF5FB;
-      --midday-border:#AED6F1;
-      --afternoon-bg: #E8F5E9;
-      --afternoon-border:#A5D6A7;
+      --early-bg:     #fff9db;
+      --early-border: #fab005;
+      --midday-bg:    #e7f5ff;
+      --midday-border:#228be6;
+      --afternoon-bg: #ebfbee;
+      --afternoon-border:#40c057;
     }}
 
     [data-theme="dark"] {{
-      --bg:              #121212;
-      --surface:         #1C1C1E;
-      --text-dark:       #FFFFFF;
-      --text-mid:        #D1D5DB;
-      --border-soft:     #2C2C2E;
-      --early-bg:        #2C2301;
-      --midday-bg:       #15202B;
-      --afternoon-bg:    #1B2E1E;
+      --bg:              #0b0e11;
+      --surface:         #1b1d21;
+      --text-dark:       #f8f9fa;
+      --text-mid:        #adb5bd;
+      --border-soft:     #2c2e33;
+      /* High Contrast Dark Mode Palette */
+      --early-bg:        #2d2400;
+      --early-border:    #ffd43b;
+      --midday-bg:       #001b3d;
+      --midday-border:   #339af0;
+      --afternoon-bg:    #052910;
+      --afternoon-border:#51cf66;
     }}
 
-    body {{ background: var(--bg); color: var(--text-dark); font-family: 'Inter', sans-serif; transition: background 0.2s; padding-bottom: 80px; margin: 0; }}
+    body {{ background: var(--bg); color: var(--text-dark); font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 40px; transition: background 0.2s; }}
     
-    header {{ background: var(--green-deep); padding: 30px 20px 20px; text-align: center; }}
-    h1 {{ font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: var(--white); letter-spacing: 0.05em; margin: 0; color: white; }}
-    .window-tag {{ color: var(--gold); font-size: 0.75rem; font-weight: 600; display: block; margin-top: 10px; }}
+    header {{ background: var(--green-deep); padding: 20px; text-align: center; color: white; display: flex; flex-direction: column; align-items: center; gap: 10px; }}
+    h1 {{ font-family: 'Bebas Neue', sans-serif; font-size: 3rem; margin: 0; letter-spacing: 2px; line-height: 1; }}
     
-    .updated-bar {{ background: var(--green-deep); border-bottom: 3px solid var(--gold); text-align: center; padding: 10px; font-size: 0.75rem; color: var(--white); opacity: 0.9; color: white; }}
+    .sunset-badge {{
+        background: var(--sunset-bg);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 10px rgba(251, 133, 0, 0.3);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }}
+
+    .window-tag {{ font-size: 0.75rem; font-weight: 600; color: var(--gold); text-transform: uppercase; }}
     
-    main {{ max-width: 600px; margin: 20px auto; padding: 0 20px; }}
+    .status-area {{ background: var(--surface); border-bottom: 2px solid var(--border-soft); padding: 8px; text-align: center; font-size: 0.7rem; color: var(--text-mid); font-weight: 600; }}
+    .status-area div {{ margin-bottom: 2px; }}
+    .highlight-interval {{ color: var(--afternoon-border); }}
+
+    main {{ 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); 
+        gap: 16px; 
+        padding: 16px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }}
     
-    .course-card {{ background: var(--surface); border: 1px solid var(--border-soft); border-radius: 12px; margin-bottom: 20px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }}
-    .card-header {{ padding: 16px; background: var(--surface); border-bottom: 1px solid var(--border-soft); cursor: pointer; }}
-    .header-title-group {{ display: flex; align-items: center; gap: 12px; }}
-    .course-name {{ font-weight: 700; font-size: 1.1rem; color: var(--green-deep); }}
-    [data-theme="dark"] .course-name {{ color: #A5D6A7; }}
+    .course-card {{ background: var(--surface); border: 1px solid var(--border-soft); border-radius: 8px; overflow: hidden; height: fit-content; }}
+    .card-header {{ padding: 10px 14px; background: var(--surface); border-bottom: 1px solid var(--border-soft); cursor: pointer; display: flex; align-items: center; justify-content: space-between; }}
+    .course-name {{ font-weight: 800; font-size: 0.95rem; color: var(--green-deep); text-transform: uppercase; }}
+    [data-theme="dark"] .course-name {{ color: var(--afternoon-border); }}
     
-    .collapse-icon {{ font-size: 0.7rem; color: var(--text-mid); transition: transform 0.3s; }}
-    .course-card.is-collapsed .collapse-icon {{ transform: rotate(-90deg); }}
+    .collapse-icon {{ font-size: 0.6rem; transition: transform 0.2s; margin-right: 8px; }}
     .course-card.is-collapsed .card-body {{ display: none; }}
+    .course-card.is-collapsed .collapse-icon {{ transform: rotate(-90deg); }}
 
-    .day-row {{ padding: 16px; border-bottom: 1px solid var(--border-soft); }}
+    .day-row {{ padding: 10px 14px; border-bottom: 1px solid var(--border-soft); }}
     .day-row:last-child {{ border-bottom: none; }}
-    .day-row-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }}
-    .day-label {{ font-weight: 600; font-size: 0.9rem; color: var(--text-mid); }}
+    .day-row-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }}
+    .day-label {{ font-weight: 700; font-size: 0.8rem; color: var(--text-mid); }}
     
-    .book-btn {{ background: transparent; border: 1px solid var(--border-soft); color: var(--text-dark); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; text-decoration: none; }}
+    .book-btn {{ border: 1px solid var(--border-soft); color: var(--text-dark); padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-decoration: none; text-transform: uppercase; }}
+    .book-btn:hover {{ background: var(--green-deep); color: white; }}
     
-    .slots {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 8px; list-style: none; padding: 0; }}
-    .slots li {{ padding: 8px; text-align: center; border-radius: 4px; border: 1px solid transparent; font-size: 0.8rem; font-weight: 600; }}
+    .slots {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; list-style: none; padding: 0; margin: 0; }}
+    .slots li {{ padding: 6px 2px; text-align: center; border-radius: 4px; border: 1px solid transparent; font-size: 0.7rem; font-weight: 700; }}
     
-    .slot--early {{ background: var(--early-bg); border-color: var(--early-border); }}
-    .slot--midday {{ background: var(--midday-bg); border-color: var(--midday-border); }}
-    .slot--afternoon {{ background: var(--afternoon-bg); border-color: var(--afternoon-border); }}
-    .no-slots {{ font-size: 0.8rem; color: var(--text-light); font-style: italic; }}
+    .slot--early {{ background: var(--early-bg); border-color: var(--early-border); color: var(--early-border); }}
+    .slot--midday {{ background: var(--midday-bg); border-color: var(--midday-border); color: var(--midday-border); }}
+    .slot--afternoon {{ background: var(--afternoon-bg); border-color: var(--afternoon-border); color: var(--afternoon-border); }}
+    .no-slots {{ font-size: 0.7rem; color: var(--text-light); font-style: italic; }}
 
-    #theme-toggle {{ position: fixed; bottom: 20px; right: 20px; width: 48px; height: 48px; border-radius: 50%; background: var(--green-deep); color: var(--gold); border: none; cursor: pointer; }}
+    #theme-toggle {{ position: fixed; bottom: 20px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: var(--green-deep); color: var(--gold); border: none; cursor: pointer; z-index: 100; }}
+
+    @media (max-width: 400px) {{
+        main {{ grid-template-columns: 1fr; padding: 10px; }}
+        h1 {{ font-size: 2.2rem; }}
+        .slots {{ grid-template-columns: repeat(3, 1fr); }}
+    }}
   </style>
 </head>
 <body>
   <header>
+    <div class="window-tag">⏱ {start_ampm} – {end_ampm} Window</div>
     <h1>TEE TIME MONITOR</h1>
-    <span class="window-tag">⏱ {start_ampm} – {end_ampm} &nbsp;&nbsp; SUNSET: {actual_sunset}</span>
+    <div class="sunset-badge">
+        <span>☀️ SUNSET CUTOFF:</span>
+        <span>{actual_sunset}</span>
+    </div>
   </header>
 
-  <div class="updated-bar">
-    Last updated: <span id="time-ago">just now</span> (<span id="last-ts">{now_str}</span>)
+  <div class="status-area">
+    <div class="highlight-interval">Checked every 15 minutes</div>
+    <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">{now_str}</span>)</div>
   </div>
 
   <main>
@@ -1114,7 +1144,6 @@ def generate_html():
   <script>
     const updateTs = {now_ts};
     
-    // Time ago logic
     function updateTime() {{
       const now = Math.floor(Date.now() / 1000);
       const diff = now - updateTs;
@@ -1124,14 +1153,12 @@ def generate_html():
     setInterval(updateTime, 30000);
     updateTime();
 
-    // Accordion
     document.querySelectorAll('.collapsible-header').forEach(header => {{
       header.addEventListener('click', () => {{
         header.closest('.course-card').classList.toggle('is-collapsed');
       }});
     }});
 
-    // Theme
     const btn = document.getElementById('theme-toggle');
     btn.addEventListener('click', () => {{
       const isDark = document.documentElement.dataset.theme === 'dark';
@@ -1139,7 +1166,6 @@ def generate_html():
       btn.textContent = isDark ? '🌙' : '☀️';
     }});
 
-    // Auto reload logic
     setInterval(async () => {{
         try {{
           const r = await fetch('version.json?_=' + Date.now());
@@ -1153,6 +1179,7 @@ def generate_html():
 
     Path("index.html").write_text(html)
     Path("version.json").write_text(json.dumps({"ts": now_ts}))
+  
 def _select_courses(filter_terms: list[str]) -> list[dict]:
     """Match case-insensitive substrings against course names. Empty = all."""
     if not filter_terms:
