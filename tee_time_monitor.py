@@ -975,6 +975,11 @@ def generate_html():
         course = cd["course"]
         days_html = ""
         for day in cd["days"]:
+            # Derive a short weekday key for JS filtering: "Friday", "Saturday", "Sunday"
+            day_weekday_name = day["date"].strftime("%A")  # e.g. "Friday"
+            day_label = day["label"]
+            book_url  = day["book_url"]
+
             if day["slots"]:
                 items_html = ""
                 for s in day["slots"]:
@@ -986,17 +991,28 @@ def generate_html():
                     price = (" · " + s["price"]) if s.get("price") else ""
                     items_html += f'<li class="{cls}" role="listitem">{badge}{t}{price}</li>'
                 day_body = f'<ul class="slots" role="list" aria-label="Available tee times">{items_html}</ul>'
+                header_book = f'<a class="book-btn" href="{book_url}" target="_blank" aria-label="Book tee time for {day_label}">Book &#8594;</a>'
+                extra_class = ""
+                day_header_html = f'<div class="day-header"><span class="day-name">{day_label}</span>{header_book}</div>'
+                block_content = f'{day_header_html}\n              {day_body}'
             else:
-                day_body = '<p class="no-times">No times available</p>'
+                extra_class = " day-block--booked"
+                day_header_html = f'<div class="day-header day-header--booked"><span class="day-name">{day_label}</span></div>'
+                booked_row = (
+                    f'<div class="fully-booked-row">'
+                    f'<span class="fully-booked-label">&#9940; Fully Booked</span>'
+                    f'<a class="book-btn" href="{book_url}" target="_blank" '
+                    f'aria-label="Book tee time for {day_label}">Book &#8594;</a>'
+                    f'</div>'
+                )
+                block_content = f'{day_header_html}\n              {booked_row}'
 
-            days_html += f"""
-            <div class="day-block" aria-label="Times for {day['label']}">
-              <div class="day-header">
-                <span class="day-name">{day["label"]}</span>
-                <a class="book-btn" href="{day["book_url"]}" target="_blank" aria-label="Book tee time for {day['label']}">Book →</a>
-              </div>
-              {day_body}
-            </div>"""
+            days_html += (
+                f'\n            <div class="day-block{extra_class}" data-day="{day_weekday_name}"'
+                f' aria-label="Times for {day_label}">'
+                f'\n              {block_content}'
+                f'\n            </div>'
+            )
 
         cards_html += f"""
         <div class="course-card" aria-label="{course['name']}">
@@ -1526,6 +1542,63 @@ def generate_html():
       opacity: 0.4;
     }}
 
+    /* ── Day filter toggle bar ── */
+    .day-filter-bar {{
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 20px 0;
+      max-width: 1100px;
+      margin: 0 auto;
+    }}
+    .day-toggle {{
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      padding: 7px 22px;
+      border-radius: 24px;
+      border: 2px solid var(--green-mid);
+      background: var(--green-mid);
+      color: var(--text-on-brand);
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s, border-color 0.18s, opacity 0.18s, transform 0.1s;
+      user-select: none;
+    }}
+    .day-toggle:hover {{ transform: translateY(-1px); filter: brightness(1.1); }}
+    .day-toggle:focus-visible {{ outline: 2.5px solid var(--gold); outline-offset: 3px; }}
+    .day-toggle.off {{
+      background: transparent;
+      color: var(--text-mid);
+      border-color: var(--border-soft);
+      opacity: 0.55;
+    }}
+    [data-theme="dark"] .day-toggle.off {{
+      color: var(--text-light);
+      border-color: var(--border-soft);
+    }}
+
+    /* ── Fully booked compact row ── */
+    .day-block--booked {{
+      padding: 10px 20px;
+      background: var(--surface);
+      opacity: 0.72;
+    }}
+    .day-header--booked {{
+      margin-bottom: 6px;
+    }}
+    .fully-booked-row {{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }}
+    .fully-booked-label {{
+      font-size: 0.75rem;
+      font-style: italic;
+      color: var(--text-light);
+      letter-spacing: 0.04em;
+    }}
+
     /* ════════════════════════════════════════════
        MOBILE OVERRIDES  (≤ 767px)
        ════════════════════════════════════════════ */
@@ -1641,6 +1714,9 @@ def generate_html():
       .toast {{ bottom: 80px; font-size: 0.8rem; padding: 10px 20px; }}
 
       #theme-toggle {{ bottom: 20px; right: 14px; width: 40px; height: 40px; font-size: 1rem; }}
+
+      .day-filter-bar {{ gap: 7px; padding: 12px 14px 0; }}
+      .day-toggle {{ font-size: 0.88rem; padding: 6px 16px; }}
     }}
   </style>
 </head>
@@ -1684,6 +1760,12 @@ def generate_html():
     Checked every 15 minutes <br>Last run: <strong>{now_str}</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
+  <div class="day-filter-bar" role="group" aria-label="Filter by day">
+    <button class="day-toggle" data-filter="Friday"   aria-pressed="true">Friday</button>
+    <button class="day-toggle" data-filter="Saturday" aria-pressed="true">Saturday</button>
+    <button class="day-toggle" data-filter="Sunday"   aria-pressed="true">Sunday</button>
+  </div>
+
   <main aria-label="Course tee times">
     {cards_html}
   </main>
@@ -1717,6 +1799,37 @@ def generate_html():
         btn.textContent = isDark ? '🌙' : '☀️';
         localStorage.setItem('ttw-theme', isDark ? '' : 'dark');
       }});
+    }})();
+
+    // ── Day filter toggles ──
+    (function() {{
+      const toggles = document.querySelectorAll('.day-toggle');
+      const active = new Set(['Friday', 'Saturday', 'Sunday']);
+
+      function applyFilter() {{
+        document.querySelectorAll('.day-block').forEach(function(block) {{
+          const day = block.getAttribute('data-day');
+          block.style.display = active.has(day) ? '' : 'none';
+        }});
+      }}
+
+      toggles.forEach(function(btn) {{
+        btn.addEventListener('click', function() {{
+          const day = btn.getAttribute('data-filter');
+          if (active.has(day)) {{
+            active.delete(day);
+            btn.classList.add('off');
+            btn.setAttribute('aria-pressed', 'false');
+          }} else {{
+            active.add(day);
+            btn.classList.remove('off');
+            btn.setAttribute('aria-pressed', 'true');
+          }}
+          applyFilter();
+        }});
+      }});
+
+      applyFilter(); // run on load (all on by default)
     }})();
 
     // ── Minutes ago counter ──
