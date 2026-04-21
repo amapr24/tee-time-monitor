@@ -1153,8 +1153,8 @@ def generate_html():
     
     .slots {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; list-style: none; padding: 0; margin: 0; }}
     .slots li {{ 
-        padding: 6px 2px; text-align: center; border-radius: 5px; border: 2px solid transparent; 
-        font-size: 0.75rem; font-weight: 800; color: var(--slot-text);
+        padding: 3px 3px; text-align: center; border-radius: 5px; border: 2px solid rgba(0, 0, 0, 0.25); 
+        font-size: 0.8rem; font-weight: 650; color: var(--slot-text);
     }}
     
     .slot--early {{ background: var(--early-bg); border-color: var(--early-brd); }}
@@ -1168,21 +1168,21 @@ def generate_html():
 
     /* --- NEW SLOT HIGHLIGHTING CSS --- */
     .slot--new {{
-        box-shadow: 0 0 0 1.5px var(--gold);
-        animation: pulse-new 2s ease-in-out 3;
+        box-shadow: 0 0 0 2px var(--gold);
+        animation: pulse-new 2s ease-in-out 10;
     }}
     .new-badge {{
-        font-size: 0.6rem;
+        font-size: 0.4rem;
         background: var(--gold);
         color: #000; /* Dark text ensures readability against the gold background */
         border-radius: 3px;
-        padding: 1px 4px;
-        margin-right: 5px;
+        padding: 1px 2px;
+        margin-right: 3px;
         font-weight: 800;
         vertical-align: middle;
     }}
     @keyframes pulse-new {{
-        0%, 100% {{ box-shadow: 0 0 0 1.5px var(--gold); }}
+        0%, 100% {{ box-shadow: 0 0 0 2px var(--gold); }}
         /* Using rgba based on your --gold hex #ffb703 */
         50%      {{ box-shadow: 0 0 0 5px rgba(255, 183, 3, 0.4); }}
     }}
