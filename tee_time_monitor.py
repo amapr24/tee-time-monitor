@@ -1026,7 +1026,17 @@ def generate_html():
                         time_val = s.get("time", "?")
                         # Pass target_date and sunset_dt to the helper
                         cls = _slot_time_class(time_val, day["date_obj"], day["sunset_dt"])
-                        items_html += f'<li class="{cls}">{time_val}</li>'
+                        
+                        # --- START OF NEW LOGIC ---
+                        # Add the highlight class and create the badge if the slot is new
+                        if s.get("is_new"):
+                            cls += " slot--new"
+                        badge = '<span class="new-badge">NEW</span>' if s.get("is_new") else ""
+                        
+                        # Inject the badge into the <li> element
+                        items_html += f'<li class="{cls}">{badge}{time_val}</li>'
+                        # --- END OF NEW LOGIC ---
+                        
                     cards_html += f'<ul class="slots">{items_html}</ul>'
                 else:
                     cards_html += '<div class="no-slots">No times available</div>'
@@ -1156,8 +1166,30 @@ def generate_html():
     .slot--twilight {{ background: var(--twilight-bg); border-color: var(--twilight-brd); }}
     .no-slots {{ font-size: 0.7rem; color: var(--text-sub); font-style: italic; text-align: center; padding: 5px 0; }}
 
-    #theme-toggle {{ position: fixed; bottom: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }}
+    /* --- NEW SLOT HIGHLIGHTING CSS --- */
+    .slot--new {{
+        box-shadow: 0 0 0 1.5px var(--gold);
+        animation: pulse-new 2s ease-in-out 3;
+    }}
+    .new-badge {{
+        font-size: 0.6rem;
+        background: var(--gold);
+        color: #000; /* Dark text ensures readability against the gold background */
+        border-radius: 3px;
+        padding: 1px 4px;
+        margin-right: 5px;
+        font-weight: 800;
+        vertical-align: middle;
+    }}
+    @keyframes pulse-new {{
+        0%, 100% {{ box-shadow: 0 0 0 1.5px var(--gold); }}
+        /* Using rgba based on your --gold hex #ffb703 */
+        50%      {{ box-shadow: 0 0 0 5px rgba(255, 183, 3, 0.4); }}
+    }}
+    /* --- END OF NEW SLOT HIGHLIGHTING CSS --- */
 
+    #theme-toggle {{ position: fixed; bottom: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }}
+    
     @media (max-width: 480px) {{
         main {{ grid-template-columns: 1fr; padding: 8px; }}
         h1 {{ font-size: 2.2rem; }}
