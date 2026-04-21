@@ -907,7 +907,7 @@ async def check_course(playwright, course: dict, dates: list[date]):
 def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> str:
     """
     Returns the CSS class based on time of day and proximity to sunset.
-    Priority: Twilight (within 4h of sunset) > Afternoon > Midday > Early.
+    Priority: Twilight (within 4.5h of sunset) > Afternoon > Midday > Early.
     """
     try:
         t_str = time_str.strip().upper()
@@ -927,8 +927,8 @@ def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> s
         )
         
         # 1. Twilight Check (Primary Priority)
-        # If the slot is within 4 hours (14400 seconds) of sunset
-        if (sunset_dt - slot_dt).total_seconds() <= 14400:
+        # If the slot is within 4.5 hours (16200 seconds) of sunset
+        if (sunset_dt - slot_dt).total_seconds() <= 16200:
             return "slot--twilight"
             
         # 2. Standard Time-of-Day logic
@@ -1074,7 +1074,7 @@ def generate_html():
       --early-bg:     #ffe479; --early-brd: #fbbf24;
       --mid-bg:       #1e3a8a; --mid-brd:   #3b82f6;
       --late-bg:      #064e3b; --late-brd:  #10b981;
-      --twilight-bg:  #3b0764; 
+      --twilight-bg:  #582a7c; 
       --twilight-brd: #a855f7;
     }}
 
@@ -1149,8 +1149,8 @@ def generate_html():
     
     .slot--early {{ background: var(--early-bg); border-color: var(--early-brd); }}
     /* Force dark text for cream morning slots in dark mode */
-    [data-theme="dark"] .slot--early {{ color: #422006; }} 
-    
+    /* Old color: #422006 */
+    [data-theme="dark"] .slot--early {{ color: #545454; }}
     .slot--midday {{ background: var(--mid-bg); border-color: var(--mid-brd); }}
     .slot--afternoon {{ background: var(--late-bg); border-color: var(--late-brd); }}
     .slot--twilight {{ background: var(--twilight-bg); border-color: var(--twilight-brd); }}
