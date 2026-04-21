@@ -671,7 +671,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>12:16 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>12:30 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <main aria-label="Course tee times">
@@ -688,7 +688,7 @@
                 <span class="day-name">Friday, Apr 24</span>
                 <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book →</a>
               </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday slot--new" role="listitem"><span class="new-badge" aria-label="New">NEW</span>11:08 AM</li><li class="slot slot--afternoon" role="listitem">3:32 PM</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:08 AM</li><li class="slot slot--afternoon" role="listitem">3:32 PM</li></ul>
             </div>
             <div class="day-block" aria-label="Times for Saturday, Apr 25">
               <div class="day-header">
@@ -731,7 +731,7 @@
                 <span class="day-name">Sunday, Apr 26</span>
                 <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book →</a>
               </div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon slot--new" role="listitem"><span class="new-badge" aria-label="New">NEW</span>3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:40 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
             </div>
         </div>
         <div class="course-card" aria-label="Normandy Shores">
@@ -858,7 +858,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776788160 * 1000);
+      const lastRun = new Date(1776789057 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
