@@ -80,7 +80,3 @@ Playwright is imported via a guarded `try/except` so the parsers module stays im
 Both workflows use `if: always()` on the save-cache and commit steps so a partial scrape failure still persists whatever was gathered — preserve this behavior.
 
 Both workflows do `git pull --rebase` (no branch argument) before `git push`. On `dev` this pulls the checkout's tracking branch first, then pushes explicitly to `dev`. If you change the checkout ref or push target, verify the rebase step still matches.
-
-## `archive/`
-
-`monitor_miami_lakes.py`, `monitor_normandy.py`, `monitor_shores.py` are the original per-course scripts that were consolidated into `tee_time_monitor.py`. They are kept for reference only — do not edit them, and do not wire them into the workflow.
