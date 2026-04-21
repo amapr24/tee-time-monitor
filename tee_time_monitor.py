@@ -988,7 +988,7 @@ def generate_html():
         })
 
     # Global sunset for the header (using the first date)
-    first_sunset = sun(MIAMI.observer, date=dates[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
+    actual_sunset = sun(MIAMI.observer, date=dates[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
 
     cards_html = ""
     for c in course_data:
