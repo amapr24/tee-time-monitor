@@ -1014,14 +1014,18 @@ def generate_html():
                 f'\n            </div>'
             )
 
+        # ── CHANGED: added collapse-btn inside card-header, wrapped days in card-body ──
         cards_html += f"""
         <div class="course-card" aria-label="{course['name']}">
           <div class="card-header">
             <div class="course-name">{course["name"]}</div>
             <div class="course-meta">{course.get("address","")}</div>
             <div class="course-meta"><a href="tel:{course.get('phone','')}">{course.get('phone','')}</a></div>
+            <button class="collapse-btn" aria-label="Collapse {course['name']}" title="Collapse">▲</button>
           </div>
-          {days_html}
+          <div class="card-body">
+            {days_html}
+          </div>
         </div>"""
 
     html = f"""<!DOCTYPE html>
@@ -1257,7 +1261,7 @@ def generate_html():
     main {{
       max-width: 1100px;
       margin: 0 auto;
-      padding: 24px 20px 20px;
+      padding: 0 20px 20px;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 24px;
@@ -1277,11 +1281,16 @@ def generate_html():
       transform: translateY(-4px);
       box-shadow: 0 12px 40px rgba(13,43,26,0.18), 0 2px 8px rgba(13,43,26,0.1);
     }}
+    .course-card.collapsed:hover {{
+      transform: none;
+      box-shadow: 0 4px 24px rgba(13,43,26,0.12), 0 1px 4px rgba(13,43,26,0.08);
+    }}
     .card-header {{
       background: linear-gradient(135deg, var(--green-deep) 0%, var(--green-mid) 100%);
       padding: 20px 24px 12px;
       position: relative;
       overflow: hidden;
+      cursor: pointer;
     }}
     .card-header::before {{
       content: '⛳';
@@ -1291,6 +1300,42 @@ def generate_html():
       font-size: 2.5rem;
       opacity: 0.15;
     }}
+
+    /* ── Collapse toggle ── */
+    .collapse-btn {{
+      position: absolute;
+      bottom: 12px;
+      right: 14px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--gold);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.3s ease;
+      z-index: 1;
+      line-height: 1;
+    }}
+    .collapse-btn:hover {{ background: rgba(255,255,255,0.22); }}
+    .collapse-btn:focus-visible {{ outline: 2px solid var(--gold); outline-offset: 2px; }}
+    .course-card.collapsed .collapse-btn {{ transform: rotate(180deg); }}
+    .card-body {{
+      overflow: hidden;
+      transition: max-height 0.35s ease, opacity 0.25s ease;
+      max-height: 2000px;
+      opacity: 1;
+    }}
+    .course-card.collapsed .card-body {{
+      max-height: 0;
+      opacity: 0;
+    }}
+    .course-card.collapsed .card-header::before {{ opacity: 0.08; }}
+
     .course-name {{
       font-family: 'Bebas Neue', sans-serif;
       font-size: 1.8rem;
@@ -1547,7 +1592,7 @@ def generate_html():
       display: flex;
       justify-content: center;
       gap: 10px;
-      padding: 14px 20px 0;
+      padding: 14px 20px 14px;
       max-width: 1100px;
       margin: 0 auto;
     }}
@@ -1674,6 +1719,8 @@ def generate_html():
       .card-header::before {{ font-size: 1.8rem; opacity: 0.12; top: 8px; right: 12px; }}
       .course-name {{ font-size: 1.5rem; }}
       .course-meta {{ font-size: 0.68rem; }}
+
+      .collapse-btn {{ bottom: 10px; right: 10px; width: 24px; height: 24px; font-size: 0.65rem; }}
 
       .day-block {{ padding: 10px 15px; min-height: 58px; position: relative; }}
       .day-header {{ margin-bottom: 6px; }}
@@ -1830,6 +1877,33 @@ def generate_html():
       }});
 
       applyFilter(); // run on load (all on by default)
+    }})();
+
+    // ── Collapsible course cards ──
+    (function() {{
+      document.querySelectorAll('.collapse-btn').forEach(function(btn) {{
+        btn.addEventListener('click', function(e) {{
+          e.stopPropagation();
+          const card = btn.closest('.course-card');
+          const isCollapsed = card.classList.toggle('collapsed');
+          btn.setAttribute('aria-label', (isCollapsed ? 'Expand ' : 'Collapse ') + card.getAttribute('aria-label'));
+          btn.setAttribute('title', isCollapsed ? 'Expand' : 'Collapse');
+        }});
+      }});
+      // Also allow clicking the card-header itself to toggle
+      document.querySelectorAll('.card-header').forEach(function(header) {{
+        header.addEventListener('click', function(e) {{
+          // Don't fire if a link inside the header was clicked
+          if (e.target.closest('a')) return;
+          const card = header.closest('.course-card');
+          const btn  = card.querySelector('.collapse-btn');
+          const isCollapsed = card.classList.toggle('collapsed');
+          if (btn) {{
+            btn.setAttribute('aria-label', (isCollapsed ? 'Expand ' : 'Collapse ') + card.getAttribute('aria-label'));
+            btn.setAttribute('title', isCollapsed ? 'Expand' : 'Collapse');
+          }}
+        }});
+      }});
     }})();
 
     // ── Minutes ago counter ──
