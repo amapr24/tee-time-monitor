@@ -640,7 +640,7 @@
 
       .updated-bar { font-size: 0.78rem; padding: 6px 15px; }
 
-      main { margin: 15px auto 0; padding: 16px 12px 0; gap: 15px; }
+      main { margin: 0 auto 0; padding: 0 12px 0; gap: 15px; }
 
       .course-card { border-radius: 12px; }
       .course-card:hover { transform: none; }
@@ -689,7 +689,7 @@
 
       #theme-toggle { bottom: 20px; right: 14px; width: 40px; height: 40px; font-size: 1rem; }
 
-      .day-filter-bar { gap: 7px; padding: 12px 14px 0; }
+      .day-filter-bar { gap: 7px; padding: 12px 14px 12px; }
       .day-toggle { font-size: 0.88rem; padding: 6px 16px; }
     }
   </style>
@@ -731,7 +731,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>1:19 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>1:46 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="day-filter-bar" role="group" aria-label="Filter by day">
@@ -773,9 +773,9 @@
               <div class="day-header day-header--booked"><span class="day-name">Friday, Apr 24</span></div>
               <div class="fully-booked-row"><span class="fully-booked-label">&#9940; Fully Booked</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
             </div>
-            <div class="day-block" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
-              <div class="day-header"><span class="day-name">Saturday, Apr 25</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:56 PM</li></ul>
+            <div class="day-block day-block--booked" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
+              <div class="day-header day-header--booked"><span class="day-name">Saturday, Apr 25</span></div>
+              <div class="fully-booked-row"><span class="fully-booked-label">&#9940; Fully Booked</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
             </div>
             <div class="day-block" data-day="Sunday" aria-label="Times for Sunday, Apr 26">
               <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
@@ -791,7 +791,7 @@
           
             <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
               <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon slot--new" role="listitem"><span class="new-badge" aria-label="New">NEW</span>3:32 PM</li><li class="slot slot--afternoon" role="listitem">3:48 PM</li></ul>
             </div>
             <div class="day-block" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
               <div class="day-header"><span class="day-name">Saturday, Apr 25</span><a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
@@ -831,7 +831,7 @@
           
             <div class="day-block" data-day="Friday" aria-label="Times for Friday, Apr 24">
               <div class="day-header"><span class="day-name">Friday, Apr 24</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Friday, Apr 24">Book &#8594;</a></div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:50 AM</li><li class="slot slot--midday" role="listitem">11:58 AM</li><li class="slot slot--afternoon" role="listitem">12:06 PM</li><li class="slot slot--afternoon" role="listitem">12:14 PM</li><li class="slot slot--afternoon" role="listitem">12:22 PM</li><li class="slot slot--afternoon" role="listitem">12:30 PM</li><li class="slot slot--afternoon" role="listitem">12:38 PM</li><li class="slot slot--afternoon" role="listitem">12:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--midday" role="listitem">11:50 AM</li><li class="slot slot--midday" role="listitem">11:58 AM</li><li class="slot slot--afternoon" role="listitem">12:06 PM</li><li class="slot slot--afternoon" role="listitem">12:22 PM</li><li class="slot slot--afternoon" role="listitem">12:30 PM</li><li class="slot slot--afternoon" role="listitem">12:38 PM</li><li class="slot slot--afternoon" role="listitem">12:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
             <div class="day-block" data-day="Saturday" aria-label="Times for Saturday, Apr 25">
               <div class="day-header"><span class="day-name">Saturday, Apr 25</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Saturday, Apr 25">Book &#8594;</a></div>
@@ -839,7 +839,7 @@
             </div>
             <div class="day-block" data-day="Sunday" aria-label="Times for Sunday, Apr 26">
               <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">1:50 PM</li><li class="slot slot--afternoon" role="listitem">1:58 PM</li><li class="slot slot--afternoon" role="listitem">2:06 PM</li><li class="slot slot--afternoon" role="listitem">2:14 PM</li><li class="slot slot--afternoon" role="listitem">2:22 PM</li><li class="slot slot--afternoon" role="listitem">2:30 PM</li><li class="slot slot--afternoon" role="listitem">2:38 PM</li><li class="slot slot--afternoon" role="listitem">2:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:02 PM</li><li class="slot slot--afternoon" role="listitem">3:10 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">1:50 PM</li><li class="slot slot--afternoon" role="listitem">1:58 PM</li><li class="slot slot--afternoon" role="listitem">2:06 PM</li><li class="slot slot--afternoon" role="listitem">2:14 PM</li><li class="slot slot--afternoon" role="listitem">2:22 PM</li><li class="slot slot--afternoon" role="listitem">2:30 PM</li><li class="slot slot--afternoon" role="listitem">2:38 PM</li><li class="slot slot--afternoon" role="listitem">2:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:02 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
         </div>
   </main>
@@ -910,7 +910,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776791959 * 1000);
+      const lastRun = new Date(1776793588 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
@@ -919,6 +919,19 @@
       }
       update();
       setInterval(update, 30000);
+    })();
+
+    // ── Auto-reload when GitHub Actions publishes a new version ──
+    (function() {
+      const currentTs = 1776793588;
+      setInterval(async function() {
+        try {
+          const r = await fetch('version.json?_=' + Date.now());
+          if (!r.ok) return;
+          const data = await r.json();
+          if (data.ts > currentTs) location.reload();
+        } catch(e) {}
+      }, 30000);
     })();
   </script>
 
