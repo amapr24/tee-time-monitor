@@ -774,7 +774,7 @@
   </header>
 
   <div class="updated-bar">
-    Checked every 15 minutes <br>Last run: <strong>2:32 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
+    Checked every 15 minutes <br>Last run: <strong>2:46 PM ET, Tuesday April 21, 2026</strong><span class="mins-ago" id="mins-ago"></span>
   </div>
 
   <div class="day-filter-bar" role="group" aria-label="Filter by day">
@@ -896,7 +896,7 @@
             </div>
             <div class="day-block" data-day="Sunday" aria-label="Times for Sunday, Apr 26">
               <div class="day-header"><span class="day-name">Sunday, Apr 26</span><a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank" aria-label="Book tee time for Sunday, Apr 26">Book &#8594;</a></div>
-              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">1:50 PM</li><li class="slot slot--afternoon" role="listitem">1:58 PM</li><li class="slot slot--afternoon" role="listitem">2:06 PM</li><li class="slot slot--afternoon" role="listitem">2:14 PM</li><li class="slot slot--afternoon" role="listitem">2:22 PM</li><li class="slot slot--afternoon" role="listitem">2:30 PM</li><li class="slot slot--afternoon" role="listitem">2:38 PM</li><li class="slot slot--afternoon" role="listitem">2:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:02 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
+              <ul class="slots" role="list" aria-label="Available tee times"><li class="slot slot--afternoon" role="listitem">1:50 PM</li><li class="slot slot--afternoon" role="listitem">1:58 PM</li><li class="slot slot--afternoon" role="listitem">2:06 PM</li><li class="slot slot--afternoon" role="listitem">2:14 PM</li><li class="slot slot--afternoon" role="listitem">2:22 PM</li><li class="slot slot--afternoon" role="listitem">2:30 PM</li><li class="slot slot--afternoon" role="listitem">2:38 PM</li><li class="slot slot--afternoon" role="listitem">2:46 PM</li><li class="slot slot--afternoon" role="listitem">2:54 PM</li><li class="slot slot--afternoon" role="listitem">3:18 PM</li><li class="slot slot--afternoon" role="listitem">3:26 PM</li><li class="slot slot--afternoon" role="listitem">3:34 PM</li><li class="slot slot--afternoon" role="listitem">3:42 PM</li><li class="slot slot--afternoon" role="listitem">3:50 PM</li><li class="slot slot--afternoon" role="listitem">3:58 PM</li></ul>
             </div>
           </div>
         </div>
@@ -995,7 +995,7 @@
     (function() {
       const el = document.getElementById('mins-ago');
       if (!el) return;
-      const lastRun = new Date(1776796372 * 1000);
+      const lastRun = new Date(1776797160 * 1000);
       function update() {
         const mins = Math.floor((Date.now() - lastRun) / 60000);
         if (mins < 1)       el.textContent = ' · just now';
@@ -1008,7 +1008,7 @@
 
     // ── Auto-reload when GitHub Actions publishes a new version ──
     (function() {
-      const currentTs = 1776796372;
+      const currentTs = 1776797160;
       setInterval(async function() {
         try {
           const r = await fetch('version.json?_=' + Date.now());
