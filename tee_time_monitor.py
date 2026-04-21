@@ -1049,9 +1049,9 @@ def generate_html():
       --early-bg:     #fff8e6;
       --early-border: #f0c060;
       --early-text:   #5c3a00;
-      --midday-bg:    #d4eddc;
-      --midday-border:rgba(46,139,79,0.28);
-      --midday-text:  #0d2b1a;
+      --midday-bg:    #1e3828;
+      --midday-border:rgba(46,139,79,0.4);
+      --midday-text:  #a8e0b8;
       --afternoon-bg: #ddeeff;
       --afternoon-border:#7aaedd;
       --afternoon-text:#0d2448;
