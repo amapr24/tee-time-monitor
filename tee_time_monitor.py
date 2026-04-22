@@ -1041,7 +1041,7 @@ def generate_html():
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.15">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tee Time Monitor</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -1389,6 +1389,7 @@ def generate_html():
 
     /* ── Responsive ─────────────────────────────────────────────────── */
     @media (max-width: 480px) {{
+      html {{ font-size: 115%; }} /* This scales every 'rem' unit globally */
       main {{ grid-template-columns: 1fr; padding: 8px; }}
       h1   {{ font-size: 2.2rem; }}
     }}
