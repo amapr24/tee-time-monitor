@@ -94,16 +94,6 @@ COURSES = [
         "skip_past_dates": True,
     },
     {
-        "name":           "Plantation Preserve",
-        "address":        "7050 W Broward Blvd, Plantation",
-        "phone":          "(954) 585-5020",
-        "type":           "webtrac",
-        "url":            "https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail",
-        "tee_time_min":   8,
-        "tee_time_max":   14,
-        "cache_file":     "cache_plantation.json",
-    },
-    {
         "name":           "Miami Shores",
         "address":        "10000 Biscayne Blvd, Miami Shores",
         "phone":          "(305) 795-2369",
@@ -115,6 +105,16 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_shores.json",
         "skip_past_dates": True,
+    },
+    {
+        "name":           "Plantation Preserve",
+        "address":        "7050 W Broward Blvd, Plantation",
+        "phone":          "(954) 585-5020",
+        "type":           "webtrac",
+        "url":            "https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail",
+        "tee_time_min":   8,
+        "tee_time_max":   14,
+        "cache_file":     "cache_plantation.json",
     },
 ]
 
@@ -908,6 +908,12 @@ def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> s
     """
     Returns the CSS class based on time of day and proximity to sunset.
     Priority: Twilight (within 4.5h of sunset) > Afternoon > Midday > Early.
+
+    CSS class → colour mapping:
+      slot--early      gold/yellow   pre-10 AM
+      slot--midday     green         10 AM – noon
+      slot--afternoon  blue          noon+
+      slot--twilight   purple        within 4.5 h of sunset
     """
     try:
         t_str = time_str.strip().upper()
@@ -915,32 +921,30 @@ def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> s
         time_parts = t_str.replace("AM", "").replace("PM", "").strip().split(":")
         h = int(time_parts[0])
         m = int(time_parts[1]) if len(time_parts) > 1 else 0
-        
-        # Convert to 24h for simple morning/midday logic
+
         h_24 = h
-        if is_pm and h != 12: h_24 += 12
+        if is_pm and h != 12:   h_24 += 12
         elif not is_pm and h == 12: h_24 = 0
-        
-        # Create a datetime for this specific slot to compare against sunset
+
         slot_dt = datetime.combine(target_date, datetime.min.time()).replace(
             hour=h_24, minute=m, tzinfo=ET
         )
-        
-        # 1. Twilight Check (Primary Priority)
-        # If the slot is within 4.5 hours (16200 seconds) of sunset
-        if (sunset_dt - slot_dt).total_seconds() <= 16200:
+
+        # 1. Twilight: within 4.5 hours (16 200 s) of sunset
+        if (sunset_dt - slot_dt).total_seconds() <= 16_200:
             return "slot--twilight"
-            
-        # 2. Standard Time-of-Day logic
+
+        # 2. Standard time-of-day buckets
         if h_24 < 10: return "slot--early"
         if h_24 < 12: return "slot--midday"
         return "slot--afternoon"
-    except:
+    except Exception:
         return ""
 
+
 def generate_html():
-    dates = get_upcoming_weekend_dates()
-    now_dt = datetime.now(ET)
+    dates   = get_upcoming_weekend_dates()
+    now_dt  = datetime.now(ET)
     now_str = now_dt.strftime("%-I:%M %p ET, %a %b %-d")
     now_ts  = int(now_dt.timestamp())
 
@@ -949,21 +953,18 @@ def generate_html():
         days_for_course = []
         for d in dates:
             cache_file = CACHE_DIR / course["cache_file"]
-            
-            # Get actual sunset for this specific day
-            s_info = sun(MIAMI.observer, date=d, tzinfo=ET)
+
+            s_info    = sun(MIAMI.observer, date=d, tzinfo=ET)
             sunset_dt = s_info["sunset"]
-            
-            # Use the existing cutoff logic for filtering
+
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             raw_slots = load_cache(cache_file, d)
-            
+
             slots = [
                 s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
                 if not is_slot_in_past(s.get("time", ""), d)
             ]
-            
-            # Generate booking URL
+
             if course["type"] == "cpsgolf":
                 book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
             else:
@@ -972,33 +973,30 @@ def generate_html():
                     f"&step=teetimes&holes={course.get('holes', 18)}"
                     f"&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
                 )
-            
-            days_for_course.append({
-                "date_obj": d,
-                "sunset_dt": sunset_dt, # Store for class helper
-                "label": d.strftime("%a %b %-d"),
-                "weekday": d.strftime("%A"),
-                "slots": slots,
-                "book_url": book_url
-            })
-        
-        course_data.append({
-            "name": course["name"],
-            "days": days_for_course
-        })
 
-    # Global sunset for the header (using the first date)
+            days_for_course.append({
+                "date_obj":  d,
+                "sunset_dt": sunset_dt,
+                "label":     d.strftime("%a %b %-d"),
+                "weekday":   d.strftime("%A"),
+                "slots":     slots,
+                "book_url":  book_url,
+            })
+
+        course_data.append({"name": course["name"], "days": days_for_course})
+
     actual_sunset = sun(MIAMI.observer, date=dates[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
 
+    # ── Build course cards HTML ───────────────────────────────────────────────
     cards_html = ""
     for c in course_data:
-        name = c["name"]
-        safe_id = name.replace(" ", "-").lower()
+        name      = c["name"]
+        safe_id   = name.replace(" ", "-").lower()
         any_slots = any(day["slots"] for day in c["days"])
-        
-        display_name = name if any_slots else f"{name} (Fully Booked)"
+
+        display_name    = name if any_slots else f"{name} (Fully Booked)"
         collapsed_state = "is-collapsed" if not any_slots else ""
-        
+
         cards_html += f'''
         <div class="course-card {collapsed_state}" id="card-{safe_id}">
           <div class="card-header collapsible-header">
@@ -1008,34 +1006,37 @@ def generate_html():
             </div>
           </div>
           <div class="card-body">'''
-        
+
         if any_slots:
             for day in c["days"]:
                 slots = day["slots"]
-                
                 cards_html += f'''
                 <div class="day-row" data-day="{day['weekday']}">
                   <div class="day-row-header">
                     <span class="day-label">{day["label"]}</span>
                     <a class="book-btn" href="{day["book_url"]}" target="_blank">Book</a>
                   </div>'''
-                
+
                 if slots:
                     items_html = ""
                     for s in slots:
                         time_val = s.get("time", "?")
-                        # Pass target_date and sunset_dt to the helper
-                        cls = _slot_time_class(time_val, day["date_obj"], day["sunset_dt"])
-                        items_html += f'<li class="{cls}">{time_val}</li>'
+                        cls      = _slot_time_class(time_val, day["date_obj"], day["sunset_dt"])
+                        if s.get("is_new"):
+                            cls += " slot--new"
+                        badge      = '<span class="new-badge">NEW</span>' if s.get("is_new") else ""
+                        items_html += f'<li class="{cls}">{badge}{time_val}</li>'
                     cards_html += f'<ul class="slots">{items_html}</ul>'
                 else:
                     cards_html += '<div class="no-slots">No times available</div>'
-                cards_html += '</div>'
+
+                cards_html += '</div>'  # .day-row
         else:
             cards_html += '<div class="day-row"><div class="no-slots">Fully booked for the weekend.</div></div>'
-            
-        cards_html += '</div></div>'
 
+        cards_html += '</div></div>'  # .card-body  .course-card
+
+    # ── Full HTML document ────────────────────────────────────────────────────
     html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1045,123 +1046,354 @@ def generate_html():
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
+    /* ── Design tokens ─────────────────────────────────────────────── */
     :root {{
-      --brand-green:  #4a7c59;
-      --gold:         #ffb703;
-      --sunset-orange:#fb8500;
-      --text-main:    #1a1a1a;
-      --text-sub:     #4b5563;
-      --slot-text:    #000000;
-      --surface:      #ffffff;
-      --bg:           #f3f4f6;
-      --border:       #e5e7eb;
-      
-      --early-bg:     #fef9c3; --early-brd: #facc15;
-      --mid-bg:       #dbeafe; --mid-brd:   #60a5fa;
-      --late-bg:      #dcfce7; --late-brd:  #4ade80;
-      --twilight-bg:  #f3e8ff; 
-      --twilight-brd: #c084fc;
+      --brand-green:      #4a7c59;
+      --gold:             #ffb703;
+      --sunset-orange:    #fb8500;
+      --text-main:        #1a1a1a;
+      --text-sub:         #4b5563;
+      --slot-text:        #111111;
+      --surface:          #ffffff;
+      --bg:               #f3f4f6;
+      --border:           #e5e7eb;
+
+      /* Early  = gold/yellow  (pre-10 AM)   */
+      --early-bg:         #fef9c3;
+      --early-brd:        #facc15;
+      --early-text:       #111111;
+
+      /* Midday = green        (10 AM–noon)  */
+      --midday-bg:        #dcfce7;
+      --midday-brd:       #4ade80;
+      --midday-text:      #111111;
+
+      /* Afternoon = blue      (noon+)       */
+      --afternoon-bg:     #dbeafe;
+      --afternoon-brd:    #60a5fa;
+      --afternoon-text:   #111111;
+
+      /* Twilight  = purple    (near sunset) */
+      --twilight-bg:      #f3e8ff;
+      --twilight-brd:     #c084fc;
+      --twilight-text:    #111111;
     }}
 
     [data-theme="dark"] {{
-      --bg:           #0f172a;
-      --surface:      #1e293b;
-      --text-main:    #f8f9fa;
-      --text-sub:     #94a3b8;
-      --slot-text:    #ffffff;
-      --border:       #334155;
-      /* Cream-ish Morning Slot for Dark Mode */
-      --early-bg:     #ffe479; --early-brd: #fbbf24;
-      --mid-bg:       #1e3a8a; --mid-brd:   #3b82f6;
-      --late-bg:      #064e3b; --late-brd:  #10b981;
-      --twilight-bg:  #582a7c; 
-      --twilight-brd: #a855f7;
+      /* Backgrounds */
+      --bg:               #141c25;
+      --surface:          #1c2733;
+      --border:           #2e3f50;
+
+      /* Text */
+      --text-main:        #dde6ef;
+      --text-sub:         #7e96ad;
+      --slot-text:        #dde6ef;
+
+      /* Brand */
+      --brand-green:      #5fa374;
+
+      /* Early  = warm amber-sand wash */
+      --early-bg:         #2a2410;
+      --early-brd:        #c9a030;
+      --early-text:       #e8d5a0;
+
+      /* Midday = sage-forest wash     */
+      --midday-bg:        #0f2318;
+      --midday-brd:       #57a875;
+      --midday-text:      #8fd4a8;
+
+      /* Afternoon = slate-blue wash   */
+      --afternoon-bg:     #152030;
+      --afternoon-brd:    #5b91cc;
+      --afternoon-text:   #a8caed;
+
+      /* Twilight = dusty mauve wash   */
+      --twilight-bg:      #1e1630;
+      --twilight-brd:     #9b6ec8;
+      --twilight-text:    #c4a0e8;
     }}
 
-    body {{ background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 50px; }}
-    
-    header {{ 
-        background: var(--brand-green); 
-        padding: 12px 15px; 
-        text-align: center; 
-        color: white; 
-        border-bottom: 3px solid var(--gold); 
+    /* ── Reset & base ──────────────────────────────────────────────── */
+    * {{ box-sizing: border-box; }}
+    body {{
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding-bottom: 50px;
+      transition: background 0.3s, color 0.3s;
     }}
-    h1 {{ font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; margin: 0; letter-spacing: 1.5px; line-height: 1; }}
-    
+
+    /* ── Header ────────────────────────────────────────────────────── */
+    header {{
+      background: var(--brand-green);
+      padding: 12px 15px;
+      text-align: center;
+      color: white;
+      border-bottom: 3px solid var(--gold);
+      transition: background 0.3s;
+    }}
+    [data-theme="dark"] header {{
+      background: #0d1720;
+      border-bottom: 3px solid var(--gold);
+    }}
+    h1 {{
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.8rem;
+      margin: 0;
+      letter-spacing: 1.5px;
+      line-height: 1;
+      color: white;
+      transition: color 0.3s, text-shadow 0.3s;
+    }}
+    [data-theme="dark"] h1 {{
+      color: var(--brand-green);
+      text-shadow: 0 0 20px rgba(95, 163, 116, 0.4);
+    }}
     .sunset-box {{
-        background: var(--sunset-orange);
-        display: inline-flex;
-        padding: 3px 10px;
-        border-radius: 6px;
-        font-weight: 800;
-        font-size: 0.75rem;
-        margin-top: 5px;
-        align-items: center; gap: 5px;
+      background: var(--sunset-orange);
+      display: inline-flex;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 0.75rem;
+      margin-top: 5px;
+      align-items: center;
+      gap: 5px;
+      color: white;
     }}
-
     .header-status {{
-        margin-top: 8px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        opacity: 0.9;
+      margin-top: 8px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      opacity: 0.9;
     }}
     .header-status b {{ color: var(--gold); }}
 
-    .filter-bar {{ 
-        position: sticky; top: 0; z-index: 50; 
-        background: var(--surface); padding: 10px; 
-        display: flex; justify-content: center; gap: 6px;
-        border-bottom: 1px solid var(--border);
+    /* ── Colour legend ──────────────────────────────────────────────── */
+    .legend {{
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 12px;
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      transition: background 0.3s;
+    }}
+    .legend-item {{
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }}
+    .legend-dot {{
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      border: 2px solid transparent;
+      flex-shrink: 0;
+    }}
+    .legend-dot--early {{
+      background: var(--early-bg);
+      border-color: var(--early-brd);
+    }}
+    .legend-dot--midday {{
+      background: var(--midday-bg);
+      border-color: var(--midday-brd);
+    }}
+    .legend-dot--afternoon {{
+      background: var(--afternoon-bg);
+      border-color: var(--afternoon-brd);
+    }}
+    .legend-dot--twilight {{
+      background: var(--twilight-bg);
+      border-color: var(--twilight-brd);
+    }}
+
+    /* ── Filter bar ─────────────────────────────────────────────────── */
+    .filter-bar {{
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--surface);
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s;
     }}
     .filter-btn {{
-        background: var(--bg); border: 1px solid var(--border); color: var(--text-sub);
-        padding: 5px 12px; border-radius: 15px; font-size: 0.7rem; font-weight: 700; cursor: pointer;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text-sub);
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
     }}
-    .filter-btn.active {{ background: var(--brand-green); color: white; border-color: var(--brand-green); }}
+    .filter-btn.active {{
+      background: var(--brand-green);
+      color: white;
+      border-color: var(--brand-green);
+    }}
 
-    main {{ 
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
-        gap: 12px; padding: 12px; max-width: 1400px; margin: 0 auto;
+    /* ── Course grid ────────────────────────────────────────────────── */
+    main {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 12px;
+      padding: 12px;
+      max-width: 1400px;
+      margin: 0 auto;
     }}
-    
-    .course-card {{ background: var(--surface); border: 1px solid var(--border); border-radius: 10px; height: fit-content; }}
-    .card-header {{ padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }}
-    .course-name {{ font-weight: 800; font-size: 0.95rem; color: var(--brand-green); }}
-    [data-theme="dark"] .course-name {{ color: var(--late-brd); }}
-    
-    .collapse-icon {{ font-size: 0.6rem; transition: 0.3s; color: var(--text-sub); }}
+
+    /* ── Course card ────────────────────────────────────────────────── */
+    .course-card {{
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      height: fit-content;
+      transition: background 0.3s, border-color 0.3s;
+    }}
+    .card-header {{
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }}
+    .course-name {{
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--brand-green);
+    }}
+    .collapse-icon {{
+      font-size: 0.6rem;
+      transition: transform 0.3s;
+      color: var(--text-sub);
+    }}
     .course-card.is-collapsed .card-body {{ display: none; }}
     .course-card.is-collapsed .collapse-icon {{ transform: rotate(-90deg); }}
 
-    .day-row {{ padding: 10px 14px; border-bottom: 1px solid var(--border); }}
-    .day-row:last-child {{ border-bottom: none; }}
-    .day-row-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }}
-    .day-label {{ font-weight: 700; font-size: 0.8rem; }}
-    
-    .book-btn {{ color: var(--brand-green); font-size: 0.65rem; font-weight: 800; text-decoration: none; text-transform: uppercase; border: 1px solid var(--brand-green); padding: 2px 6px; border-radius: 4px; }}
-    
-    .slots {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; list-style: none; padding: 0; margin: 0; }}
-    .slots li {{ 
-        padding: 6px 2px; text-align: center; border-radius: 5px; border: 2px solid transparent; 
-        font-size: 0.75rem; font-weight: 800; color: var(--slot-text);
+    /* ── Day rows ───────────────────────────────────────────────────── */
+    .day-row {{
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
     }}
-    
-    .slot--early {{ background: var(--early-bg); border-color: var(--early-brd); }}
-    /* Force dark text for cream morning slots in dark mode */
-    /* Old color: #422006 */
-    [data-theme="dark"] .slot--early {{ color: #545454; }}
-    .slot--midday {{ background: var(--mid-bg); border-color: var(--mid-brd); }}
-    .slot--afternoon {{ background: var(--late-bg); border-color: var(--late-brd); }}
-    .slot--twilight {{ background: var(--twilight-bg); border-color: var(--twilight-brd); }}
-    .no-slots {{ font-size: 0.7rem; color: var(--text-sub); font-style: italic; text-align: center; padding: 5px 0; }}
+    .day-row:last-child {{ border-bottom: none; }}
+    .day-row-header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }}
+    .day-label {{ font-weight: 700; font-size: 0.8rem; }}
+    .book-btn {{
+      color: var(--brand-green);
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-decoration: none;
+      text-transform: uppercase;
+      border: 1px solid var(--brand-green);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }}
 
-    #theme-toggle {{ position: fixed; bottom: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }}
+    /* ── Slots ──────────────────────────────────────────────────────── */
+    .slots {{
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+      gap: 5px;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }}
+    .slots li {{
+      position: relative;        /* needed for .new-badge absolute child */
+      padding: 3px 4px;
+      text-align: center;
+      border-radius: 5px;
+      border: 2px solid transparent;
+      font-size: 0.75rem;
+      font-weight: 650;
+    }}
 
+    /* Light-mode slot colours */
+    .slot--early     {{ background: var(--early-bg);     border-color: var(--early-brd);     color: var(--early-text);     }}
+    .slot--midday    {{ background: var(--midday-bg);    border-color: var(--midday-brd);    color: var(--midday-text);    }}
+    .slot--afternoon {{ background: var(--afternoon-bg); border-color: var(--afternoon-brd); color: var(--afternoon-text); }}
+    .slot--twilight  {{ background: var(--twilight-bg);  border-color: var(--twilight-brd);  color: var(--twilight-text);  }}
+
+    /* Dark-mode slot text overrides (backgrounds already set via vars) */
+    [data-theme="dark"] .slot--early     {{ color: var(--early-text);     }}
+    [data-theme="dark"] .slot--midday    {{ color: var(--midday-text);    }}
+    [data-theme="dark"] .slot--afternoon {{ color: var(--afternoon-text); }}
+    [data-theme="dark"] .slot--twilight  {{ color: var(--twilight-text);  }}
+
+    /* New-slot highlight */
+    .slot--new {{
+      box-shadow: 0 0 0 2px var(--gold);
+      animation: pulse-new 2s ease-in-out 15;
+    }}
+    .new-badge {{
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.5rem;
+      background: var(--gold);
+      color: #000;
+      padding: 1px 4px;
+      border-radius: 2px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }}
+    @keyframes pulse-new {{
+      0%, 100% {{ box-shadow: 0 0 0 2px var(--gold); }}
+      50%       {{ box-shadow: 0 0 0 5px rgba(255,183,3,0.4); }}
+    }}
+
+    .no-slots {{
+      font-size: 0.7rem;
+      color: var(--text-sub);
+      font-style: italic;
+      text-align: center;
+      padding: 5px 0;
+    }}
+
+    /* ── Theme toggle button ────────────────────────────────────────── */
+    #theme-toggle {{
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--brand-green);
+      color: var(--gold);
+      border: none;
+      cursor: pointer;
+      z-index: 100;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      transition: background 0.3s;
+    }}
+
+    /* ── Responsive ─────────────────────────────────────────────────── */
     @media (max-width: 480px) {{
-        main {{ grid-template-columns: 1fr; padding: 8px; }}
-        h1 {{ font-size: 2.2rem; }}
-        .slots {{ grid-template-columns: repeat(3, 1fr); }}
+      html {{ font-size: 115%; }} /* This scales every 'rem' unit globally */
+      main {{ grid-template-columns: 1fr; padding: 8px; }}
+      h1   {{ font-size: 2.2rem; }}
+      /* Ensure the grid adjusts for the larger text on mobile */
+      .slots {{ grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }}
     }}
   </style>
 </head>
@@ -1170,11 +1402,20 @@ def generate_html():
     <h1>TEE TIME MONITOR</h1>
     <div class="sunset-box">☀️ SUNSET: {actual_sunset}</div>
     <div class="header-status">
-      <div style="margin-bottom: 4px;"><b>Checked every 15 minutes</b></div>
+      <div style="margin-bottom:4px"><b>Checked every 15 minutes</b></div>
       <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">{now_str}</span>)</div>
-  </div>
+    </div>
   </header>
 
+  <!-- Colour legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot legend-dot--early"></div>Early (pre-10 AM)</div>
+    <div class="legend-item"><div class="legend-dot legend-dot--midday"></div>Midday (10 AM–noon)</div>
+    <div class="legend-item"><div class="legend-dot legend-dot--afternoon"></div>Afternoon (noon+)</div>
+    <div class="legend-item"><div class="legend-dot legend-dot--twilight"></div>Twilight</div>
+  </div>
+
+  <!-- Day filter -->
   <div class="filter-bar">
     <button class="filter-btn active" data-day="Friday">Friday</button>
     <button class="filter-btn active" data-day="Saturday">Saturday</button>
@@ -1188,34 +1429,36 @@ def generate_html():
   <button id="theme-toggle">🌙</button>
 
   <script>
+    // ── "X mins ago" counter ─────────────────────────────────────────
     const updateTs = {now_ts};
-    
     function updateTime() {{
-      const now = Math.floor(Date.now() / 1000);
-      const diff = now - updateTs;
+      const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
-      document.getElementById('time-ago').textContent = mins <= 0 ? 'just now' : mins + 'm ago';
+      document.getElementById('time-ago').textContent =
+        mins <= 0 ? 'just now' : mins + 'm ago';
     }}
-    setInterval(updateTime, 30000);
+    setInterval(updateTime, 30_000);
     updateTime();
 
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    filterBtns.forEach(btn => {{
+    // ── Day filter ───────────────────────────────────────────────────
+    document.querySelectorAll('.filter-btn').forEach(btn => {{
       btn.addEventListener('click', () => {{
         btn.classList.toggle('active');
         const day = btn.dataset.day;
-        document.querySelectorAll(`.day-row[data-day="${{day}}"]`).forEach(r => 
+        document.querySelectorAll(`.day-row[data-day="${{day}}"]`).forEach(r =>
           r.style.display = btn.classList.contains('active') ? 'block' : 'none'
         );
       }});
     }});
 
-    document.querySelectorAll('.collapsible-header').forEach(header => {{
-      header.addEventListener('click', () => {{
-        header.closest('.course-card').classList.toggle('is-collapsed');
+    // ── Card collapse ────────────────────────────────────────────────
+    document.querySelectorAll('.collapsible-header').forEach(h => {{
+      h.addEventListener('click', () => {{
+        h.closest('.course-card').classList.toggle('is-collapsed');
       }});
     }});
 
+    // ── Theme toggle ─────────────────────────────────────────────────
     const themeBtn = document.getElementById('theme-toggle');
     themeBtn.addEventListener('click', () => {{
       const isDark = document.documentElement.dataset.theme === 'dark';
@@ -1223,13 +1466,14 @@ def generate_html():
       themeBtn.textContent = isDark ? '🌙' : '☀️';
     }});
 
+    // ── Auto-reload when a new scrape runs ───────────────────────────
     setInterval(async () => {{
-        try {{
-          const r = await fetch('version.json?_=' + Date.now());
-          const data = await r.json();
-          if (data.ts > updateTs) location.reload();
-        }} catch(e) {{}}
-    }}, 30000);
+      try {{
+        const r    = await fetch('version.json?_=' + Date.now());
+        const data = await r.json();
+        if (data.ts > updateTs) location.reload();
+      }} catch(e) {{}}
+    }}, 30_000);
   </script>
 </body>
 </html>"""
