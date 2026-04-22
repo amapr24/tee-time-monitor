@@ -1476,7 +1476,7 @@ def generate_html():
 </html>"""
 
     Path("index.html").write_text(html)
-    Path("version.json").write_text(json.dumps({{"ts": now_ts}}))
+    Path("version.json").write_text(json.dumps({"ts": now_ts}))
   
 def _select_courses(filter_terms: list[str]) -> list[dict]:
     """Match case-insensitive substrings against course names. Empty = all."""
