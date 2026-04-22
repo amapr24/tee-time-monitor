@@ -1167,19 +1167,23 @@ def generate_html():
     .no-slots {{ font-size: 0.7rem; color: var(--text-sub); font-style: italic; text-align: center; padding: 5px 0; }}
 
     /* --- NEW SLOT HIGHLIGHTING CSS --- */
+
     .slot--new {{
+        position: relative; /* Required for absolute positioning of child */
         box-shadow: 0 0 0 2px var(--gold);
-        animation: pulse-new 2s ease-in-out 10;
+        animation: pulse-new 2s ease-in-out 15;
     }}
     .new-badge {{
-        font-size: 0.4rem;
+        position: absolute;
+        top: -8px;          /* Sit slightly above the top edge */
+        left: 50%;
+        transform: translateX(-50%); /* Center it horizontally */
+        font-size: 0.5rem;
         background: var(--gold);
-        color: #000; /* Dark text ensures readability against the gold background */
-        border-radius: 3px;
-        padding: 1px 2px;
-        margin-right: 3px;
-        font-weight: 800;
-        vertical-align: middle;
+        color: #000;
+        padding: 1px 4px;
+        border-radius: 2px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }}
     @keyframes pulse-new {{
         0%, 100% {{ box-shadow: 0 0 0 2px var(--gold); }}
