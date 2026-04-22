@@ -119,19 +119,23 @@
     .no-slots { font-size: 0.7rem; color: var(--text-sub); font-style: italic; text-align: center; padding: 5px 0; }
 
     /* --- NEW SLOT HIGHLIGHTING CSS --- */
+
     .slot--new {
+        position: relative; /* Required for absolute positioning of child */
         box-shadow: 0 0 0 2px var(--gold);
-        animation: pulse-new 2s ease-in-out 10;
+        animation: pulse-new 2s ease-in-out 15;
     }
     .new-badge {
-        font-size: 0.4rem;
+        position: absolute;
+        top: -8px;          /* Sit slightly above the top edge */
+        left: 50%;
+        transform: translateX(-50%); /* Center it horizontally */
+        font-size: 0.5rem;
         background: var(--gold);
-        color: #000; /* Dark text ensures readability against the gold background */
-        border-radius: 3px;
-        padding: 1px 2px;
-        margin-right: 3px;
-        font-weight: 800;
-        vertical-align: middle;
+        color: #000;
+        padding: 1px 4px;
+        border-radius: 2px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
     @keyframes pulse-new {
         0%, 100% { box-shadow: 0 0 0 2px var(--gold); }
@@ -155,7 +159,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:48 PM</div>
     <div class="header-status">
       <div style="margin-bottom: 4px;"><b>Checked every 15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">7:38 PM ET, Tue Apr 21</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">11:15 PM ET, Tue Apr 21</span>)</div>
   </div>
   </header>
 
@@ -179,7 +183,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Fri Apr 24</span>
                     <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--afternoon slot--new"><span class="new-badge">NEW</span>12:04 PM</li></ul></div>
+                  </div><div class="no-slots">No times available</div></div>
                 <div class="day-row" data-day="Saturday">
                   <div class="day-row-header">
                     <span class="day-label">Sat Apr 25</span>
@@ -189,7 +193,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Sun Apr 26</span>
                     <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
-                  </div><div class="no-slots">No times available</div></div></div></div>
+                  </div><ul class="slots"><li class="slot--afternoon slot--new"><span class="new-badge">NEW</span>2:28 PM</li></ul></div></div></div>
         <div class="course-card " id="card-miami-beach">
           <div class="card-header collapsible-header">
             <div class="header-title-group">
@@ -212,7 +216,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Sun Apr 26</span>
                     <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--twilight">3:32 PM</li><li class="slot--twilight">3:40 PM</li><li class="slot--twilight">3:48 PM</li><li class="slot--twilight">3:56 PM</li></ul></div></div></div>
+                  </div><ul class="slots"><li class="slot--afternoon slot--new"><span class="new-badge">NEW</span>2:20 PM</li><li class="slot--twilight">3:40 PM</li><li class="slot--twilight">3:48 PM</li><li class="slot--twilight">3:56 PM</li></ul></div></div></div>
         <div class="course-card " id="card-normandy-shores">
           <div class="card-header collapsible-header">
             <div class="header-title-group">
@@ -248,7 +252,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Fri Apr 24</span>
                     <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--afternoon">2:30 PM</li><li class="slot--twilight">3:33 PM</li><li class="slot--twilight">3:51 PM</li></ul></div>
+                  </div><ul class="slots"><li class="slot--afternoon">2:30 PM</li><li class="slot--twilight">3:33 PM</li></ul></div>
                 <div class="day-row" data-day="Saturday">
                   <div class="day-row-header">
                     <span class="day-label">Sat Apr 25</span>
@@ -281,13 +285,13 @@
                   <div class="day-row-header">
                     <span class="day-label">Sun Apr 26</span>
                     <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--midday">11:26 AM</li><li class="slot--afternoon">2:06 PM</li><li class="slot--afternoon">2:14 PM</li><li class="slot--afternoon">2:22 PM</li><li class="slot--afternoon">2:30 PM</li><li class="slot--afternoon">2:38 PM</li><li class="slot--afternoon">2:46 PM</li><li class="slot--afternoon">2:54 PM</li><li class="slot--twilight">3:26 PM</li><li class="slot--twilight">3:34 PM</li><li class="slot--twilight">3:42 PM</li><li class="slot--twilight">3:50 PM</li><li class="slot--twilight">3:58 PM</li></ul></div></div></div>
+                  </div><ul class="slots"><li class="slot--afternoon">2:06 PM</li><li class="slot--afternoon">2:14 PM</li><li class="slot--afternoon">2:22 PM</li><li class="slot--afternoon">2:30 PM</li><li class="slot--afternoon">2:38 PM</li><li class="slot--afternoon">2:46 PM</li><li class="slot--afternoon">2:54 PM</li><li class="slot--twilight">3:26 PM</li><li class="slot--twilight">3:34 PM</li><li class="slot--twilight">3:42 PM</li><li class="slot--twilight">3:50 PM</li><li class="slot--twilight">3:58 PM</li></ul></div></div></div>
   </main>
 
   <button id="theme-toggle">🌙</button>
 
   <script>
-    const updateTs = 1776814687;
+    const updateTs = 1776827703;
     
     function updateTime() {
       const now = Math.floor(Date.now() / 1000);
