@@ -94,16 +94,6 @@ COURSES = [
         "skip_past_dates": True,
     },
     {
-        "name":           "Plantation Preserve",
-        "address":        "7050 W Broward Blvd, Plantation",
-        "phone":          "(954) 585-5020",
-        "type":           "webtrac",
-        "url":            "https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail",
-        "tee_time_min":   8,
-        "tee_time_max":   14,
-        "cache_file":     "cache_plantation.json",
-    },
-    {
         "name":           "Miami Shores",
         "address":        "10000 Biscayne Blvd, Miami Shores",
         "phone":          "(305) 795-2369",
@@ -115,6 +105,16 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_shores.json",
         "skip_past_dates": True,
+    },
+    {
+        "name":           "Plantation Preserve",
+        "address":        "7050 W Broward Blvd, Plantation",
+        "phone":          "(954) 585-5020",
+        "type":           "webtrac",
+        "url":            "https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail",
+        "tee_time_min":   8,
+        "tee_time_max":   14,
+        "cache_file":     "cache_plantation.json",
     },
 ]
 
