@@ -1392,6 +1392,8 @@ def generate_html():
       html {{ font-size: 115%; }} /* This scales every 'rem' unit globally */
       main {{ grid-template-columns: 1fr; padding: 8px; }}
       h1   {{ font-size: 2.2rem; }}
+      /* Ensure the grid adjusts for the larger text on mobile */
+      .slots {{ grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }}
     }}
   </style>
 </head>
