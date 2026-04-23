@@ -297,6 +297,7 @@ def send_email(subject: str, body: str):
 
 def notify(subject: str, body: str, push_msg: str):
     send_pushover(subject, push_msg)
+    #send_email(subject, body)  # <--- This line must be added to trigger the email
 
 async def launch_browser(playwright):
     browser = await playwright.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled", "--no-sandbox"])
