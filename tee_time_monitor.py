@@ -347,20 +347,26 @@ def parse_webtrac_row(cells: list[str]) -> dict | None:
     """cells = innerText of each <td> in a results row (index-aligned)."""
     if len(cells) < 6:
         return None
-    # Match JS parseInt's leniency — cell may contain icons/labels after the
-    # number ("4 Open", "4\nof\n4"). Extract the first integer we see.
+        
+    # Extract the first integer we see (e.g., "4 Open" -> 4)
     m = _LEADING_INT_RE.search(cells[5] or "")
     open_slots = int(m.group(0)) if m else 0
-    if open_slots == 0:
+    
+    # FIX: Only accept the slot if there are EXACTLY 4 players available.
+    # If it's 0, 1, 2, or 3, we skip it.
+    if open_slots != 4:
         return None
+        
     time = _normalize_time_label(cells[1] or "")
     if not _WEBTRAC_TIME_RE.search(time):
         return None
+        
     return {
         "time":  time,
         "price": (cells[7] if len(cells) > 7 else "").strip(),
         "holes": (cells[3] if len(cells) > 3 else "").strip() or "18 Holes",
     }
+
 
 
 def parse_webtrac(rows: list[list[str]]) -> list[dict]:
