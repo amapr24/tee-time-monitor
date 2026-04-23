@@ -91,5 +91,3 @@ To add a new course, update the `COURSES` list in `tee_time_monitor.py` with the
 ## 📜 License
 MIT License. See `LICENSE` for details.
 
-***
-
