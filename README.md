@@ -1,9 +1,3 @@
-Since your project is a specialized tool that combines **web scraping (Playwright)**, **astronomical calculations (Astral)**, and a **custom dashboard**, the README should be professional and "engineer-centric." It should clearly explain *why* the tool exists (the "pain point" of competitive golf bookings) and *how* to set it up.
-
-Here is a suggested, well-written `README.md` for your production branch.
-
-***
-
 # ⛳️ Tee Time Monitor
 
 A high-performance monitoring system for Miami-area golf courses. This tool automates the tedious process of refreshing booking pages by scraping available tee times and delivering real-time alerts via Pushover and Email.
@@ -15,13 +9,15 @@ Booking a weekend tee time in Miami is often a race against time. **Tee Time Mon
 ### Key Features
 - **Multi-Platform Support:** Custom scrapers for CPS Golf, Chronogolf, and WebTrac.
 
-- | Course | Booking platform |
+
+| Course | Booking platform |
 |---|---|
 | Miami Lakes | cpsgolf |
 | Miami Beach | Chronogolf |
 | Normandy Shores | Chronogolf |
 | Plantation Preserve | WebTrac |
 | Miami Shores | Chronogolf |
+
 
 - **Smart Window Filtering:** Automatically calculates the "sunset cutoff" (using the `astral` library) to filter out times that are too late to play.
 - **Real-Time Notifications:** Immediate alerts via **Pushover** (push notifications) and **SMTP Email**.
