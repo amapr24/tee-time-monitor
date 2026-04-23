@@ -1057,13 +1057,14 @@ def generate_html():
         display_name    = name if any_slots else f"{name} (Fully Booked)"
         collapsed_state = "is-collapsed" if not any_slots else ""
 
-        cards_html += f'''
+        header_class = "card-header collapsible-header" if any_slots else "card-header"
+        icon_html = '<span class="collapse-icon">▼</span>' if any_slots else ""
+
+        # Change this line to remove manual spaces, let CSS gap handle it
+                cards_html += f'''
         <div class="course-card {collapsed_state}" id="card-{safe_id}">
-          <div class="card-header collapsible-header">
-            <div class="header-title-group">
-              <span class="collapse-icon">▼</span>
-              <span class="course-name">{display_name}</span>
-            </div>
+          <div class="{header_class}">
+            <div class="header-title-group">{icon_html}<span class="course-name">{display_name}</span></div>
           </div>
           <div class="card-body">'''
 
@@ -1332,19 +1333,46 @@ def generate_html():
       align-items: center;
       justify-content: space-between;
     }}
+
+    /* IMPLEMENTATION 4 ADD/UPDATE THIS BLOCK */
+    .header-title-group {{
+      display: flex;
+      align-items: center;       /* CRITICAL: Centers icon with text */
+      gap: 8px;                  /* Spacing between icon and name */
+      min-width: 0;              /* Prevents flex item overflow issues */
+    }}
+    
+    /* IMPLEMENTATION 1: Remove pointer from non-collapsible headers */
+    .collapsible-header {{ cursor: pointer; }}
+    
     .course-name {{
       font-weight: 800;
       font-size: 0.95rem;
       color: var(--brand-green);
-    }}
+      white-space: nowrap;       /* Prevents text wrapping which misaligns rows */
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }}  
+    
+    /* IMPLEMENTATION 3: Rotation logic for the icon */
+    
+    /* UPDATE THIS BLOCK */
     .collapse-icon {{
       font-size: 0.6rem;
       transition: transform 0.3s;
       color: var(--text-sub);
+      display: inline-block;
+      line-height: 1;            /* Crucial for vertical centering of symbols */
+      transform-origin: 50% 50%; /* Rotates around the exact center of the glyph */
+      margin-top: 0;             /* Reset any default margins */
+      margin-bottom: 0;
     }}
-    .course-card.is-collapsed .card-body {{ display: none; }}
+    
     .course-card.is-collapsed .collapse-icon {{ transform: rotate(-90deg); }}
 
+    .course-card.is-collapsed .card-body {{ display: none; }}
+
+    
     /* ── Day rows ───────────────────────────────────────────────────── */
     .day-row {{
       padding: 10px 14px;
@@ -1429,14 +1457,25 @@ def generate_html():
       text-align: center;
       padding: 5px 0;
     }}
+    
+    /* IMPLEMENTATION 2: Empty state styles */
+    .empty-state {{ 
+      text-align: center; 
+      padding: 40px 20px; 
+      color: var(--text-sub); 
+      font-size: 0.9rem; 
+      font-weight: 600; 
+      max-width: 600px; 
+      margin: 0 auto 40px auto; 
+    }}
 
     /* ── Theme toggle button ────────────────────────────────────────── */
     #theme-toggle {{
       position: fixed;
       bottom: 15px;
       right: 15px;
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: var(--brand-green);
       color: var(--gold);
@@ -1486,6 +1525,11 @@ def generate_html():
     {cards_html}
   </main>
 
+  <!-- IMPLEMENTATION 2: Empty state message -->
+  <div id="empty-state-msg" style="display:none" class="empty-state">
+    Select a day above to see available times.
+  </div>
+  
   <button id="theme-toggle">🌙</button>
 
   <script>
@@ -1508,6 +1552,11 @@ def generate_html():
         document.querySelectorAll(`.day-row[data-day="${{day}}"]`).forEach(r =>
           r.style.display = btn.classList.contains('active') ? 'block' : 'none'
         );
+        
+        // IMPLEMENTATION 2: Check if any filters are active
+        const activeBtns = document.querySelectorAll('.filter-btn.active');
+        document.getElementById('empty-state-msg').style.display = 
+          activeBtns.length === 0 ? 'block' : 'none';
       }});
     }});
 
