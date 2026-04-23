@@ -248,11 +248,15 @@ def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
 def parse_webtrac_row(cells: list[str]) -> dict | None:
     if len(cells) < 6: return None
     m = _LEADING_INT_RE.search(cells[5] or "")
-    # FIXED: Fixed operator precedence bug here
-    if (int(m.group(0)) if m else 0) == 0: return None
+    
+    # FIX: Change '== 0' to '!= 4' to ensure ONLY slots with exactly 4 players are detected
+    if (int(m.group(0)) if m else 0) != 4: 
+        return None
+        
     time = _normalize_time_label(cells[1] or "")
     if not _WEBTRAC_TIME_RE.search(time): return None
     return {"time": time, "price": (cells[7] if len(cells) > 7 else "").strip(), "holes": (cells[3] if len(cells) > 3 else "").strip() or "18 Holes"}
+
 
 def parse_webtrac(rows: list[list[str]]) -> list[dict]:
     out = []
@@ -368,9 +372,10 @@ def find_new_slots(old: list[dict], new: list[dict]) -> list[dict]:
 
 async def check_day(context, course: dict, target_date: date):
     """Check a single date and return new slots found."""
-    t_min = course["tee_time_min"]
-    t_max = get_sunset_cutoff(target_date, course["tee_time_max"])
+    name, day_name = course["name"], DAY_NAMES.get(target_date.weekday(), "Unknown")
+    t_min, t_max = course["tee_time_min"], get_sunset_cutoff(target_date, course["tee_time_max"])
     cache_file = CACHE_DIR / course["cache_file"]
+    
     if course.get("skip_past_dates") and target_date < datetime.now(ET).date(): return []
     
     if course["type"] == "cpsgolf": raw = await scrape_cpsgolf(context, course, target_date)
@@ -380,12 +385,37 @@ async def check_day(context, course: dict, target_date: date):
     
     current_slots = deduplicate_slots(raw, t_min, t_max)
     cached_slots = load_cache(cache_file, target_date)
-    new_slots = find_new_slots(cached_slots, current_slots)
+    new_slots = find_new_slots(cached_slots, current_slots) if cached_slots else []
     
     new_slot_times = {s.get("time", "").strip().upper() for s in new_slots}
     for s in current_slots: s["is_new"] = s.get("time", "").strip().upper() in new_slot_times
-    
     save_cache(cache_file, target_date, current_slots)
+
+    if not current_slots:
+        print("  No slots found -- skipping.\n")
+        return new_slots
+
+    if new_slots:
+        print(f"  {len(new_slots)} NEW slot(s)!")
+        date_label = f"{day_name}, {target_date.strftime('%B %-d, %Y')}"
+        subject = f"Tee Time Alert - {name} {target_date.strftime('%a %b %-d')}"
+        book_url = f"{course['url']}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}" if course["type"] == "cpsgolf" else \
+                   f"{course['url']}?date={target_date.isoformat()}&step=teetimes&holes={course.get('holes', 18)}&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
+
+        lines = [f"New tee time(s) just opened at {name}", f"for {date_label}:\n"]
+        for s in new_slots:
+            line = f"  - {s.get('time', '?')}"
+            if s.get("holes"): line += f"  |  {s['holes']}"
+            if s.get("price"): line += f"  |  {s['price']}"
+            lines.append(line)
+        lines.append(f"\nBook here:\n{book_url}")
+        
+        slot_list = ", ".join(s.get("time", "?") for s in new_slots)
+        push_msg = f"{len(new_slots)} new slot(s) on {date_label}:\n{slot_list}\n\nBook: {book_url}"
+        notify(subject, "\n".join(lines), push_msg)
+    else:
+        print("  No new slots since last check.")
+
     return new_slots
 
 async def check_course(playwright, course: dict, dates: list[date]):
