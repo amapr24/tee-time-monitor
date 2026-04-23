@@ -397,22 +397,7 @@ async def check_day(context, course: dict, target_date: date):
 
     if new_slots:
         logging.info(f"✨ NEW SLOT DETECTED: {name} on {target_date} ({len(new_slots)} new times)!")
-        date_label = f"{day_name}, {target_date.strftime('%B %-d, %Y')}"
-        subject = f"Tee Time Alert - {name} {target_date.strftime('%a %b %-d')}"
-        book_url = f"{course['url']}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}" if course["type"] == "cpsgolf" else \
-                   f"{course['url']}?date={target_date.isoformat()}&step=teetimes&holes={course.get('holes', 18)}&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
-
-        lines = [f"New tee time(s) just opened at {name}", f"for {date_label}:\n"]
-        for s in new_slots:
-            line = f"  - {s.get('time', '?')}"
-            if s.get("holes"): line += f"  |  {s['holes']}"
-            if s.get("price"): line += f"  |  {s['price']}"
-            lines.append(line)
-        lines.append(f"\nBook here:\n{book_url}")
-        
-        slot_list = ", ".join(s.get("time", "?") for s in new_slots)
-        push_msg = f"{len(new_slots)} new slot(s) on {date_label}:\n{slot_list}\n\nBook: {book_url}"
-        notify(subject, "\n".join(lines), push_msg)
+        # Note: Individual notification removed to favor grouped minimalist notification in check_course
     else:
         logging.info(f"[{name}] {target_date}: No new slots found (matches cache).")
 
@@ -436,21 +421,23 @@ async def check_course(playwright, course: dict, dates: list[date]):
             name = course["name"]
             subject = f"Tee Time Alert - {name}"
             
-            # Construct a single detailed message
-            lines = [f"New tee time(s) opened at {name}:"]
+            # --- MINIMALIST PUSHOVER CONSTRUCTION ---
+            lines = [f"{name}"] # Course name on first line
             for date_label, slots in course_new_slots.items():
-                lines.append(f"\n📅 {date_label}:")
-                for s in slots:
-                    lines.append(f"  - {s.get('time', '?')}")
+                times_str = ", ".join(s.get("time", "?") for s in slots)
+                # Format: Fri May 01 - 8:00 AM, 8:30 AM
+                lines.append(f"{date_label} - {times_str}")
             
-            book_url = course["url"]
-            lines.append(f"\nBook here: {book_url}")
-            body = "\n".join(lines)
+            if course["type"] != "chronogolf":
+                book_url = course["url"]
+                # Adds a blank line before the link for better visual separation
+                lines.append(f"\n{book_url}")
             
-            # NOW: Pass the full grouped list into the Pushover message instead of a short summary
-            push_msg = body
+            push_msg = "\n".join(lines)
             
-            notify(subject, body, push_msg)
+            # For Email, we keep a slightly more detailed version, but for Push, we use the minimalist one
+            email_body = f"New tee times opened at {name}:\n\n" + push_msg
+            #notify(subject, email_body, push_msg)
             
     finally: await browser.close()
 
