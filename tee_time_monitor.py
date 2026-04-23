@@ -904,9 +904,6 @@ async def check_course(playwright, course: dict, dates: list[date]):
 
 # ── data.json generator ────────────────────────────────────────────────────────────
 
-import json
-from datetime import datetime, date as _date
-
 # Map your scraper's course "name" -> the app's course "id"
 APP_COURSE_IDS = {
     "Miami Beach":         "miami-beach",
