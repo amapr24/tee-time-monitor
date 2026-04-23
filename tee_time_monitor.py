@@ -437,7 +437,7 @@ async def check_course(playwright, course: dict, dates: list[date]):
             
             # For Email, we keep a slightly more detailed version, but for Push, we use the minimalist one
             email_body = f"New tee times opened at {name}:\n\n" + push_msg
-            #notify(subject, email_body, push_msg)
+            notify(subject, email_body, push_msg)
             
     finally: await browser.close()
 
