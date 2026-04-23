@@ -1061,7 +1061,7 @@ def generate_html():
         icon_html = '<span class="collapse-icon">▼</span>' if any_slots else ""
 
         # Change this line to remove manual spaces, let CSS gap handle it
-                cards_html += f'''
+        cards_html += f'''
         <div class="course-card {collapsed_state}" id="card-{safe_id}">
           <div class="{header_class}">
             <div class="header-title-group">{icon_html}<span class="course-name">{display_name}</span></div>
