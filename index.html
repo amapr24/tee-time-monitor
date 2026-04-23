@@ -364,7 +364,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:48 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Checked every 15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:15 PM ET, Wed Apr 22</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:31 PM ET, Wed Apr 22</span>)</div>
     </div>
   </header>
 
@@ -397,7 +397,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Fri Apr 24</span>
                     <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--twilight slot--new"><span class="new-badge">NEW</span>3:56 PM</li></ul></div>
+                  </div><div class="no-slots">No times available</div></div>
                 <div class="day-row" data-day="Saturday">
                   <div class="day-row-header">
                     <span class="day-label">Sat Apr 25</span>
@@ -443,7 +443,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Fri Apr 24</span>
                     <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--midday slot--new"><span class="new-badge">NEW</span>10:28 AM</li><li class="slot--midday">10:44 AM</li></ul></div>
+                  </div><ul class="slots"><li class="slot--midday">10:28 AM</li><li class="slot--midday">10:44 AM</li><li class="slot--afternoon slot--new"><span class="new-badge">NEW</span>1:00 PM</li></ul></div>
                 <div class="day-row" data-day="Saturday">
                   <div class="day-row-header">
                     <span class="day-label">Sat Apr 25</span>
@@ -506,7 +506,7 @@
 
   <script>
     // ── "X mins ago" counter ─────────────────────────────────────────
-    const updateTs = 1776903355;
+    const updateTs = 1776904275;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
