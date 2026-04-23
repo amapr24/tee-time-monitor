@@ -392,11 +392,11 @@ async def check_day(context, course: dict, target_date: date):
     save_cache(cache_file, target_date, current_slots)
 
     if not current_slots:
-        print("  No slots found -- skipping.\n")
+        logging.info(f"[{name}] {target_date}: No slots available at all.")
         return new_slots
 
     if new_slots:
-        print(f"  {len(new_slots)} NEW slot(s)!")
+        logging.info(f"✨ NEW SLOT DETECTED: {name} on {target_date} ({len(new_slots)} new times)!")
         date_label = f"{day_name}, {target_date.strftime('%B %-d, %Y')}"
         subject = f"Tee Time Alert - {name} {target_date.strftime('%a %b %-d')}"
         book_url = f"{course['url']}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}" if course["type"] == "cpsgolf" else \
@@ -414,7 +414,7 @@ async def check_day(context, course: dict, target_date: date):
         push_msg = f"{len(new_slots)} new slot(s) on {date_label}:\n{slot_list}\n\nBook: {book_url}"
         notify(subject, "\n".join(lines), push_msg)
     else:
-        print("  No new slots since last check.")
+        logging.info(f"[{name}] {target_date}: No new slots found (matches cache).")
 
     return new_slots
 
