@@ -13,9 +13,9 @@ Booking a weekend tee time in Miami is often a race against time. **Tee Time Mon
   | Course | Booking platform |
   |---|---|
   | Miami Beach | Chronogolf |
-  | Miami Lakes | cpsgolf |
   | Miami Shores | Chronogolf |
   | Normandy Shores | Chronogolf |
+  | Miami Lakes | cpsgolf |
   | Plantation Preserve | WebTrac |
 
 
