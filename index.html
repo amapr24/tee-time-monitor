@@ -364,7 +364,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:48 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Checked every 15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:01 PM ET, Wed Apr 22</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:16 PM ET, Wed Apr 22</span>)</div>
     </div>
   </header>
 
@@ -385,29 +385,14 @@
 
   <main id="course-grid">
     
-        <div class="course-card " id="card-miami-lakes">
+        <div class="course-card is-collapsed" id="card-miami-lakes">
           <div class="card-header collapsible-header">
             <div class="header-title-group">
               <span class="collapse-icon">▼</span>
-              <span class="course-name">Miami Lakes</span>
+              <span class="course-name">Miami Lakes (Fully Booked)</span>
             </div>
           </div>
-          <div class="card-body">
-                <div class="day-row" data-day="Friday">
-                  <div class="day-row-header">
-                    <span class="day-label">Fri Apr 24</span>
-                    <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
-                  </div><div class="no-slots">No times available</div></div>
-                <div class="day-row" data-day="Saturday">
-                  <div class="day-row-header">
-                    <span class="day-label">Sat Apr 25</span>
-                    <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
-                  </div><div class="no-slots">No times available</div></div>
-                <div class="day-row" data-day="Sunday">
-                  <div class="day-row-header">
-                    <span class="day-label">Sun Apr 26</span>
-                    <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--twilight">3:56 PM</li></ul></div></div></div>
+          <div class="card-body"><div class="day-row"><div class="no-slots">Fully booked for the weekend.</div></div></div></div>
         <div class="course-card " id="card-miami-beach">
           <div class="card-header collapsible-header">
             <div class="header-title-group">
@@ -471,7 +456,7 @@
                   <div class="day-row-header">
                     <span class="day-label">Sat Apr 25</span>
                     <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-                  </div><ul class="slots"><li class="slot--twilight">3:58 PM</li></ul></div>
+                  </div><ul class="slots"><li class="slot--afternoon slot--new"><span class="new-badge">NEW</span>12:06 PM</li><li class="slot--twilight">3:58 PM</li></ul></div>
                 <div class="day-row" data-day="Sunday">
                   <div class="day-row-header">
                     <span class="day-label">Sun Apr 26</span>
@@ -506,7 +491,7 @@
 
   <script>
     // ── "X mins ago" counter ─────────────────────────────────────────
-    const updateTs = 1776906063;
+    const updateTs = 1776906965;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
