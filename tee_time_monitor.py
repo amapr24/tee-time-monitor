@@ -248,7 +248,8 @@ def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
 def parse_webtrac_row(cells: list[str]) -> dict | None:
     if len(cells) < 6: return None
     m = _LEADING_INT_RE.search(cells[5] or "")
-    if int(m.group(0)) if m else 0 == 0: return None
+    # FIXED: Fixed operator precedence bug here
+    if (int(m.group(0)) if m else 0) == 0: return None
     time = _normalize_time_label(cells[1] or "")
     if not _WEBTRAC_TIME_RE.search(time): return None
     return {"time": time, "price": (cells[7] if len(cells) > 7 else "").strip(), "holes": (cells[3] if len(cells) > 3 else "").strip() or "18 Holes"}
@@ -405,7 +406,7 @@ async def check_course(playwright, course: dict, dates: list[date]):
             name = course["name"]
             subject = f"Tee Time Alert - {name}"
             
-            # Construct a single grouped message
+            # Construct a single detailed message
             lines = [f"New tee time(s) opened at {name}:"]
             for date_label, slots in course_new_slots.items():
                 lines.append(f"\n📅 {date_label}:")
@@ -415,7 +416,9 @@ async def check_course(playwright, course: dict, dates: list[date]):
             book_url = course["url"]
             lines.append(f"\nBook here: {book_url}")
             body = "\n".join(lines)
-            push_msg = f"New slots at {name}! {len(course_new_slots)} days available. Check dashboard or book: {book_url}"
+            
+            # NOW: Pass the full grouped list into the Pushover message instead of a short summary
+            push_msg = body
             
             notify(subject, body, push_msg)
             
@@ -486,8 +489,8 @@ HTML_TEMPLATE = """
     .collapsible-header { cursor: pointer; }
     .header-title-group { display: flex; align-items: center; gap: 8px; }
     .course-name { font-weight: 800; font-size: 0.95rem; color: var(--brand-green); }
-    .collapse-icon { font-size: 0.6rem; transition: transform 0.3s; color: var(--text-sub); display: inline-block; line-height: 1; transform-origin: 50% 50%; transform: rotate(90deg); }
-    .course-card.is-collapsed .collapse-icon { transform: rotate(180deg); }
+    .collapse-icon { font-size: 0.6rem; transition: transform 0.3s; color: var(--text-sub); display: inline-block; line-height: 1; transform-origin: 50% 50%; transform: rotate(0deg); }
+    .course-card.is-collapsed .collapse-icon { transform: rotate(-90deg); }
     .course-card.is-collapsed .card-body { display: none; }
     .day-row { padding: 10px 14px; border-bottom: 1px solid var(--border); }
     .day-row:last-child { border-bottom: none; }
