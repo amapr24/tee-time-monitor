@@ -12,11 +12,11 @@ Booking a weekend tee time in Miami is often a race against time. **Tee Time Mon
 
   | Course | Booking platform |
   |---|---|
-  | Miami Lakes | cpsgolf |
   | Miami Beach | Chronogolf |
+  | Miami Lakes | cpsgolf |
+  | Miami Shores | Chronogolf |
   | Normandy Shores | Chronogolf |
   | Plantation Preserve | WebTrac |
-  | Miami Shores | Chronogolf |
 
 
 - **Smart Window Filtering:** Automatically calculates the "sunset cutoff" (using the `astral` library) to filter out times that are too late to play.
