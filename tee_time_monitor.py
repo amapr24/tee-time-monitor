@@ -902,6 +902,69 @@ async def check_course(playwright, course: dict, dates: list[date]):
         await browser.close()
         print(f"\n  Browser closed for {course['name']}.")
 
+# ── data.json generator ────────────────────────────────────────────────────────────
+
+import json
+from datetime import datetime, date as _date
+
+# Map your scraper's course "name" -> the app's course "id"
+APP_COURSE_IDS = {
+    "Miami Beach":         "miami-beach",
+    "Normandy Shores":     "normandy-shores",
+    "Miami Shores":        "miami-shores",
+    "Miami Lakes":         "miami-lakes",
+    "Plantation Preserve": "plantation-preserve",
+}
+
+def _slot_to_app(slot: dict) -> dict:
+    out = {"time": slot.get("time", "")}
+    if slot.get("holes"):
+        try:
+            out["holes"] = int(str(slot["holes"]).split()[0])
+        except Exception:
+            pass
+    price = slot.get("price")
+    if price:
+        # Strip "$" and any non-numeric chars; leave as a number if possible.
+        cleaned = "".join(ch for ch in str(price) if ch.isdigit() or ch == ".")
+        if cleaned:
+            try:
+                out["price"] = float(cleaned)
+            except ValueError:
+                out["price"] = price
+    if slot.get("is_new"):
+        out["isNew"] = True
+    return out
+
+def generate_data_json():
+    """Emit a single data.json the Miami Tee Times app reads."""
+    dates = get_upcoming_weekend_dates()
+    courses_out = []
+    for course in COURSES:
+        app_id = APP_COURSE_IDS.get(course["name"])
+        if not app_id:
+            continue
+        cache_file = CACHE_DIR / course["cache_file"]
+        days_out = []
+        for d in dates:
+            t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
+            raw_slots = load_cache(cache_file, d)
+            slots = [
+                _slot_to_app(s)
+                for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
+                if not is_slot_in_past(s.get("time", ""), d)
+            ]
+            days_out.append({"date": d.isoformat(), "slots": slots})
+        courses_out.append({"id": app_id, "days": days_out})
+
+    payload = {
+        "version": 1,
+        "generatedAt": datetime.now(ET).isoformat(),
+        "courses": courses_out,
+    }
+    Path("data.json").write_text(json.dumps(payload, indent=2))
+    print("  data.json generated.")
+
 # ── HTML generator ────────────────────────────────────────────────────────────
 
 def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> str:
@@ -1515,6 +1578,7 @@ async def main(courses: list[dict]):
     if len(courses) == len(COURSES):
         print("Generating index.html...")
         generate_html()
+        generate_data_json()
     else:
         print("Filtered run — skipping index.html regeneration.")
     print("Done.\n")
