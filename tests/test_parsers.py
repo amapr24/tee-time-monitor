@@ -153,32 +153,33 @@ def test_webtrac_row_too_few_cells():
 
 
 def test_webtrac_row_defaults_holes_when_blank():
-    row = _webtrac_row("7:00 am", "04/18/2026", "", "P", 2)
+    row = _webtrac_row("7:00 am", "04/18/2026", "", "P", 4)
     assert parse_webtrac_row(row)["holes"] == "18 Holes"
 
 
 def test_webtrac_row_missing_cost_cell():
     # Table sometimes omits the trailing cost cell; parser must tolerate it.
-    row = ["", "7:00 am", "04/18/2026", "18", "P", "2", ""]
+    row = ["", "7:00 am", "04/18/2026", "18", "P", "4", ""]
     slot = parse_webtrac_row(row)
     assert slot["price"] == ""
     assert slot["time"] == "7:00 AM"
 
 
 def test_webtrac_row_open_slots_with_trailing_text():
-    # WebTrac sometimes renders open-slots cell with decorations/icons after
-    # the number ("4 Open", "4\nof\n4"). parseInt-style leniency: grab leading int.
+    # WebTrac renders the open-slots cell as "4 Open" or similar; grab leading int.
     row = ["", "7:00 am", "04/18/2026", "18", "P", "4 Open", "", "$42"]
     assert parse_webtrac_row(row)["time"] == "7:00 AM"
+    # "3\nof\n4" has leading int 3, which is not 4 → filtered out
     row2 = ["", "7:15 am", "04/18/2026", "18", "P", "3\nof\n4", "", "$42"]
-    assert parse_webtrac_row(row2)["time"] == "7:15 AM"
+    assert parse_webtrac_row(row2) is None
 
 
-def test_webtrac_parses_multiple_rows_filtering_zero():
+def test_webtrac_parses_multiple_rows_filtering_non_four():
+    # Only rows with exactly 4 open spaces are included.
     rows = [
         _webtrac_row("7:00 am", "04/18/2026", "18", "P", 4, "", "$42"),
         _webtrac_row("7:15 am", "04/18/2026", "18", "P", 0),
         _webtrac_row("7:30 am", "04/18/2026", "18", "P", 2, "", "$42"),
     ]
     slots = parse_webtrac(rows)
-    assert [s["time"] for s in slots] == ["7:00 AM", "7:30 AM"]
+    assert [s["time"] for s in slots] == ["7:00 AM"]
