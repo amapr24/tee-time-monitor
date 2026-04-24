@@ -386,8 +386,9 @@ async def check_day(context, course: dict, target_date: date):
     
     current_slots = deduplicate_slots(raw, t_min, t_max)
     cached_slots = load_cache(cache_file, target_date)
-    new_slots = find_new_slots(cached_slots, current_slots) if cached_slots else []
-    
+    is_first_run = not cached_slots
+    new_slots = [] if is_first_run else find_new_slots(cached_slots, current_slots)
+
     new_slot_times = {s.get("time", "").strip().upper() for s in new_slots}
     for s in current_slots: s["is_new"] = s.get("time", "").strip().upper() in new_slot_times
     save_cache(cache_file, target_date, current_slots)
@@ -396,9 +397,12 @@ async def check_day(context, course: dict, target_date: date):
         logging.info(f"[{name}] {target_date}: No slots available at all.")
         return new_slots
 
-    if new_slots:
+    if is_first_run:
+        date_label = target_date.strftime("%a %b %-d")
+        logging.info(f"[{name}] {target_date}: First run – sending detection nudge.")
+        send_pushover(f"Tee Time Monitor", f"{name} – {date_label} detected")
+    elif new_slots:
         logging.info(f"✨ NEW SLOT DETECTED: {name} on {target_date} ({len(new_slots)} new times)!")
-        # Note: Individual notification removed to favor grouped minimalist notification in check_course
     else:
         logging.info(f"[{name}] {target_date}: No new slots found (matches cache).")
 
@@ -441,6 +445,62 @@ async def check_course(playwright, course: dict, dates: list[date]):
             notify(subject, email_body, push_msg)
             
     finally: await browser.close()
+
+APP_COURSE_IDS = {
+    "Miami Beach":         "miami-beach",
+    "Normandy Shores":     "normandy-shores",
+    "Miami Shores":        "miami-shores",
+    "Miami Lakes":         "miami-lakes",
+    "Plantation Preserve": "plantation-preserve",
+}
+
+def _slot_to_app(slot: dict) -> dict:
+    out = {"time": slot.get("time", "")}
+    if slot.get("holes"):
+        try:
+            out["holes"] = int(str(slot["holes"]).split()[0])
+        except Exception:
+            pass
+    price = slot.get("price")
+    if price:
+        cleaned = "".join(ch for ch in str(price) if ch.isdigit() or ch == ".")
+        if cleaned:
+            try:
+                out["price"] = float(cleaned)
+            except ValueError:
+                out["price"] = price
+    if slot.get("is_new"):
+        out["isNew"] = True
+    return out
+
+def generate_data_json():
+    """Emit a single data.json the Miami Tee Times app reads."""
+    dates = get_upcoming_weekend_dates()
+    courses_out = []
+    for course in COURSES:
+        app_id = APP_COURSE_IDS.get(course["name"])
+        if not app_id:
+            continue
+        cache_file = CACHE_DIR / course["cache_file"]
+        days_out = []
+        for d in dates:
+            t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
+            raw_slots = load_cache(cache_file, d)
+            slots = [
+                _slot_to_app(s)
+                for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
+                if not is_slot_in_past(s.get("time", ""), d)
+            ]
+            days_out.append({"date": d.isoformat(), "slots": slots})
+        courses_out.append({"id": app_id, "days": days_out})
+
+    payload = {
+        "version": 1,
+        "generatedAt": datetime.now(ET).isoformat(),
+        "courses": courses_out,
+    }
+    Path("data.json").write_text(json.dumps(payload, indent=2))
+    logger.info("data.json generated.")
 
 def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> str:
     try:
@@ -488,11 +548,11 @@ HTML_TEMPLATE = """
     [data-theme="dark"] header { background: #0d1720; }
     h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; margin: 0; letter-spacing: 1.5px; line-height: 1; color: white; }
     [data-theme="dark"] h1 { color: var(--brand-green); text-shadow: 0 0 20px rgba(95, 163, 116, 0.4); }
-    .sunset-box { background: var(--sunset-orange); display: inline-flex; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; margin-top: 5px; color: white; }
+    .sunset-box { background: var(--sunset-orange); display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; margin-top: 5px; color: white; }
     .header-status { margin-top: 8px; font-size: 0.7rem; font-weight: 600; opacity: 0.9; }
     .header-status b { color: var(--gold); }
     .legend { background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 12px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.04em; }
     .legend-dot { width: 12px; height: 12px; border-radius: 3px; border: 2px solid transparent; }
     .legend-dot--early { background: var(--early-bg); border-color: var(--early-brd); }
     .legend-dot--midday { background: var(--midday-bg); border-color: var(--midday-brd); }
@@ -526,7 +586,7 @@ HTML_TEMPLATE = """
     @keyframes pulse-new { 0%, 100% { box-shadow: 0 0 0 2px var(--gold); } 50% { box-shadow: 0 0 0 5px rgba(255,183,3,0.4); } }
     .no-slots { font-size: 0.7rem; color: var(--text-sub); font-style: italic; text-align: center; padding: 5px 0; }
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 0.9rem; font-weight: 600; max-width: 600px; margin: 0 auto 40px auto; }
-    #theme-toggle { position: fixed; bottom: 15px; right: 15px; width: 40px; height: 40px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
+    #theme-toggle { position: fixed; bottom: 15px; right: 15px; width: 44px; height: 44px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.3s; }
     @media (max-width: 480px) { html { font-size: 115%; } main { grid-template-columns: 1fr; padding: 8px; } h1 { font-size: 2.2rem; } .slots { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); } }
   </style>
 </head>
@@ -646,7 +706,17 @@ def generate_html():
             slots = [s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day) if not is_slot_in_past(s.get("time", ""), d)]
             total_slots_count += len(slots)
             
-            book_url = f"{course['url']}?date={d.isoformat()}" if course["type"] == "chronogolf" else course["url"]
+            if course["type"] == "chronogolf":
+                book_url = (
+                    f"{course['url']}?date={d.isoformat()}"
+                    f"&step=teetimes&holes={course.get('holes', 18)}"
+                    f"&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
+                )
+            elif course["type"] == "cpsgolf":
+                t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
+                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
+            else:
+                book_url = course["url"]
             days_for_course.append({
                 "date_obj": d, "sunset_dt": sunset_dt, "label": d.strftime("%a %b %-d"), "weekday": d.strftime("%A"),
                 "slots": [{"time": s.get("time", "?"), "is_new": s.get("is_new", False), "cls": _slot_time_class(s.get("time", "?"), d, sunset_dt)} for s in slots],
@@ -686,6 +756,7 @@ async def main(courses: list[dict]):
         await asyncio.gather(*[check_course(playwright, course, dates) for course in courses], return_exceptions=True)
     if len(courses) == len(COURSES):
         generate_html()
+        generate_data_json()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
