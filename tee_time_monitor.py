@@ -398,7 +398,7 @@ async def check_day(context, course: dict, target_date: date):
         return new_slots
 
     if is_first_run:
-        date_label = target_date.strftime("%a %b %-d")
+        date_label = target_date.strftime("%a %-d")
         logging.info(f"[{name}] {target_date}: First run – sending detection nudge.")
         send_pushover(f"Tee Time Monitor", f"{name} – {date_label} detected")
     elif new_slots:
@@ -418,7 +418,7 @@ async def check_course(playwright, course: dict, dates: list[date]):
             try:
                 new_slots = await check_day(context, course, d)
                 if new_slots:
-                    course_new_slots[d.strftime("%a %b %-d")] = new_slots
+                    course_new_slots[d.strftime("%a %-d")] = new_slots
             except Exception as e: logger.exception(f"Error checking {course['name']} on {d}: {e}")
             await asyncio.sleep(random.uniform(1.5, 3.5))
 
@@ -718,7 +718,7 @@ def generate_html():
             else:
                 book_url = course["url"]
             days_for_course.append({
-                "date_obj": d, "sunset_dt": sunset_dt, "label": d.strftime("%a %b %-d"), "weekday": d.strftime("%A"),
+                "date_obj": d, "sunset_dt": sunset_dt, "label": d.strftime("%a %-d"), "weekday": d.strftime("%A"),
                 "slots": [{"time": s.get("time", "?"), "is_new": s.get("is_new", False), "cls": _slot_time_class(s.get("time", "?"), d, sunset_dt)} for s in slots],
                 "book_url": book_url
             })
