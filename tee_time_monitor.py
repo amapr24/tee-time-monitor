@@ -76,7 +76,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_beach.json",
         "skip_past_dates": True,
-    },    
+    },
     {
         "name":           "Normandy Shores",
         "address":        "2401 Biarritz Dr, Miami Beach",
@@ -116,7 +116,10 @@ COURSES = [
 ]
 
 ET = ZoneInfo("America/New_York")
-DAY_NAMES = {0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday", 4: "Friday", 5: "Saturday", 6: "Sunday"}
+DAY_NAMES = {
+    0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday",
+    4: "Friday",  5: "Saturday", 6: "Sunday",
+}
 CACHE_DIR = Path(".")
 MIAMI = LocationInfo("Miami", "USA", "America/New_York", 25.7617, -80.1918)
 
@@ -131,34 +134,46 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
 
 def get_upcoming_weekend_dates() -> list[date]:
     today = datetime.now(ET).date()
-    return [today + timedelta(days=i) for i in range(6) if (today + timedelta(days=i)).weekday() in (4, 5, 6)]
+    return [
+        today + timedelta(days=i)
+        for i in range(6)
+        if (today + timedelta(days=i)).weekday() in (4, 5, 6)
+    ]
 
 def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
     try:
         parts = time_str.strip().split()
         hour, _ = map(int, parts[0].split(":"))
         ampm = parts[1].upper() if len(parts) > 1 else "AM"
-        if ampm == "PM" and hour != 12: hour += 12
-        elif ampm == "AM" and hour == 12: hour = 0
+        if ampm == "PM" and hour != 12:
+            hour += 12
+        elif ampm == "AM" and hour == 12:
+            hour = 0
         return t_min <= hour <= t_max
-    except Exception: return False
+    except Exception:
+        return False
 
 def is_slot_in_past(time_str: str, target_date: date) -> bool:
-    if target_date != datetime.now(ET).date(): return False
+    if target_date != datetime.now(ET).date():
+        return False
     try:
         parts = time_str.strip().split()
         hour, minute = map(int, parts[0].split(":"))
         ampm = parts[1].upper() if len(parts) > 1 else "AM"
-        if ampm == "PM" and hour != 12: hour += 12
-        elif ampm == "AM" and hour == 12: hour = 0
+        if ampm == "PM" and hour != 12:
+            hour += 12
+        elif ampm == "AM" and hour == 12:
+            hour = 0
         now_et = datetime.now(ET)
         return (hour, minute) <= (now_et.hour, now_et.minute)
-    except Exception: return False
+    except Exception:
+        return False
 
 def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
     seen, out = set(), []
     for slot in slots:
-        if not is_within_window(slot.get("time", ""), t_min, t_max): continue
+        if not is_within_window(slot.get("time", ""), t_min, t_max):
+            continue
         key = (slot.get("time", "").strip().upper(),)
         if key not in seen:
             seen.add(key)
@@ -174,95 +189,124 @@ _CHRONO_HOLE_RE = re.compile(r"(\d+)\s*hole", re.I)
 _WEBTRAC_TIME_RE = re.compile(r"\d{1,2}:\d{2}")
 _LEADING_INT_RE  = re.compile(r"\d+")
 
-def _collapse(raw: str) -> str: return re.sub(r"\s+", " ", raw or "").strip()
+def _collapse(raw: str) -> str:
+    return re.sub(r"\s+", " ", raw or "").strip()
+
 def _normalize_time_label(time_str: str) -> str:
     t = _collapse(time_str)
     return re.sub(r"\b(am|pm)\b", lambda m: m.group(1).upper(), t, flags=re.I)
 
 def parse_cpsgolf_card(raw: str) -> dict | None:
     raw = _collapse(raw)
-    if not raw: return None
+    if not raw:
+        return None
     m = _CPS_TIME_RE.search(raw)
-    if not m: return None
+    if not m:
+        return None
     time_base = m.group(1) or m.group(2)
     ampm = "PM" if m.group(1) else "AM"
     holes, price = _CPS_HOLE_RE.search(raw), _PRICE_RE.search(raw)
-    return {"time": f"{time_base} {ampm}", "holes": holes.group(0) if holes else "", "price": price.group(0) if price else ""}
+    return {
+        "time":  f"{time_base} {ampm}",
+        "holes": holes.group(0) if holes else "",
+        "price": price.group(0) if price else "",
+    }
 
 def parse_cpsgolf(card_texts: list[str], body_text: str = "") -> list[dict]:
     out, seen = [], set()
     for raw in card_texts:
         slot = parse_cpsgolf_card(raw)
-        if not slot: continue
+        if not slot:
+            continue
         key = (slot["time"], slot["holes"])
-        if key in seen: continue
+        if key in seen:
+            continue
         seen.add(key)
         out.append(slot)
-    if out: return out
+    if out:
+        return out
     for m in _CPS_TIME_RE.finditer(_collapse(body_text)):
         time_base = m.group(1) or m.group(2)
         ampm = "PM" if m.group(1) else "AM"
         time = f"{time_base} {ampm}"
         key = (time, "")
-        if key in seen: continue
+        if key in seen:
+            continue
         seen.add(key)
         out.append({"time": time, "holes": "", "price": ""})
     return out
 
 def parse_chronogolf_card(raw: str) -> dict | None:
     raw = _collapse(raw)
-    if len(raw) < 3: return None
+    if len(raw) < 3:
+        return None
     time = ""
     m12 = _CHRONO_12H_RE.search(raw)
-    if m12: time = f"{m12.group(1)} {m12.group(2).upper()}"
+    if m12:
+        time = f"{m12.group(1)} {m12.group(2).upper()}"
     else:
         m24 = _CHRONO_24H_RE.search(raw)
         if m24:
             h, minute = int(m24.group(1)), m24.group(2)
             ampm = "PM" if h >= 12 else "AM"
-            if h > 12: h -= 12
-            if h == 0: h = 12
+            if h > 12:
+                h -= 12
+            if h == 0:
+                h = 12
             time = f"{h}:{minute} {ampm}"
-    if not time: return None
+    if not time:
+        return None
     hole, price = _CHRONO_HOLE_RE.search(raw), _PRICE_RE.search(raw)
-    return {"time": time, "holes": f"{hole.group(1)} holes" if hole else "", "price": price.group(0) if price else ""}
+    return {
+        "time":  time,
+        "holes": f"{hole.group(1)} holes" if hole else "",
+        "price": price.group(0) if price else "",
+    }
 
 def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
     out, seen = [], set()
     for raw in card_texts:
         slot = parse_chronogolf_card(raw)
-        if not slot: continue
+        if not slot:
+            continue
         key = (slot["time"], slot["holes"])
-        if key in seen: continue
+        if key in seen:
+            continue
         seen.add(key)
         out.append(slot)
-    if out: return out
+    if out:
+        return out
     for m in _CHRONO_12H_RE.finditer(_collapse(body_text)):
         time = f"{m.group(1)} {m.group(2).upper()}"
         key = (time, "")
-        if key in seen: continue
+        if key in seen:
+            continue
         seen.add(key)
         out.append({"time": time, "holes": "", "price": ""})
     return out
 
 def parse_webtrac_row(cells: list[str]) -> dict | None:
-    if len(cells) < 6: return None
-    m = _LEADING_INT_RE.search(cells[5] or "")
-    
-    # FIX: Change '== 0' to '!= 4' to ensure ONLY slots with exactly 4 players are detected
-    if (int(m.group(0)) if m else 0) != 4: 
+    if len(cells) < 6:
         return None
-        
+    m = _LEADING_INT_RE.search(cells[5] or "")
+    # Only show slots with exactly 4 open spaces (the column contains available player count)
+    if (int(m.group(0)) if m else 0) != 4:
+        return None
     time = _normalize_time_label(cells[1] or "")
-    if not _WEBTRAC_TIME_RE.search(time): return None
-    return {"time": time, "price": (cells[7] if len(cells) > 7 else "").strip(), "holes": (cells[3] if len(cells) > 3 else "").strip() or "18 Holes"}
-
+    if not _WEBTRAC_TIME_RE.search(time):
+        return None
+    return {
+        "time":  time,
+        "price": (cells[7] if len(cells) > 7 else "").strip(),
+        "holes": (cells[3] if len(cells) > 3 else "").strip() or "18 Holes",
+    }
 
 def parse_webtrac(rows: list[list[str]]) -> list[dict]:
     out = []
     for row in rows:
         slot = parse_webtrac_row(row)
-        if slot: out.append(slot)
+        if slot:
+            out.append(slot)
     return out
 
 async def human_delay(page, min_ms: int = 800, max_ms: int = 2200):
@@ -271,38 +315,69 @@ async def human_delay(page, min_ms: int = 800, max_ms: int = 2200):
 async def goto_with_retry(page, url: str, *, attempts: int = 3, **kwargs):
     last_exc = None
     for i in range(attempts):
-        try: return await page.goto(url, **kwargs)
+        try:
+            return await page.goto(url, **kwargs)
         except Exception as e:
             last_exc = e
-            if i == attempts - 1: break
+            if i == attempts - 1:
+                break
             await asyncio.sleep(2 ** i)
     raise last_exc
 
 def send_pushover(title: str, message: str):
-    if not all([PUSHOVER_USER, PUSHOVER_TOKEN]): return
-    try: requests.post("https://api.pushover.net/1/messages.json", data={"token": PUSHOVER_TOKEN, "user": PUSHOVER_USER, "title": title, "message": message, "sound": "cashregister", "priority": 0}, timeout=10)
-    except Exception as e: logger.error(f"Pushover error: {e}")
+    if not all([PUSHOVER_USER, PUSHOVER_TOKEN]):
+        return
+    try:
+        requests.post(
+            "https://api.pushover.net/1/messages.json",
+            data={
+                "token":    PUSHOVER_TOKEN,
+                "user":     PUSHOVER_USER,
+                "title":    title,
+                "message":  message,
+                "sound":    "cashregister",
+                "priority": 0,
+            },
+            timeout=10,
+        )
+    except Exception as e:
+        logger.error(f"Pushover error: {e}")
 
 def send_email(subject: str, body: str):
-    if not all([EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_TO]): return
+    if not all([EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_TO]):
+        return
     recipients = [e.strip() for e in EMAIL_TO.split(",")]
     msg = MIMEText(body, "plain")
-    msg["Subject"], msg["From"], msg["To"] = subject, EMAIL_SENDER, ", ".join(recipients)
+    msg["Subject"] = subject
+    msg["From"]    = EMAIL_SENDER
+    msg["To"]      = ", ".join(recipients)
     try:
         with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
             server.starttls()
             server.login(EMAIL_SENDER, EMAIL_PASSWORD)
             server.sendmail(EMAIL_SENDER, recipients, msg.as_string())
-    except Exception as e: logger.error(f"Email error: {e}")
+    except Exception as e:
+        logger.error(f"Email error: {e}")
 
 def notify(subject: str, body: str, push_msg: str):
     send_pushover(subject, push_msg)
-    #send_email(subject, body)  # <--- This line must be added to trigger the email
 
 async def launch_browser(playwright):
-    browser = await playwright.chromium.launch(headless=True, args=["--disable-blink-features=AutomationControlled", "--no-sandbox"])
-    context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36", viewport={"width": 1280, "height": 900})
-    await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    browser = await playwright.chromium.launch(
+        headless=True,
+        args=["--disable-blink-features=AutomationControlled", "--no-sandbox"],
+    )
+    context = await browser.new_context(
+        user_agent=(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        ),
+        viewport={"width": 1280, "height": 900},
+    )
+    await context.add_init_script(
+        "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    )
     return browser, context
 
 async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]:
@@ -315,17 +390,21 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
         target_month_str = target_date.strftime("%B %Y")
         for _ in range(12):
             header = await page.evaluate("() => { const pat = /^[A-Za-z]+ \\d{4}$/; const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false); let node; while ((node = walker.nextNode())) { const t = node.textContent.trim(); if (pat.test(t)) return t; } return ''; }")
-            if target_month_str in (header or "").strip(): break
-            if not header: break
+            if target_month_str in (header or "").strip():
+                break
+            if not header:
+                break
             await page.evaluate("() => { for (const el of document.querySelectorAll('*')) { const t = (el.innerText || '').trim(); if (t === '\\u203a' || t === '>' || t === '\\u25b6' || t === '\\u2192') { el.click(); return true; } } return false; }")
             await human_delay(page, 600, 1200)
         day_num = str(target_date.day)
         clicked = await page.evaluate(f"() => {{ const target = '{day_num}'; const all = document.querySelectorAll('div, span, a, button, li'); for (const el of all) {{ if ((el.innerText || '').trim() !== target) continue; const classes = (el.className || '').toLowerCase(); if (['gray','grey','disabled','prev','next','old','muted','inactive'].some(c => classes.includes(c))) continue; el.click(); return true; }} return null; }}")
-        if not clicked: return []
+        if not clicked:
+            return []
         await human_delay(page, 3000, 5000)
         card_texts, body_text = await page.evaluate("() => { const selectors = ['[class*=\"teetime\"]', '[class*=\"tee-time\"]', '[class*=\"timeslot\"]', '[class*=\"time-slot\"]', '[class*=\"booking\"]', '[class*=\"result-item\"]', '[class*=\"search-result\"]', '[class*=\"tee-card\"]']; let cards = []; for (const sel of selectors) { const found = document.querySelectorAll(sel); if (found.length > 0) { cards = Array.from(found); break; } } return [cards.map(c => c.innerText), document.body.innerText]; }")
         return parse_cpsgolf(card_texts, body_text)
-    finally: await page.close()
+    finally:
+        await page.close()
 
 async def scrape_chronogolf(context, course: dict, target_date: date) -> list[dict]:
     base_url = course["url"]
@@ -336,7 +415,8 @@ async def scrape_chronogolf(context, course: dict, target_date: date) -> list[di
         await human_delay(page, 3000, 6000)
         card_texts, body_text = await page.evaluate("() => { const selectors = ['[class*=\"teetime-card\"]', '[class*=\"teetime\"]', '[class*=\"tee-time\"]', '[class*=\"green-fee\"]']; let cards = []; for (const sel of selectors) { const found = document.querySelectorAll(sel); if (found.length > 0) { cards = Array.from(found); break; } } return [cards.map(c => c.innerText), document.body.innerText]; }")
         return parse_chronogolf(card_texts, body_text)
-    finally: await page.close()
+    finally:
+        await page.close()
 
 async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]:
     page = await context.new_page()
@@ -344,16 +424,29 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
         base_url = course["url"].split("?")[0]
         await goto_with_retry(page, base_url + "?module=GR&display=Detail", wait_until="networkidle", timeout=60_000)
         csrf = await page.evaluate("() => document.querySelector('#_csrf_token')?.value || ''")
-        params = {"Action": "Start", "_csrf_token": csrf, "numberofplayers": "1", "begindate": target_date.strftime("%m/%d/%Y"), "begintime": "12:00 am", "numberofholes": "18", "display": "Detail", "module": "GR", "grwebsearch_buttonsearch": "yes"}
+        params = {
+            "Action": "Start",
+            "_csrf_token": csrf,
+            "numberofplayers": "1",
+            "begindate": target_date.strftime("%m/%d/%Y"),
+            "begintime": "12:00 am",
+            "numberofholes": "18",
+            "display": "Detail",
+            "module": "GR",
+            "grwebsearch_buttonsearch": "yes",
+        }
         await goto_with_retry(page, base_url + "?" + urlencode(params), wait_until="networkidle", timeout=60_000)
         rows = await page.evaluate("() => Array.from(document.querySelectorAll('#grwebsearch_output_table tbody tr')).map(row => Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim()))")
         return parse_webtrac(rows)
-    finally: await page.close()
+    finally:
+        await page.close()
 
 def load_cache(cache_file: Path, d: date) -> list[dict]:
     try:
-        if cache_file.exists(): return json.loads(cache_file.read_text()).get(d.isoformat(), [])
-    except Exception as e: logger.error(f"Cache load error for {d}: {e}")
+        if cache_file.exists():
+            return json.loads(cache_file.read_text()).get(d.isoformat(), [])
+    except Exception as e:
+        logger.error(f"Cache load error for {d}: {e}")
     return []
 
 def save_cache(cache_file: Path, d: date, slots: list[dict]):
@@ -361,11 +454,15 @@ def save_cache(cache_file: Path, d: date, slots: list[dict]):
     try:
         if cache_file.exists():
             content = cache_file.read_text().strip()
-            if content: all_cache = json.loads(content)
-    except Exception as e: logger.error(f"Cache read error for {d}: {e}")
+            if content:
+                all_cache = json.loads(content)
+    except Exception as e:
+        logger.error(f"Cache read error for {d}: {e}")
     all_cache[d.isoformat()] = slots
-    try: cache_file.write_text(json.dumps(all_cache, indent=2))
-    except Exception as e: logger.error(f"Cache write error for {d}: {e}")
+    try:
+        cache_file.write_text(json.dumps(all_cache, indent=2))
+    except Exception as e:
+        logger.error(f"Cache write error for {d}: {e}")
 
 def find_new_slots(old: list[dict], new: list[dict]) -> list[dict]:
     old_times = {t.get("time", "").strip().upper() for t in old}
@@ -376,21 +473,27 @@ async def check_day(context, course: dict, target_date: date):
     name, day_name = course["name"], DAY_NAMES.get(target_date.weekday(), "Unknown")
     t_min, t_max = course["tee_time_min"], get_sunset_cutoff(target_date, course["tee_time_max"])
     cache_file = CACHE_DIR / course["cache_file"]
-    
-    if course.get("skip_past_dates") and target_date < datetime.now(ET).date(): return []
-    
-    if course["type"] == "cpsgolf": raw = await scrape_cpsgolf(context, course, target_date)
-    elif course["type"] == "chronogolf": raw = await scrape_chronogolf(context, course, target_date)
-    elif course["type"] == "webtrac": raw = await scrape_webtrac(context, course, target_date)
-    else: return []
-    
+
+    if course.get("skip_past_dates") and target_date < datetime.now(ET).date():
+        return []
+
+    if course["type"] == "cpsgolf":
+        raw = await scrape_cpsgolf(context, course, target_date)
+    elif course["type"] == "chronogolf":
+        raw = await scrape_chronogolf(context, course, target_date)
+    elif course["type"] == "webtrac":
+        raw = await scrape_webtrac(context, course, target_date)
+    else:
+        return []
+
     current_slots = deduplicate_slots(raw, t_min, t_max)
     cached_slots = load_cache(cache_file, target_date)
     is_first_run = not cached_slots
     new_slots = [] if is_first_run else find_new_slots(cached_slots, current_slots)
 
     new_slot_times = {s.get("time", "").strip().upper() for s in new_slots}
-    for s in current_slots: s["is_new"] = s.get("time", "").strip().upper() in new_slot_times
+    for s in current_slots:
+        s["is_new"] = s.get("time", "").strip().upper() in new_slot_times
     save_cache(cache_file, target_date, current_slots)
 
     if not current_slots:
@@ -411,7 +514,7 @@ async def check_day(context, course: dict, target_date: date):
 async def check_course(playwright, course: dict, dates: list[date]):
     """Manage browser for course and group notifications by course."""
     browser, context = await launch_browser(playwright)
-    course_new_slots = {} # date_str -> list of slots
+    course_new_slots = {}  # date_str -> list of slots
 
     try:
         for d in dates:
@@ -419,32 +522,25 @@ async def check_course(playwright, course: dict, dates: list[date]):
                 new_slots = await check_day(context, course, d)
                 if new_slots:
                     course_new_slots[d.strftime("%a %-d")] = new_slots
-            except Exception as e: logger.exception(f"Error checking {course['name']} on {d}: {e}")
+            except Exception as e:
+                logger.exception(f"Error checking {course['name']} on {d}: {e}")
             await asyncio.sleep(random.uniform(1.5, 3.5))
 
         if course_new_slots:
             name = course["name"]
             subject = f"Tee Time Alert - {name}"
-            
-            # --- MINIMALIST PUSHOVER CONSTRUCTION ---
-            lines = []  # <--- Changed from [f"{name}"] to []
+            lines = []
             for date_label, slots in course_new_slots.items():
                 times_str = ", ".join(s.get("time", "?") for s in slots)
-                # Format: Fri May 01 - 8:00 AM, 8:30 AM
                 lines.append(f"{date_label} - {times_str}")
-            
             if course["type"] != "chronogolf":
-                book_url = course["url"]
-                # Adds a blank line before the link for better visual separation
-                lines.append(f"\n{book_url}")
-            
+                lines.append(f"\n{course['url']}")
             push_msg = "\n".join(lines)
-            
-            # For Email, we keep a slightly more detailed version, but for Push, we use the minimalist one
             email_body = f"New tee times opened at {name}:\n\n" + push_msg
             notify(subject, email_body, push_msg)
-            
-    finally: await browser.close()
+
+    finally:
+        await browser.close()
 
 APP_COURSE_IDS = {
     "Miami Beach":         "miami-beach",
@@ -510,11 +606,15 @@ def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> s
         h, m = int(time_parts[0]), int(time_parts[1]) if len(time_parts) > 1 else 0
         h_24 = h + 12 if is_pm and h != 12 else 0 if not is_pm and h == 12 else h
         slot_dt = datetime.combine(target_date, datetime.min.time()).replace(hour=h_24, minute=m, tzinfo=ET)
-        if (sunset_dt - slot_dt).total_seconds() <= 16_200: return "slot--twilight"
-        if h_24 < 10: return "slot--early"
-        if h_24 < 12: return "slot--midday"
+        if (sunset_dt - slot_dt).total_seconds() <= 16_200:
+            return "slot--twilight"
+        if h_24 < 10:
+            return "slot--early"
+        if h_24 < 12:
+            return "slot--midday"
         return "slot--afternoon"
-    except Exception: return ""
+    except Exception:
+        return ""
 
 # ── Jinja2 HTML Template ───────────────────────────────────────────────────────
 
@@ -693,7 +793,7 @@ def generate_html():
     dates = get_upcoming_weekend_dates()
     now_dt = datetime.now(ET)
     now_str, now_ts = now_dt.strftime("%-I:%M %p ET, %a %b %-d"), int(now_dt.timestamp())
-    
+
     course_data = []
     for course in COURSES:
         days_for_course = []
@@ -703,9 +803,12 @@ def generate_html():
             sunset_dt = sun(MIAMI.observer, date=d, tzinfo=ET)["sunset"]
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             raw_slots = load_cache(cache_file, d)
-            slots = [s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day) if not is_slot_in_past(s.get("time", ""), d)]
+            slots = [
+                s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
+                if not is_slot_in_past(s.get("time", ""), d)
+            ]
             total_slots_count += len(slots)
-            
+
             if course["type"] == "chronogolf":
                 book_url = (
                     f"{course['url']}?date={d.isoformat()}"
@@ -717,37 +820,57 @@ def generate_html():
                 book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
             else:
                 book_url = course["url"]
+
             days_for_course.append({
-                "date_obj": d, "sunset_dt": sunset_dt, "label": d.strftime("%a %-d"), "weekday": d.strftime("%A"),
-                "slots": [{"time": s.get("time", "?"), "is_new": s.get("is_new", False), "cls": _slot_time_class(s.get("time", "?"), d, sunset_dt)} for s in slots],
-                "book_url": book_url
+                "date_obj":  d,
+                "sunset_dt": sunset_dt,
+                "label":     d.strftime("%a %-d"),
+                "weekday":   d.strftime("%A"),
+                "slots": [
+                    {
+                        "time":   s.get("time", "?"),
+                        "is_new": s.get("is_new", False),
+                        "cls":    _slot_time_class(s.get("time", "?"), d, sunset_dt),
+                    }
+                    for s in slots
+                ],
+                "book_url": book_url,
             })
 
         any_slots = total_slots_count > 0
-        display_name = f"{course['name']} ({total_slots_count} slots)" if any_slots else f"{course['name']} (Fully Booked)"
+        display_name = (
+            f"{course['name']} ({total_slots_count} slots)"
+            if any_slots
+            else f"{course['name']} (Fully Booked)"
+        )
         course_data.append({
-            "name": course["name"], "safe_id": course["name"].replace(" ", "-").lower(),
-            "display_name": display_name, "any_slots": any_slots, "days": days_for_course
+            "name":         course["name"],
+            "safe_id":      course["name"].replace(" ", "-").lower(),
+            "display_name": display_name,
+            "any_slots":    any_slots,
+            "days":         days_for_course,
         })
 
     actual_sunset = sun(MIAMI.observer, date=dates[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
-    
+
     template = Template(HTML_TEMPLATE)
     html_out = template.render(
-        courses=course_data, 
-        actual_sunset=actual_sunset, 
-        now_str=now_str, 
-        now_ts=now_ts
+        courses=course_data,
+        actual_sunset=actual_sunset,
+        now_str=now_str,
+        now_ts=now_ts,
     )
 
     Path("index.html").write_text(html_out)
     Path("version.json").write_text(json.dumps({"ts": now_ts}))
 
 def _select_courses(filter_terms: list[str]) -> list[dict]:
-    if not filter_terms: return COURSES
+    if not filter_terms:
+        return COURSES
     terms = [t.lower() for t in filter_terms]
     picked = [c for c in COURSES if any(t in c["name"].lower() for t in terms)]
-    if not picked: sys.exit(f"No course matched {filter_terms!r}.")
+    if not picked:
+        sys.exit(f"No course matched {filter_terms!r}.")
     return picked
 
 async def main(courses: list[dict]):
