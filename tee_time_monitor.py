@@ -292,9 +292,11 @@ def parse_webtrac_row(cells: list[str]) -> dict | None:
     # Only show slots with exactly 4 open spaces (the column contains available player count)
     if (int(m.group(0)) if m else 0) != 4:
         return None
+        
     time = _normalize_time_label(cells[1] or "")
     if not _WEBTRAC_TIME_RE.search(time):
         return None
+        
     return {
         "time":  time,
         "price": (cells[7] if len(cells) > 7 else "").strip(),
