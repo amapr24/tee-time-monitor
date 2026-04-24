@@ -443,13 +443,15 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
     finally:
         await page.close()
 
-def load_cache(cache_file: Path, d: date) -> list[dict]:
+def load_cache(cache_file: Path, d: date) -> list[dict] | None:
     try:
         if cache_file.exists():
-            return json.loads(cache_file.read_text()).get(d.isoformat(), [])
+            data = json.loads(cache_file.read_text())
+            if d.isoformat() in data:
+                return data[d.isoformat()]
     except Exception as e:
         logger.error(f"Cache load error for {d}: {e}")
-    return []
+    return None
 
 def save_cache(cache_file: Path, d: date, slots: list[dict]):
     all_cache = {}
@@ -490,7 +492,7 @@ async def check_day(context, course: dict, target_date: date):
 
     current_slots = deduplicate_slots(raw, t_min, t_max)
     cached_slots = load_cache(cache_file, target_date)
-    is_first_run = not cached_slots
+    is_first_run = cached_slots is None
     new_slots = [] if is_first_run else find_new_slots(cached_slots, current_slots)
 
     new_slot_times = {s.get("time", "").strip().upper() for s in new_slots}
@@ -583,7 +585,7 @@ def generate_data_json():
         days_out = []
         for d in dates:
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
-            raw_slots = load_cache(cache_file, d)
+            raw_slots = load_cache(cache_file, d) or []
             slots = [
                 _slot_to_app(s)
                 for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
@@ -804,7 +806,7 @@ def generate_html():
             cache_file = CACHE_DIR / course["cache_file"]
             sunset_dt = sun(MIAMI.observer, date=d, tzinfo=ET)["sunset"]
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
-            raw_slots = load_cache(cache_file, d)
+            raw_slots = load_cache(cache_file, d) or []
             slots = [
                 s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
                 if not is_slot_in_past(s.get("time", ""), d)
