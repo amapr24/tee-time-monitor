@@ -423,7 +423,7 @@ async def check_course(playwright, course: dict, dates: list[date]):
             subject = f"Tee Time Alert - {name}"
             
             # --- MINIMALIST PUSHOVER CONSTRUCTION ---
-            lines = [f"{name}"] # Course name on first line
+            #lines = [f"{name}"] # Course name on first line
             for date_label, slots in course_new_slots.items():
                 times_str = ", ".join(s.get("time", "?") for s in slots)
                 # Format: Fri May 01 - 8:00 AM, 8:30 AM
