@@ -699,7 +699,7 @@ HTML_TEMPLATE = """
     <h1>TEE TIME MONITOR</h1>
     <div class="sunset-box">☀️ SUNSET: {{ actual_sunset }}</div>
     <div class="header-status">
-      <div style="margin-bottom:4px"><b>Checked every 15 minutes</b></div>
+      <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
       <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">{{ now_str }}</span>)</div>
     </div>
   </header>
@@ -740,13 +740,15 @@ HTML_TEMPLATE = """
                 </li>
                 {% endfor %}
               </ul>
+            {% elif day.not_released %}
+              <div class="no-slots">Not yet released</div>
             {% else %}
               <div class="no-slots">No times available</div>
             {% endif %}
           </div>
           {% endfor %}
         {% else %}
-          <div class="day-row"><div class="no-slots">Fully booked for the weekend.</div></div>
+          <div class="day-row"><div class="no-slots">{{ 'Not yet released.' if c.all_not_released else 'Fully booked for the weekend.' }}</div></div>
         {% endif %}
       </div>
     </div>
@@ -806,7 +808,9 @@ def generate_html():
             cache_file = CACHE_DIR / course["cache_file"]
             sunset_dt = sun(MIAMI.observer, date=d, tzinfo=ET)["sunset"]
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
-            raw_slots = load_cache(cache_file, d) or []
+            cached = load_cache(cache_file, d)
+            not_released = cached is None
+            raw_slots = cached or []
             slots = [
                 s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
                 if not is_slot_in_past(s.get("time", ""), d)
@@ -826,10 +830,11 @@ def generate_html():
                 book_url = course["url"]
 
             days_for_course.append({
-                "date_obj":  d,
-                "sunset_dt": sunset_dt,
-                "label":     d.strftime("%a %-d"),
-                "weekday":   d.strftime("%A"),
+                "date_obj":     d,
+                "sunset_dt":    sunset_dt,
+                "label":        d.strftime("%a %-d"),
+                "weekday":      d.strftime("%A"),
+                "not_released": not_released,
                 "slots": [
                     {
                         "time":   s.get("time", "?"),
@@ -842,17 +847,20 @@ def generate_html():
             })
 
         any_slots = total_slots_count > 0
-        display_name = (
-            f"{course['name']} ({total_slots_count} slots)"
-            if any_slots
-            else f"{course['name']} (Fully Booked)"
-        )
+        all_not_released = not any_slots and all(day["not_released"] for day in days_for_course)
+        if any_slots:
+            display_name = f"{course['name']} ({total_slots_count} slots)"
+        elif all_not_released:
+            display_name = f"{course['name']} (Not Yet Released)"
+        else:
+            display_name = f"{course['name']} (Fully Booked)"
         course_data.append({
-            "name":         course["name"],
-            "safe_id":      course["name"].replace(" ", "-").lower(),
-            "display_name": display_name,
-            "any_slots":    any_slots,
-            "days":         days_for_course,
+            "name":            course["name"],
+            "safe_id":         course["name"].replace(" ", "-").lower(),
+            "display_name":    display_name,
+            "any_slots":       any_slots,
+            "all_not_released": all_not_released,
+            "days":            days_for_course,
         })
 
     actual_sunset = sun(MIAMI.observer, date=dates[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
