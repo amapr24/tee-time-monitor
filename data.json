@@ -1,17 +1,19 @@
 {
   "version": 1,
-  "generatedAt": "2026-04-24T13:14:23.642634-04:00",
+  "generatedAt": "2026-04-25T10:56:56.566717-04:00",
   "courses": [
     {
       "id": "miami-lakes",
       "days": [
         {
-          "date": "2026-04-24",
-          "slots": []
-        },
-        {
           "date": "2026-04-25",
-          "slots": []
+          "slots": [
+            {
+              "time": "11:00 AM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-04-26",
@@ -22,10 +24,6 @@
     {
       "id": "miami-beach",
       "days": [
-        {
-          "date": "2026-04-24",
-          "slots": []
-        },
         {
           "date": "2026-04-25",
           "slots": []
@@ -44,10 +42,6 @@
       "id": "normandy-shores",
       "days": [
         {
-          "date": "2026-04-24",
-          "slots": []
-        },
-        {
           "date": "2026-04-25",
           "slots": []
         },
@@ -65,25 +59,19 @@
       "id": "miami-shores",
       "days": [
         {
-          "date": "2026-04-24",
-          "slots": []
-        },
-        {
           "date": "2026-04-25",
-          "slots": [
-            {
-              "time": "3:58 PM"
-            }
-          ]
+          "slots": []
         },
         {
           "date": "2026-04-26",
           "slots": [
             {
-              "time": "3:42 PM"
+              "time": "10:54 AM",
+              "isNew": true
             },
             {
-              "time": "3:50 PM"
+              "time": "11:02 AM",
+              "isNew": true
             },
             {
               "time": "3:58 PM"
@@ -96,29 +84,8 @@
       "id": "plantation-preserve",
       "days": [
         {
-          "date": "2026-04-24",
-          "slots": [
-            {
-              "time": "3:24 PM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "3:51 PM",
-              "holes": 18,
-              "isNew": true
-            }
-          ]
-        },
-        {
           "date": "2026-04-25",
-          "slots": [
-            {
-              "time": "3:24 PM",
-              "holes": 18,
-              "isNew": true
-            }
-          ]
+          "slots": []
         },
         {
           "date": "2026-04-26",
