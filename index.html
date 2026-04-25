@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:48 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Checked every 15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">10:51 AM ET, Sat Apr 25</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">11:00 AM ET, Sat Apr 25</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -151,7 +151,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (1 slots)</span>
+          <span class="course-name">Normandy Shores (2 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -163,7 +163,14 @@
               <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-04-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
             </div>
             
-              <div class="no-slots">No times available</div>
+              <ul class="slots">
+                
+                <li class="slot--twilight slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:40 PM
+                </li>
+                
+              </ul>
             
           </div>
           
@@ -192,7 +199,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Shores (2 slots)</span>
+          <span class="course-name">Miami Shores (3 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -219,6 +226,11 @@
                 <li class="slot--midday ">
                   
                   10:54 AM
+                </li>
+                
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  11:02 AM
                 </li>
                 
                 <li class="slot--twilight ">
@@ -252,7 +264,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1777128698;
+    const updateTs = 1777129254;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
