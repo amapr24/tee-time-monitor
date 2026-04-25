@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:48 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Checked every 15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">7:01 AM ET, Sat Apr 25</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">7:10 AM ET, Sat Apr 25</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -96,7 +96,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (3 slots)</span>
+          <span class="course-name">Miami Lakes (4 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -110,8 +110,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   10:04 AM
                 </li>
                 
@@ -135,6 +135,11 @@
                 <li class="slot--afternoon ">
                   
                   1:16 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  1:24 PM
                 </li>
                 
               </ul>
@@ -291,7 +296,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1777114906;
+    const updateTs = 1777115456;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
