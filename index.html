@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:49 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:10 AM ET, Sun Apr 26</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:21 AM ET, Sun Apr 26</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -92,50 +92,16 @@
   </div>
   <main id="course-grid">
     
-    <div class="course-card " id="card-miami-lakes">
-      <div class="card-header collapsible-header">
+    <div class="course-card is-collapsed" id="card-miami-lakes">
+      <div class="card-header">
         <div class="header-title-group">
-          <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (2 slots)</span>
+          
+          <span class="course-name">Miami Lakes (Fully Booked)</span>
         </div>
       </div>
       <div class="card-body">
         
-          
-          <div class="day-row" data-day="Sunday">
-            <div class="day-row-header">
-              <span class="day-label">Sun 26</span>
-              <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  11:24 AM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
-          <div class="day-row" data-day="Friday">
-            <div class="day-row-header">
-              <span class="day-label">Fri 1</span>
-              <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  11:24 AM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
+          <div class="day-row"><div class="no-slots">Fully booked for the weekend.</div></div>
         
       </div>
     </div>
@@ -298,16 +264,6 @@
                 
                 <li class="slot--afternoon ">
                   
-                  1:00 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:08 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
                   1:16 PM
                 </li>
                 
@@ -359,6 +315,16 @@
                 <li class="slot--afternoon ">
                   
                   2:52 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:00 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:08 PM
                 </li>
                 
               </ul>
@@ -457,6 +423,11 @@
                   10:14 AM
                 </li>
                 
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  11:02 AM
+                </li>
+                
                 <li class="slot--midday ">
                   
                   11:10 AM
@@ -505,11 +476,6 @@
                 <li class="slot--afternoon ">
                   
                   1:34 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:42 PM
                 </li>
                 
               </ul>
@@ -700,7 +666,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1777209056;
+    const updateTs = 1777209699;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
