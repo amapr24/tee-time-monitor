@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:49 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">5:20 PM ET, Sun Apr 26</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">5:31 PM ET, Sun Apr 26</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -106,16 +106,43 @@
       </div>
     </div>
     
-    <div class="course-card is-collapsed" id="card-miami-beach">
-      <div class="card-header">
+    <div class="course-card " id="card-miami-beach">
+      <div class="card-header collapsible-header">
         <div class="header-title-group">
-          
-          <span class="course-name">Miami Beach (Fully Booked)</span>
+          <span class="collapse-icon">▼</span>
+          <span class="course-name">Miami Beach (1 slots)</span>
         </div>
       </div>
       <div class="card-body">
         
-          <div class="day-row"><div class="no-slots">Fully booked for the weekend.</div></div>
+          
+          <div class="day-row" data-day="Sunday">
+            <div class="day-row-header">
+              <span class="day-label">Sun 26</span>
+              <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-04-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
+            </div>
+            
+              <div class="no-slots">No times available</div>
+            
+          </div>
+          
+          <div class="day-row" data-day="Friday">
+            <div class="day-row-header">
+              <span class="day-label">Fri 1</span>
+              <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-05-01&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
+            </div>
+            
+              <ul class="slots">
+                
+                <li class="slot--twilight slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:56 PM
+                </li>
+                
+              </ul>
+            
+          </div>
+          
         
       </div>
     </div>
@@ -220,11 +247,6 @@
                 
                 <li class="slot--afternoon ">
                   
-                  2:36 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
                   2:44 PM
                 </li>
                 
@@ -266,6 +288,11 @@
                 <li class="slot--twilight ">
                   
                   3:48 PM
+                </li>
+                
+                <li class="slot--twilight slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:56 PM
                 </li>
                 
               </ul>
@@ -577,7 +604,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1777238459;
+    const updateTs = 1777239102;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
