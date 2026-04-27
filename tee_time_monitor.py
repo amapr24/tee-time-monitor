@@ -167,7 +167,8 @@ def is_slot_in_past(time_str: str, target_date: date) -> bool:
         now_et = datetime.now(ET)
         return (hour, minute) <= (now_et.hour, now_et.minute)
     except Exception:
-        return False
+        return True
+    #If the scraper ever picks up a time format that doesn't perfectly match HH:MM AM/PM (e.g., just "8 AM"), the split(":") will fail, the exception will trigger, and it will return False. Returning False tells the program "This slot is NOT in the past," which means the past slot will still be displayed. To be safer, you might want to return True (assume it's past/invalid) if the time cannot be parsed.
 
 def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
     seen, out = set(), []
@@ -490,7 +491,12 @@ async def check_day(context, course: dict, target_date: date):
     else:
         return []
 
-    current_slots = deduplicate_slots(raw, t_min, t_max)
+    # Filter by time window AND remove slots that have already passed today
+    current_slots = [
+        s for s in deduplicate_slots(raw, t_min, t_max) 
+        if not is_slot_in_past(s.get("time", ""), target_date)
+    ]
+
     cached_slots = load_cache(cache_file, target_date)
     is_first_run = cached_slots is None
     new_slots = [] if is_first_run else find_new_slots(cached_slots, current_slots)
