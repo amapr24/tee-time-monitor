@@ -63,6 +63,7 @@ COURSES = [
         "tee_time_min":   6,
         "tee_time_max":   15,
         "cache_file":     "cache_miami_lakes.json",
+        "skip_past_dates": True,
     },
     {
         "name":           "Miami Beach",
