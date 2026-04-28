@@ -397,11 +397,18 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
             if target_month_str in (header or "").strip():
                 break
             if not header:
-                break
-            await page.evaluate("() => { for (const el of document.querySelectorAll('*')) { const t = (el.innerText || '').trim(); if (t === '\\u203a' || t === '>' || t === '\\u25b6' || t === '\\u2192') { el.click(); return true; } } return false; }")
+                logger.warning(f"[{course['name']}] {target_date}: no calendar month header detected; aborting.")
+                return []
+            advanced = await page.evaluate("() => { const topbar = document.querySelector('.topbar-container'); const btns = Array.from(topbar ? topbar.querySelectorAll('button') : []); const nextBtn = btns.find(b => !b.disabled && !b.classList.contains('topbar-title')); if (nextBtn) { nextBtn.click(); return true; } return false; }")
+            if not advanced:
+                logger.warning(f"[{course['name']}] {target_date}: next-month button not found (stuck on '{header}'); aborting.")
+                return []
             await human_delay(page, 600, 1200)
+        else:
+            logger.warning(f"[{course['name']}] {target_date}: couldn't reach {target_month_str} after 12 advances; aborting.")
+            return []
         day_num = str(target_date.day)
-        clicked = await page.evaluate(f"() => {{ const target = '{day_num}'; const all = document.querySelectorAll('div, span, a, button, li'); for (const el of all) {{ if ((el.innerText || '').trim() !== target) continue; const classes = (el.className || '').toLowerCase(); if (['gray','grey','disabled','prev','next','old','muted','inactive'].some(c => classes.includes(c))) continue; el.click(); return true; }} return null; }}")
+        clicked = await page.evaluate(f"() => {{ const target = '{day_num}'; for (const btn of document.querySelectorAll('button.btn-day-unit')) {{ if (btn.disabled) continue; const span = btn.parentElement?.querySelector('.day-background-upper'); const txt = (span?.innerText || '').trim(); if (txt !== target) continue; if ((span?.className || '').includes('prev-month')) continue; btn.click(); return true; }} return null; }}")
         if not clicked:
             return []
         await human_delay(page, 3000, 5000)
