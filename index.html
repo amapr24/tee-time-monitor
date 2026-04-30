@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:51 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">11:31 AM ET, Thu Apr 30</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">11:41 AM ET, Thu Apr 30</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -96,7 +96,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (1 slots)</span>
+          <span class="course-name">Miami Lakes (2 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -108,7 +108,14 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
             </div>
             
-              <div class="no-slots">No times available</div>
+              <ul class="slots">
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:16 PM
+                </li>
+                
+              </ul>
             
           </div>
           
@@ -296,7 +303,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Shores (36 slots)</span>
+          <span class="course-name">Miami Shores (35 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -398,11 +405,6 @@
             </div>
             
               <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  12:22 PM
-                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -526,7 +528,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Plantation Preserve (18 slots)</span>
+          <span class="course-name">Plantation Preserve (17 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -540,8 +542,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   10:00 AM
                 </li>
                 
@@ -555,14 +557,7 @@
               <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  2:48 PM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -666,7 +661,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1777563085;
+    const updateTs = 1777563681;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
