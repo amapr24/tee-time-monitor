@@ -139,7 +139,7 @@ def get_upcoming_weekend_dates() -> list[date]:
     return [
         today + timedelta(days=i)
         for i in range(6)
-        if (today + timedelta(days=i)).weekday() in (4, 5, 6)
+        if (today + timedelta(days=i)).weekday() in (3, 4, 5, 6)
     ]
 
 def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
