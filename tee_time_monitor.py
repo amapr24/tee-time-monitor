@@ -138,7 +138,7 @@ def get_upcoming_weekend_dates() -> list[date]:
     today = datetime.now(ET).date()
     return [
         today + timedelta(days=i)
-        for i in range(6)
+        for i in range(7)
         if (today + timedelta(days=i)).weekday() in (3, 4, 5, 6)
     ]
 
@@ -725,6 +725,7 @@ HTML_TEMPLATE = """
     <div class="legend-item"><div class="legend-dot legend-dot--twilight"></div>Twilight</div>
   </div>
   <div class="filter-bar">
+    <button class="filter-btn active" data-day="Thursday">Thursday</button>
     <button class="filter-btn active" data-day="Friday">Friday</button>
     <button class="filter-btn active" data-day="Saturday">Saturday</button>
     <button class="filter-btn active" data-day="Sunday">Sunday</button>
