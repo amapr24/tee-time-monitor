@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:52 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:21 AM ET, Sun May 3</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:31 AM ET, Sun May 3</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -111,18 +111,18 @@
             
               <ul class="slots">
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   12:36 PM
                 </li>
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   3:16 PM
                 </li>
                 
-                <li class="slot--twilight slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--twilight ">
+                  
                   3:56 PM
                 </li>
                 
@@ -717,11 +717,6 @@
             
               <ul class="slots">
                 
-                <li class="slot--early slot--new">
-                  <span class="new-badge">NEW</span>
-                  8:38 AM
-                </li>
-                
                 <li class="slot--early ">
                   
                   8:46 AM
@@ -835,6 +830,11 @@
                 <li class="slot--afternoon ">
                   
                   12:38 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  12:46 PM
                 </li>
                 
               </ul>
@@ -1466,7 +1466,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1777803678;
+    const updateTs = 1777804282;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
