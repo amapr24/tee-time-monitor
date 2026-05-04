@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:55 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:31 AM ET, Mon May 4</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:41 AM ET, Mon May 4</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -131,18 +131,18 @@
             
               <ul class="slots">
                 
-                <li class="slot--twilight slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--twilight ">
+                  
                   3:40 PM
                 </li>
                 
-                <li class="slot--twilight slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--twilight ">
+                  
                   3:48 PM
                 </li>
                 
-                <li class="slot--twilight slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--twilight ">
+                  
                   3:56 PM
                 </li>
                 
@@ -267,11 +267,6 @@
                 
                 <li class="slot--early ">
                   
-                  9:40 AM
-                </li>
-                
-                <li class="slot--early ">
-                  
                   9:48 AM
                 </li>
                 
@@ -378,6 +373,11 @@
                 <li class="slot--afternoon ">
                   
                   2:12 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  2:20 PM
                 </li>
                 
               </ul>
@@ -697,7 +697,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Plantation Preserve (99 slots)</span>
+          <span class="course-name">Plantation Preserve (100 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -935,9 +935,14 @@
             
               <ul class="slots">
                 
+                <li class="slot--afternoon ">
+                  
+                  12:15 PM
+                </li>
+                
                 <li class="slot--afternoon slot--new">
                   <span class="new-badge">NEW</span>
-                  12:15 PM
+                  1:09 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -1254,7 +1259,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1777901481;
+    const updateTs = 1777902074;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
