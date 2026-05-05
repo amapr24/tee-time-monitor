@@ -420,11 +420,17 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
 
 async def scrape_chronogolf(context, course: dict, target_date: date) -> list[dict]:
     base_url = course["url"]
-    url = f"{base_url}?date={target_date.isoformat()}&step=teetimes&holes={course.get('holes', 18)}&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
+    date_str = target_date.isoformat()
+    url = f"{base_url}?date={date_str}&step=teetimes&holes={course.get('holes', 18)}&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
     page = await context.new_page()
     try:
         await goto_with_retry(page, url, wait_until="networkidle", timeout=60_000)
         await human_delay(page, 3000, 6000)
+        # Chronogolf silently redirects both past dates and unreleased future dates.
+        # If the landed URL no longer contains our requested date, bail out.
+        if f"date={date_str}" not in page.url:
+            logger.info(f"[{course['name']}] {target_date}: redirected to {page.url!r} — date not yet released, skipping.")
+            return []
         card_texts, body_text = await page.evaluate("() => { const selectors = ['[class*=\"teetime-card\"]', '[class*=\"teetime\"]', '[class*=\"tee-time\"]', '[class*=\"green-fee\"]']; let cards = []; for (const sel of selectors) { const found = document.querySelectorAll(sel); if (found.length > 0) { cards = Array.from(found); break; } } return [cards.map(c => c.innerText), document.body.innerText]; }")
         return parse_chronogolf(card_texts, body_text)
     finally:
