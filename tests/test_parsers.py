@@ -123,6 +123,18 @@ def test_chronogolf_body_fallback():
     assert [s["time"] for s in slots] == ["9:00 AM", "10:30 AM"]
 
 
+def test_chronogolf_no_tee_times_marker_suppresses_body_fallback():
+    # The Chronogolf page shows a news/notice box even when the day is empty
+    # (e.g. "The driving range will open at 9:00AM."). When the page also says
+    # "No tee times found", we must not scrape times out of that notice.
+    body = (
+        "Book your round Miami Beach Golf Club "
+        "News The driving range will open at 9:00AM. "
+        "No tee times found Adjust your filters or select another date."
+    )
+    assert parse_chronogolf([], body) == []
+
+
 # ── WebTrac ───────────────────────────────────────────────────────────────────
 
 def _webtrac_row(time, date, holes, course, open_slots, status="", cost=""):
