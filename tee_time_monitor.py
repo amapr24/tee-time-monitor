@@ -77,6 +77,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_beach.json",
         "skip_past_dates": True,
+        "booking_window_days": 4,
     },
     {
         "name":           "Normandy Shores",
@@ -90,6 +91,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_normandy.json",
         "skip_past_dates": True,
+        "booking_window_days": 4,
     },
     {
         "name":           "Miami Shores",
@@ -103,6 +105,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_shores.json",
         "skip_past_dates": True,
+        "booking_window_days": 4,
     },
     {
         "name":           "Plantation Preserve",
@@ -496,6 +499,13 @@ async def check_day(context, course: dict, target_date: date):
 
     if course.get("skip_past_dates") and target_date < datetime.now(ET).date():
         return []
+
+    booking_window = course.get("booking_window_days")
+    if booking_window is not None:
+        days_out = (target_date - datetime.now(ET).date()).days
+        if days_out > booking_window:
+            logger.info(f"[{name}] {target_date}: {days_out}d out, beyond {booking_window}d booking window — skipping.")
+            return []
 
     if course["type"] == "cpsgolf":
         raw = await scrape_cpsgolf(context, course, target_date)
