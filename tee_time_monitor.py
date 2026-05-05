@@ -77,7 +77,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_beach.json",
         "skip_past_dates": True,
-        "booking_window_days": 4,
+        "booking_window_days": 5,
     },
     {
         "name":           "Normandy Shores",
@@ -91,7 +91,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_normandy.json",
         "skip_past_dates": True,
-        "booking_window_days": 4,
+        "booking_window_days": 5,
     },
     {
         "name":           "Miami Shores",
@@ -105,7 +105,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_shores.json",
         "skip_past_dates": True,
-        "booking_window_days": 4,
+        "booking_window_days": 5,
     },
     {
         "name":           "Plantation Preserve",
