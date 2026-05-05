@@ -77,6 +77,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_beach.json",
         "skip_past_dates": True,
+        "booking_window_days": 5,
     },
     {
         "name":           "Normandy Shores",
@@ -90,6 +91,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_normandy.json",
         "skip_past_dates": True,
+        "booking_window_days": 5,
     },
     {
         "name":           "Miami Shores",
@@ -103,6 +105,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_miami_shores.json",
         "skip_past_dates": True,
+        "booking_window_days": 5,
     },
     {
         "name":           "Plantation Preserve",
@@ -114,6 +117,7 @@ COURSES = [
         "tee_time_max":   14,
         "cache_file":     "cache_plantation.json",
         "skip_past_dates": True,
+        "booking_window_days": 5,
     },
 ]
 
@@ -420,11 +424,17 @@ async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]
 
 async def scrape_chronogolf(context, course: dict, target_date: date) -> list[dict]:
     base_url = course["url"]
-    url = f"{base_url}?date={target_date.isoformat()}&step=teetimes&holes={course.get('holes', 18)}&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
+    date_str = target_date.isoformat()
+    url = f"{base_url}?date={date_str}&step=teetimes&holes={course.get('holes', 18)}&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
     page = await context.new_page()
     try:
         await goto_with_retry(page, url, wait_until="networkidle", timeout=60_000)
         await human_delay(page, 3000, 6000)
+        # Chronogolf silently redirects both past dates and unreleased future dates.
+        # If the landed URL no longer contains our requested date, bail out.
+        if f"date={date_str}" not in page.url:
+            logger.info(f"[{course['name']}] {target_date}: redirected to {page.url!r} — date not yet released, skipping.")
+            return []
         card_texts, body_text = await page.evaluate("() => { const selectors = ['[class*=\"teetime-card\"]', '[class*=\"teetime\"]', '[class*=\"tee-time\"]', '[class*=\"green-fee\"]']; let cards = []; for (const sel of selectors) { const found = document.querySelectorAll(sel); if (found.length > 0) { cards = Array.from(found); break; } } return [cards.map(c => c.innerText), document.body.innerText]; }")
         return parse_chronogolf(card_texts, body_text)
     finally:
@@ -483,13 +493,21 @@ def find_new_slots(old: list[dict], new: list[dict]) -> list[dict]:
     return [t for t in new if t.get("time", "").strip().upper() not in old_times]
 
 async def check_day(context, course: dict, target_date: date):
-    """Check a single date and return new slots found."""
-    name, day_name = course["name"], DAY_NAMES.get(target_date.weekday(), "Unknown")
+    """Check a single date. Returns (new_slots, detected_label_or_None).
+    detected_label is set on the first run that finds slots, for consolidated nudge in main()."""
+    name = course["name"]
     t_min, t_max = course["tee_time_min"], get_sunset_cutoff(target_date, course["tee_time_max"])
     cache_file = CACHE_DIR / course["cache_file"]
 
     if course.get("skip_past_dates") and target_date < datetime.now(ET).date():
-        return []
+        return [], None
+
+    booking_window = course.get("booking_window_days")
+    if booking_window is not None:
+        days_out = (target_date - datetime.now(ET).date()).days
+        if days_out > booking_window:
+            logger.info(f"[{name}] {target_date}: {days_out}d out, beyond {booking_window}d booking window — skipping.")
+            return [], None
 
     if course["type"] == "cpsgolf":
         raw = await scrape_cpsgolf(context, course, target_date)
@@ -498,11 +516,10 @@ async def check_day(context, course: dict, target_date: date):
     elif course["type"] == "webtrac":
         raw = await scrape_webtrac(context, course, target_date)
     else:
-        return []
+        return [], None
 
-    # Filter by time window AND remove slots that have already passed today
     current_slots = [
-        s for s in deduplicate_slots(raw, t_min, t_max) 
+        s for s in deduplicate_slots(raw, t_min, t_max)
         if not is_slot_in_past(s.get("time", ""), target_date)
     ]
 
@@ -517,28 +534,32 @@ async def check_day(context, course: dict, target_date: date):
 
     if not current_slots:
         logging.info(f"[{name}] {target_date}: No slots available at all.")
-        return new_slots
+        return [], None
 
     if is_first_run:
         date_label = target_date.strftime("%a %-d")
-        logging.info(f"[{name}] {target_date}: First run – sending detection nudge.")
-        send_pushover(f"Tee Time Monitor", f"{name} – {date_label} detected")
+        logging.info(f"[{name}] {target_date}: First run – will include in detection nudge.")
+        return new_slots, f"{name} – {date_label}"
     elif new_slots:
         logging.info(f"✨ NEW SLOT DETECTED: {name} on {target_date} ({len(new_slots)} new times)!")
     else:
         logging.info(f"[{name}] {target_date}: No new slots found (matches cache).")
 
-    return new_slots
+    return new_slots, None
 
-async def check_course(playwright, course: dict, dates: list[date]):
-    """Manage browser for course and group notifications by course."""
+async def check_course(playwright, course: dict, dates: list[date]) -> list[str]:
+    """Manage browser for course and group notifications by course.
+    Returns list of detected-date labels for main() to consolidate into one nudge."""
     browser, context = await launch_browser(playwright)
-    course_new_slots = {}  # date_str -> list of slots
+    course_new_slots = {}  # date_label -> list of slots
+    detected_labels = []
 
     try:
         for d in dates:
             try:
-                new_slots = await check_day(context, course, d)
+                new_slots, detected = await check_day(context, course, d)
+                if detected:
+                    detected_labels.append(detected)
                 if new_slots:
                     course_new_slots[d.strftime("%a %-d")] = new_slots
             except Exception as e:
@@ -560,6 +581,8 @@ async def check_course(playwright, course: dict, dates: list[date]):
 
     finally:
         await browser.close()
+
+    return detected_labels
 
 APP_COURSE_IDS = {
     "Miami Beach":         "miami-beach",
@@ -904,7 +927,13 @@ def _select_courses(filter_terms: list[str]) -> list[dict]:
 async def main(courses: list[dict]):
     dates = get_upcoming_weekend_dates()
     async with async_playwright() as playwright:
-        await asyncio.gather(*[check_course(playwright, course, dates) for course in courses], return_exceptions=True)
+        results = await asyncio.gather(
+            *[check_course(playwright, course, dates) for course in courses],
+            return_exceptions=True,
+        )
+    all_detected = [label for r in results if isinstance(r, list) for label in r]
+    if all_detected:
+        send_pushover("Tee Time Monitor – Now Tracking", "\n".join(all_detected))
     if len(courses) == len(COURSES):
         generate_html()
         generate_data_json()
