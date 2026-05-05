@@ -283,6 +283,11 @@ def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
         out.append(slot)
     if out:
         return out
+    # Skip the body-text fallback if Chronogolf is explicitly telling us
+    # there are no tee times — otherwise we'd pick up times from notice/news
+    # boxes (e.g. "The driving range will open at 9:00AM").
+    if "no tee times found" in (body_text or "").lower():
+        return []
     for m in _CHRONO_12H_RE.finditer(_collapse(body_text)):
         time = f"{m.group(1)} {m.group(2).upper()}"
         key = (time, "")
