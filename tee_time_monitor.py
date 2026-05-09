@@ -143,7 +143,7 @@ def get_upcoming_weekend_dates() -> list[date]:
     return [
         today + timedelta(days=i)
         for i in range(7)
-        if (today + timedelta(days=i)).weekday() in (3, 4, 5, 6)
+        if (today + timedelta(days=i)).weekday() in (4, 5, 6)
     ]
 
 def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
@@ -563,9 +563,11 @@ async def check_course(playwright, course: dict, dates: list[date]) -> list[str]
         for d in dates:
             try:
                 new_slots, detected = await check_day(context, course, d)
-                if detected:
+                # Pushover only fires for Fri-Sun; Mon-Thu still scrape/cache but stay silent.
+                notify_day = d.weekday() >= 4
+                if detected and notify_day:
                     detected_labels.append(detected)
-                if new_slots:
+                if new_slots and notify_day:
                     course_new_slots[d.strftime("%a %-d")] = new_slots
             except Exception as e:
                 logger.exception(f"Error checking {course['name']} on {d}: {e}")
