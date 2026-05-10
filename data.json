@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-10T09:30:59.202622-04:00",
+  "generatedAt": "2026-05-10T09:40:56.052514-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -8,6 +8,21 @@
         {
           "date": "2026-05-10",
           "slots": [
+            {
+              "time": "10:12 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:20 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:36 AM",
+              "holes": 18,
+              "isNew": true
+            },
             {
               "time": "11:24 AM",
               "holes": 18
@@ -21,12 +36,27 @@
               "holes": 18
             },
             {
+              "time": "12:04 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
               "time": "12:28 PM",
               "holes": 18
             },
             {
               "time": "12:36 PM",
               "holes": 18
+            },
+            {
+              "time": "12:52 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:32 PM",
+              "holes": 18,
+              "isNew": true
             },
             {
               "time": "1:56 PM",
@@ -72,6 +102,11 @@
             {
               "time": "11:24 AM",
               "holes": 18
+            },
+            {
+              "time": "11:40 AM",
+              "holes": 18,
+              "isNew": true
             },
             {
               "time": "11:48 AM",
@@ -150,9 +185,6 @@
         {
           "date": "2026-05-15",
           "slots": [
-            {
-              "time": "9:56 AM"
-            },
             {
               "time": "10:04 AM"
             },
@@ -318,9 +350,6 @@
         {
           "date": "2026-05-10",
           "slots": [
-            {
-              "time": "1:34 PM"
-            },
             {
               "time": "1:42 PM"
             },
