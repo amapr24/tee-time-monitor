@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:59 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:31 AM ET, Mon May 11</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:40 AM ET, Mon May 11</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -97,7 +97,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (10 slots)</span>
+          <span class="course-name">Miami Lakes (9 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -166,14 +166,7 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  3:16 PM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -281,7 +274,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (19 slots)</span>
+          <span class="course-name">Normandy Shores (17 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -294,11 +287,6 @@
             </div>
             
               <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  2:44 PM
-                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -364,11 +352,6 @@
                 
                 <li class="slot--afternoon ">
                   
-                  2:52 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
                   3:08 PM
                 </li>
                 
@@ -424,7 +407,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Shores (31 slots)</span>
+          <span class="course-name">Miami Shores (30 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -499,11 +482,6 @@
             </div>
             
               <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:10 PM
-                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -627,7 +605,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Plantation Preserve (28 slots)</span>
+          <span class="course-name">Plantation Preserve (26 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -708,11 +686,6 @@
                 
                 <li class="slot--afternoon ">
                   
-                  3:15 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
                   3:24 PM
                 </li>
                 
@@ -743,18 +716,13 @@
             
               <ul class="slots">
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
-                  1:54 PM
-                </li>
-                
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   2:03 PM
                 </li>
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   2:12 PM
                 </li>
                 
@@ -815,7 +783,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1778502660;
+    const updateTs = 1778503256;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
