@@ -122,12 +122,23 @@ COURSES = [
 ]
 
 ET = ZoneInfo("America/New_York")
+
+
+def _now_et() -> datetime:
+    """Current instant in America/New_York; tests may monkeypatch."""
+    return datetime.now(ET)
+
+
 DAY_NAMES = {
     0: "Monday", 1: "Tuesday", 2: "Wednesday", 3: "Thursday",
     4: "Friday",  5: "Saturday", 6: "Sunday",
 }
 CACHE_DIR = Path(".")
 MIAMI = LocationInfo("Miami", "USA", "America/New_York", 25.7617, -80.1918)
+
+# Weekday ints Mon=0 … Sun=6. Default Fri–Sun; add e.g. (3,) for Thursday scraping + UI.
+DEFAULT_SCRAPE_WEEKDAYS: tuple[int, ...] = (4, 5, 6)
+EXTRA_SCRAPE_WEEKDAYS: tuple[int, ...] = ()
 
 @lru_cache(maxsize=32)
 def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
@@ -138,13 +149,30 @@ def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
         logger.error(f"Sunset calc failed for {target_date}: {e}")
         return fallback_hour
 
-def get_upcoming_weekend_dates() -> list[date]:
-    today = datetime.now(ET).date()
+def get_monitor_dates() -> list[date]:
+    """Dates in the next 7 days whose weekday is included in scrape config (ET)."""
+    today = _now_et().date()
+    wds = set(DEFAULT_SCRAPE_WEEKDAYS) | set(EXTRA_SCRAPE_WEEKDAYS)
     return [
         today + timedelta(days=i)
         for i in range(7)
-        if (today + timedelta(days=i)).weekday() in (4, 5, 6)
+        if (today + timedelta(days=i)).weekday() in wds
     ]
+
+
+def days_ahead(target_date: date) -> int:
+    return (target_date - _now_et().date()).days
+
+
+def is_within_booking_window(course: dict, target_date: date) -> bool:
+    bw = course.get("booking_window_days")
+    if bw is None:
+        return True
+    return days_ahead(target_date) <= bw
+
+
+def visible_dates_for_course(course: dict, monitor_dates: list[date]) -> list[date]:
+    return [d for d in monitor_dates if is_within_booking_window(course, d)]
 
 def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
     try:
@@ -160,7 +188,11 @@ def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
         return False
 
 def is_slot_in_past(time_str: str, target_date: date) -> bool:
-    if target_date != datetime.now(ET).date():
+    """True if this slot's clock time is before the current *minute* (ET) on target_date.
+
+    Same-minute tee times stay visible for the whole minute (scrapes only know HH:MM).
+    """
+    if target_date != _now_et().date():
         return False
     try:
         parts = time_str.strip().split()
@@ -170,11 +202,40 @@ def is_slot_in_past(time_str: str, target_date: date) -> bool:
             hour += 12
         elif ampm == "AM" and hour == 12:
             hour = 0
-        now_et = datetime.now(ET)
-        return (hour, minute) <= (now_et.hour, now_et.minute)
+        now_et = _now_et()
+        # Compare at minute resolution so a tee time in the current clock minute still shows.
+        now_minute = now_et.replace(second=0, microsecond=0)
+        slot_dt = datetime.combine(target_date, datetime.min.time()).replace(
+            hour=hour, minute=minute, second=0, microsecond=0, tzinfo=ET
+        )
+        return slot_dt < now_minute
     except Exception:
         return True
-    #If the scraper ever picks up a time format that doesn't perfectly match HH:MM AM/PM (e.g., just "8 AM"), the split(":") will fail, the exception will trigger, and it will return False. Returning False tells the program "This slot is NOT in the past," which means the past slot will still be displayed. To be safer, you might want to return True (assume it's past/invalid) if the time cannot be parsed.
+
+
+_HOLE_COUNT_RE = re.compile(r"(\d+)\s*holes?\b", re.I)
+
+
+def slot_is_18_holes(slot: dict) -> bool:
+    """Keep only 18-hole rounds; empty/missing holes counts as 18 (site default)."""
+    raw = (slot.get("holes") or "").strip()
+    if not raw:
+        return True
+    m = _HOLE_COUNT_RE.search(raw)
+    if m:
+        return int(m.group(1)) == 18
+    return bool(re.search(r"\b18\b", raw))
+
+
+def normalize_monitor_slots(slots: list[dict]) -> list[dict]:
+    """18-hole foursome focus: drop non-18 offerings and strip price (not used downstream)."""
+    out: list[dict] = []
+    for s in slots:
+        if not slot_is_18_holes(s):
+            continue
+        row = {k: v for k, v in s.items() if k != "price"}
+        out.append(row)
+    return out
 
 def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
     seen, out = set(), []
@@ -454,7 +515,7 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
         params = {
             "Action": "Start",
             "_csrf_token": csrf,
-            "numberofplayers": "1",
+            "numberofplayers": "4",
             "begindate": target_date.strftime("%m/%d/%Y"),
             "begintime": "12:00 am",
             "numberofholes": "18",
@@ -507,13 +568,6 @@ async def check_day(context, course: dict, target_date: date):
     if course.get("skip_past_dates") and target_date < datetime.now(ET).date():
         return [], None
 
-    booking_window = course.get("booking_window_days")
-    if booking_window is not None:
-        days_out = (target_date - datetime.now(ET).date()).days
-        if days_out > booking_window:
-            logger.info(f"[{name}] {target_date}: {days_out}d out, beyond {booking_window}d booking window — skipping.")
-            return [], None
-
     if course["type"] == "cpsgolf":
         raw = await scrape_cpsgolf(context, course, target_date)
     elif course["type"] == "chronogolf":
@@ -522,6 +576,8 @@ async def check_day(context, course: dict, target_date: date):
         raw = await scrape_webtrac(context, course, target_date)
     else:
         return [], None
+
+    raw = normalize_monitor_slots(raw)
 
     current_slots = [
         s for s in deduplicate_slots(raw, t_min, t_max)
@@ -559,12 +615,15 @@ async def check_course(playwright, course: dict, dates: list[date]) -> list[str]
     course_new_slots = {}  # date_label -> list of slots
     detected_labels = []
 
+    monitored = set(DEFAULT_SCRAPE_WEEKDAYS) | set(EXTRA_SCRAPE_WEEKDAYS)
     try:
         for d in dates:
+            if not is_within_booking_window(course, d):
+                continue
             try:
                 new_slots, detected = await check_day(context, course, d)
-                # Pushover only fires for Fri-Sun; Mon-Thu still scrape/cache but stay silent.
-                notify_day = d.weekday() >= 4
+                # Pushover for any weekday we actively monitor (default Fri–Sun; add extras in EXTRA_SCRAPE_WEEKDAYS).
+                notify_day = d.weekday() in monitored
                 if detected and notify_day:
                     detected_labels.append(detected)
                 if new_slots and notify_day:
@@ -606,21 +665,13 @@ def _slot_to_app(slot: dict) -> dict:
             out["holes"] = int(str(slot["holes"]).split()[0])
         except Exception:
             pass
-    price = slot.get("price")
-    if price:
-        cleaned = "".join(ch for ch in str(price) if ch.isdigit() or ch == ".")
-        if cleaned:
-            try:
-                out["price"] = float(cleaned)
-            except ValueError:
-                out["price"] = price
     if slot.get("is_new"):
         out["isNew"] = True
     return out
 
 def generate_data_json():
     """Emit a single data.json the Miami Tee Times app reads."""
-    dates = get_upcoming_weekend_dates()
+    dates_all = get_monitor_dates()
     courses_out = []
     for course in COURSES:
         app_id = APP_COURSE_IDS.get(course["name"])
@@ -628,9 +679,9 @@ def generate_data_json():
             continue
         cache_file = CACHE_DIR / course["cache_file"]
         days_out = []
-        for d in dates:
+        for d in visible_dates_for_course(course, dates_all):
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
-            raw_slots = load_cache(cache_file, d) or []
+            raw_slots = normalize_monitor_slots(load_cache(cache_file, d) or [])
             slots = [
                 _slot_to_app(s)
                 for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
@@ -754,12 +805,13 @@ HTML_TEMPLATE = """
     <div class="legend-item"><div class="legend-dot legend-dot--afternoon"></div>Afternoon (noon+)</div>
     <div class="legend-item"><div class="legend-dot legend-dot--twilight"></div>Twilight</div>
   </div>
-  <div class="filter-bar">
-    <button class="filter-btn active" data-day="Thursday">Thursday</button>
-    <button class="filter-btn active" data-day="Friday">Friday</button>
-    <button class="filter-btn active" data-day="Saturday">Saturday</button>
-    <button class="filter-btn active" data-day="Sunday">Sunday</button>
+  {% if filter_days|length > 1 %}
+  <div class="filter-bar" id="day-filter-bar">
+    {% for day in filter_days %}
+    <button type="button" class="filter-btn active" data-day="{{ day }}">{{ day }}</button>
+    {% endfor %}
   </div>
+  {% endif %}
   <main id="course-grid">
     {% for c in courses %}
     <div class="course-card {{ 'is-collapsed' if not c.any_slots else '' }}" id="card-{{ c.safe_id }}">
@@ -793,8 +845,10 @@ HTML_TEMPLATE = """
             {% endif %}
           </div>
           {% endfor %}
+        {% elif c.no_visible_days|default(false) %}
+          <div class="day-row"><div class="no-slots">No dates in the current booking window.</div></div>
         {% else %}
-          <div class="day-row"><div class="no-slots">{{ 'Not yet released.' if c.all_not_released else 'Fully booked for the weekend.' }}</div></div>
+          <div class="day-row"><div class="no-slots">{{ 'Not yet released.' if c.all_not_released else 'Fully booked for the dates shown.' }}</div></div>
         {% endif %}
       </div>
     </div>
@@ -811,15 +865,46 @@ HTML_TEMPLATE = """
     }
     setInterval(updateTime, 30_000);
     updateTime();
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.classList.toggle('active');
+    (function dayFilters() {
+      const bar = document.getElementById('day-filter-bar');
+      if (!bar) return;
+      const STORAGE_KEY = 'teeTimeMonitor.dayFilters';
+      function loadSaved() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return null;
+      }
+      function saveState() {
+        const map = {};
+        bar.querySelectorAll('.filter-btn').forEach(b => { map[b.dataset.day] = b.classList.contains('active'); });
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(map)); } catch (e) {}
+      }
+      function applyFromButtons() {
+        bar.querySelectorAll('.filter-btn').forEach(btn => {
+          const show = btn.classList.contains('active');
+          document.querySelectorAll('.day-row[data-day="' + btn.dataset.day + '"]').forEach(r => { r.style.display = show ? 'block' : 'none'; });
+        });
+        const anyActive = bar.querySelectorAll('.filter-btn.active').length;
+        const emptyEl = document.getElementById('empty-state-msg');
+        if (emptyEl) emptyEl.style.display = anyActive === 0 ? 'block' : 'none';
+      }
+      const saved = loadSaved();
+      bar.querySelectorAll('.filter-btn').forEach(btn => {
         const day = btn.dataset.day;
-        document.querySelectorAll(`.day-row[data-day="${day}"]`).forEach(r => r.style.display = btn.classList.contains('active') ? 'block' : 'none');
-        const activeBtns = document.querySelectorAll('.filter-btn.active');
-        document.getElementById('empty-state-msg').style.display = activeBtns.length === 0 ? 'block' : 'none';
+        if (saved && Object.prototype.hasOwnProperty.call(saved, day))
+          btn.classList.toggle('active', !!saved[day]);
       });
-    });
+      applyFromButtons();
+      bar.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.classList.toggle('active');
+          saveState();
+          applyFromButtons();
+        });
+      });
+    })();
     document.querySelectorAll('.collapsible-header').forEach(h => {
       h.addEventListener('click', () => { h.closest('.course-card').classList.toggle('is-collapsed'); });
     });
@@ -842,21 +927,41 @@ HTML_TEMPLATE = """
 """
 
 def generate_html():
-    dates = get_upcoming_weekend_dates()
+    dates_all = get_monitor_dates()
     now_dt = datetime.now(ET)
     now_str, now_ts = now_dt.strftime("%-I:%M %p ET, %a %b %-d"), int(now_dt.timestamp())
 
+    weekday_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    filter_weekday_names: set[str] = set()
+    for course in COURSES:
+        for d in visible_dates_for_course(course, dates_all):
+            filter_weekday_names.add(d.strftime("%A"))
+    filter_days = sorted(filter_weekday_names, key=lambda n: weekday_order.index(n) if n in weekday_order else 99)
+
     course_data = []
     for course in COURSES:
+        dates_vis = visible_dates_for_course(course, dates_all)
+        if not dates_vis:
+            course_data.append({
+                "name":             course["name"],
+                "safe_id":          course["name"].replace(" ", "-").lower(),
+                "display_name":     f"{course['name']} (no days in booking window)",
+                "any_slots":        False,
+                "all_not_released": False,
+                "days":             [],
+                "no_visible_days":  True,
+            })
+            continue
+
         days_for_course = []
         total_slots_count = 0
-        for d in dates:
+        for d in dates_vis:
             cache_file = CACHE_DIR / course["cache_file"]
             sunset_dt = sun(MIAMI.observer, date=d, tzinfo=ET)["sunset"]
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             cached = load_cache(cache_file, d)
             not_released = cached is None
-            raw_slots = cached or []
+            raw_slots = normalize_monitor_slots(cached or [])
             slots = [
                 s for s in deduplicate_slots(raw_slots, course["tee_time_min"], t_max_day)
                 if not is_slot_in_past(s.get("time", ""), d)
@@ -870,8 +975,8 @@ def generate_html():
                     f"&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
                 )
             elif course["type"] == "cpsgolf":
-                t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
-                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_day}"
+                t_max_book = get_sunset_cutoff(d, course["tee_time_max"])
+                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_book}"
             else:
                 book_url = course["url"]
 
@@ -893,7 +998,11 @@ def generate_html():
             })
 
         any_slots = total_slots_count > 0
-        all_not_released = not any_slots and all(day["not_released"] for day in days_for_course)
+        all_not_released = (
+            not any_slots
+            and bool(days_for_course)
+            and all(day["not_released"] for day in days_for_course)
+        )
         if any_slots:
             display_name = f"{course['name']} ({total_slots_count} slots)"
         elif all_not_released:
@@ -901,19 +1010,24 @@ def generate_html():
         else:
             display_name = f"{course['name']} (Fully Booked)"
         course_data.append({
-            "name":            course["name"],
-            "safe_id":         course["name"].replace(" ", "-").lower(),
-            "display_name":    display_name,
-            "any_slots":       any_slots,
+            "name":             course["name"],
+            "safe_id":          course["name"].replace(" ", "-").lower(),
+            "display_name":     display_name,
+            "any_slots":        any_slots,
             "all_not_released": all_not_released,
-            "days":            days_for_course,
+            "days":             days_for_course,
+            "no_visible_days":  False,
         })
 
-    actual_sunset = sun(MIAMI.observer, date=dates[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
+    if dates_all:
+        actual_sunset = sun(MIAMI.observer, date=dates_all[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
+    else:
+        actual_sunset = sun(MIAMI.observer, date=datetime.now(ET).date(), tzinfo=ET)["sunset"].strftime("%-I:%M %p")
 
     template = Template(HTML_TEMPLATE)
     html_out = template.render(
         courses=course_data,
+        filter_days=filter_days,
         actual_sunset=actual_sunset,
         now_str=now_str,
         now_ts=now_ts,
@@ -932,7 +1046,7 @@ def _select_courses(filter_terms: list[str]) -> list[dict]:
     return picked
 
 async def main(courses: list[dict]):
-    dates = get_upcoming_weekend_dates()
+    dates = get_monitor_dates()
     async with async_playwright() as playwright:
         results = await asyncio.gather(
             *[check_course(playwright, course, dates) for course in courses],
