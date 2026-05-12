@@ -85,12 +85,17 @@
     <div class="legend-item"><div class="legend-dot legend-dot--afternoon"></div>Afternoon (noon+)</div>
     <div class="legend-item"><div class="legend-dot legend-dot--twilight"></div>Twilight</div>
   </div>
-  <div class="filter-bar">
-    <button class="filter-btn active" data-day="Thursday">Thursday</button>
-    <button class="filter-btn active" data-day="Friday">Friday</button>
-    <button class="filter-btn active" data-day="Saturday">Saturday</button>
-    <button class="filter-btn active" data-day="Sunday">Sunday</button>
+  
+  <div class="filter-bar" id="day-filter-bar">
+    
+    <button type="button" class="filter-btn active" data-day="Friday">Friday</button>
+    
+    <button type="button" class="filter-btn active" data-day="Saturday">Saturday</button>
+    
+    <button type="button" class="filter-btn active" data-day="Sunday">Sunday</button>
+    
   </div>
+  
   <main id="course-grid">
     
     <div class="course-card " id="card-miami-lakes">
@@ -143,7 +148,7 @@
                 
                 <li class="slot--twilight ">
                   
-                  3:40 PM
+                  4:36 PM
                 </li>
                 
                 <li class="slot--twilight ">
@@ -587,7 +592,7 @@
                 
                 <li class="slot--afternoon ">
                   
-                  1:18 PM
+                  1:02 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -627,7 +632,7 @@
                 
                 <li class="slot--afternoon ">
                   
-                  2:30 PM
+                  2:14 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -797,6 +802,21 @@
                 
                 <li class="slot--afternoon ">
                   
+                  12:33 PM
+                </li>
+                
+                <li class="slot--afternoon ">
+                  
+                  12:42 PM
+                </li>
+                
+                <li class="slot--afternoon ">
+                  
+                  12:51 PM
+                </li>
+                
+                <li class="slot--afternoon ">
+                  
                   1:00 PM
                 </li>
                 
@@ -817,17 +837,7 @@
                 
                 <li class="slot--afternoon ">
                   
-                  1:36 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:45 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:54 PM
+                  2:21 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -843,11 +853,6 @@
                 <li class="slot--afternoon ">
                   
                   2:39 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:48 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -930,15 +935,46 @@
     }
     setInterval(updateTime, 30_000);
     updateTime();
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        btn.classList.toggle('active');
+    (function dayFilters() {
+      const bar = document.getElementById('day-filter-bar');
+      if (!bar) return;
+      const STORAGE_KEY = 'teeTimeMonitor.dayFilters';
+      function loadSaved() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return null;
+      }
+      function saveState() {
+        const map = {};
+        bar.querySelectorAll('.filter-btn').forEach(b => { map[b.dataset.day] = b.classList.contains('active'); });
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(map)); } catch (e) {}
+      }
+      function applyFromButtons() {
+        bar.querySelectorAll('.filter-btn').forEach(btn => {
+          const show = btn.classList.contains('active');
+          document.querySelectorAll('.day-row[data-day="' + btn.dataset.day + '"]').forEach(r => { r.style.display = show ? 'block' : 'none'; });
+        });
+        const anyActive = bar.querySelectorAll('.filter-btn.active').length;
+        const emptyEl = document.getElementById('empty-state-msg');
+        if (emptyEl) emptyEl.style.display = anyActive === 0 ? 'block' : 'none';
+      }
+      const saved = loadSaved();
+      bar.querySelectorAll('.filter-btn').forEach(btn => {
         const day = btn.dataset.day;
-        document.querySelectorAll(`.day-row[data-day="${day}"]`).forEach(r => r.style.display = btn.classList.contains('active') ? 'block' : 'none');
-        const activeBtns = document.querySelectorAll('.filter-btn.active');
-        document.getElementById('empty-state-msg').style.display = activeBtns.length === 0 ? 'block' : 'none';
+        if (saved && Object.prototype.hasOwnProperty.call(saved, day))
+          btn.classList.toggle('active', !!saved[day]);
       });
-    });
+      applyFromButtons();
+      bar.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.classList.toggle('active');
+          saveState();
+          applyFromButtons();
+        });
+      });
+    })();
     document.querySelectorAll('.collapsible-header').forEach(h => {
       h.addEventListener('click', () => { h.closest('.course-card').classList.toggle('is-collapsed'); });
     });
