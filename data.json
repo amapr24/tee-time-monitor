@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-14T01:41:03.773446-04:00",
+  "generatedAt": "2026-05-14T01:51:07.877638-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -29,7 +29,24 @@
       "days": [
         {
           "date": "2026-05-15",
-          "slots": []
+          "slots": [
+            {
+              "time": "9:48 AM",
+              "isNew": true
+            },
+            {
+              "time": "1:24 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:32 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:48 PM",
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-05-16",
@@ -80,7 +97,28 @@
       "days": [
         {
           "date": "2026-05-15",
-          "slots": []
+          "slots": [
+            {
+              "time": "8:20 AM",
+              "isNew": true
+            },
+            {
+              "time": "2:36 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:40 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:48 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:56 PM",
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-05-16",
@@ -133,7 +171,28 @@
         },
         {
           "date": "2026-05-16",
-          "slots": []
+          "slots": [
+            {
+              "time": "2:30 PM",
+              "isNew": true
+            },
+            {
+              "time": "2:54 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:42 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:50 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:58 PM",
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-05-17",
