@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:59 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:41 AM ET, Thu May 14</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:51 AM ET, Thu May 14</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -114,7 +114,14 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=15" target="_blank">Book</a>
             </div>
             
-              <div class="no-slots">No times available</div>
+              <ul class="slots">
+                
+                <li class="slot--early slot--new">
+                  <span class="new-badge">NEW</span>
+                  8:20 AM
+                </li>
+                
+              </ul>
             
           </div>
           
@@ -141,14 +148,7 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=16" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  11:40 AM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -767,7 +767,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1778755266;
+    const updateTs = 1778755867;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
