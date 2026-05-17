@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-17T12:00:58.738537-04:00",
+  "generatedAt": "2026-05-17T12:14:05.440293-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -9,23 +9,60 @@
           "date": "2026-05-17",
           "slots": [
             {
-              "time": "12:12 PM",
-              "holes": 18
-            },
-            {
               "time": "12:28 PM",
               "holes": 18
-            },
-            {
-              "time": "1:08 PM",
-              "holes": 18,
-              "isNew": true
             }
           ]
         },
         {
           "date": "2026-05-22",
-          "slots": []
+          "slots": [
+            {
+              "time": "11:48 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:04 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:12 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:16 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:24 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:32 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:40 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:48 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:56 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-05-23",
@@ -39,9 +76,6 @@
         {
           "date": "2026-05-17",
           "slots": [
-            {
-              "time": "4:04 PM"
-            },
             {
               "time": "4:12 PM"
             },
@@ -65,9 +99,6 @@
         {
           "date": "2026-05-22",
           "slots": [
-            {
-              "time": "9:48 AM"
-            },
             {
               "time": "10:44 AM"
             },
@@ -136,6 +167,10 @@
             },
             {
               "time": "4:20 PM"
+            },
+            {
+              "time": "4:28 PM",
+              "isNew": true
             }
           ]
         }
@@ -147,9 +182,6 @@
         {
           "date": "2026-05-17",
           "slots": [
-            {
-              "time": "4:04 PM"
-            },
             {
               "time": "4:28 PM"
             },
@@ -418,14 +450,6 @@
             },
             {
               "time": "9:33 AM",
-              "holes": 18
-            },
-            {
-              "time": "9:51 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:09 AM",
               "holes": 18
             },
             {
