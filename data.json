@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-18T05:50:54.078049-04:00",
+  "generatedAt": "2026-05-18T06:04:14.429576-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -385,7 +385,104 @@
         },
         {
           "date": "2026-05-23",
-          "slots": []
+          "slots": [
+            {
+              "time": "10:46 AM",
+              "isNew": true
+            },
+            {
+              "time": "10:54 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:02 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:10 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:18 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:26 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:34 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:42 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:50 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:58 AM",
+              "isNew": true
+            },
+            {
+              "time": "12:06 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:14 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:22 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:30 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:38 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:46 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:54 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:02 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:10 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:18 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:26 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:34 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:42 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:50 PM",
+              "isNew": true
+            }
+          ]
         }
       ]
     },
