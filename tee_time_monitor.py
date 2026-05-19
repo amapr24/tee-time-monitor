@@ -141,11 +141,10 @@ DEFAULT_SCRAPE_WEEKDAYS: tuple[int, ...] = (4, 5, 6)
 EXTRA_SCRAPE_WEEKDAYS: tuple[int, ...] = ()
 
 @lru_cache(maxsize=32)
-def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
+def get_sunset_cutoff(target_date: date, fallback_hour: int) -> datetime | int:
     try:
         s = sun(MIAMI.observer, date=target_date, tzinfo=ET)
-        cutoff_dt = s["sunset"] - timedelta(hours=5)
-        return cutoff_dt.hour
+        return s["sunset"] - timedelta(hours=4, minutes=30)
     except Exception as e:
         logger.error(f"Sunset calc failed for {target_date}: {e}")
         return fallback_hour
@@ -175,16 +174,20 @@ def is_within_booking_window(course: dict, target_date: date) -> bool:
 def visible_dates_for_course(course: dict, monitor_dates: list[date]) -> list[date]:
     return [d for d in monitor_dates if is_within_booking_window(course, d)]
 
-def is_within_window(time_str: str, t_min: int, t_max: int) -> bool:
+def is_within_window(time_str: str, t_min: int, t_max_dt: datetime | int) -> bool:
     try:
         parts = time_str.strip().split()
-        hour, _ = map(int, parts[0].split(":"))
+        hour, minute = int(parts[0].split(":")[0]), int(parts[0].split(":")[1])
         ampm = parts[1].upper() if len(parts) > 1 else "AM"
         if ampm == "PM" and hour != 12:
             hour += 12
         elif ampm == "AM" and hour == 12:
             hour = 0
-        return t_min <= hour <= t_max
+        if isinstance(t_max_dt, datetime):
+            slot_minutes = hour * 60 + minute
+            cutoff_minutes = t_max_dt.hour * 60 + t_max_dt.minute
+            return t_min * 60 <= slot_minutes <= cutoff_minutes
+        return t_min <= hour <= int(t_max_dt)
     except Exception:
         return False
 
