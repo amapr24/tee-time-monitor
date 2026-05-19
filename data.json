@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-19T08:53:43.949038-04:00",
+  "generatedAt": "2026-05-19T09:03:55.194314-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -21,10 +21,6 @@
         {
           "date": "2026-05-24",
           "slots": [
-            {
-              "time": "3:08 PM",
-              "holes": 18
-            },
             {
               "time": "3:16 PM",
               "holes": 18
@@ -246,7 +242,8 @@
           "date": "2026-05-23",
           "slots": [
             {
-              "time": "2:44 PM"
+              "time": "12:36 PM",
+              "isNew": true
             },
             {
               "time": "3:00 PM"
@@ -362,8 +359,7 @@
               "time": "3:48 PM"
             },
             {
-              "time": "4:04 PM",
-              "isNew": true
+              "time": "4:04 PM"
             }
           ]
         }
@@ -530,9 +526,6 @@
           "date": "2026-05-24",
           "slots": [
             {
-              "time": "11:58 AM"
-            },
-            {
               "time": "12:14 PM"
             },
             {
@@ -599,7 +592,10 @@
               "time": "3:10 PM"
             },
             {
-              "time": "3:18 PM",
+              "time": "3:18 PM"
+            },
+            {
+              "time": "3:26 PM",
               "isNew": true
             }
           ]
@@ -737,18 +733,6 @@
               "holes": 18
             },
             {
-              "time": "4:27 PM",
-              "holes": 18
-            },
-            {
-              "time": "4:36 PM",
-              "holes": 18
-            },
-            {
-              "time": "4:45 PM",
-              "holes": 18
-            },
-            {
               "time": "4:54 PM",
               "holes": 18
             }
@@ -757,6 +741,11 @@
         {
           "date": "2026-05-23",
           "slots": [
+            {
+              "time": "11:12 AM",
+              "holes": 18,
+              "isNew": true
+            },
             {
               "time": "1:18 PM",
               "holes": 18
