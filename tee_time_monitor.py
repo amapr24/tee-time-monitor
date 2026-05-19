@@ -144,7 +144,8 @@ EXTRA_SCRAPE_WEEKDAYS: tuple[int, ...] = ()
 def get_sunset_cutoff(target_date: date, fallback_hour: int) -> int:
     try:
         s = sun(MIAMI.observer, date=target_date, tzinfo=ET)
-        return s["sunset"].hour - 4
+        cutoff_dt = s["sunset"] - timedelta(hours=4)
+        return cutoff_dt.hour
     except Exception as e:
         logger.error(f"Sunset calc failed for {target_date}: {e}")
         return fallback_hour
