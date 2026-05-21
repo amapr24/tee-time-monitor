@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:02 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:12 AM ET, Thu May 21</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:21 AM ET, Thu May 21</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -121,8 +121,8 @@
                   9:24 AM
                 </li>
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   11:24 AM
                 </li>
                 
@@ -158,7 +158,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Beach (4 slots)</span>
+          <span class="course-name">Miami Beach (3 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -175,11 +175,6 @@
                 <li class="slot--early ">
                   
                   8:04 AM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:00 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -906,7 +901,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1779369172;
+    const updateTs = 1779369687;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
