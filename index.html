@@ -31,8 +31,12 @@
     .sunset-box { background: var(--sunset-orange); display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; margin-top: 5px; color: white; }
     .header-status { margin-top: 8px; font-size: 0.7rem; font-weight: 600; opacity: 0.9; }
     .header-status b { color: var(--gold); }
-    .legend { background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 12px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.04em; }
+    .legend { background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 12px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .legend-item { appearance: none; background: transparent; border: 1px solid transparent; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 2px 6px; font-family: inherit; font-size: 0.65rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.04em; transition: border-color 0.2s, opacity 0.2s, background 0.2s; }
+    .legend-item:hover { border-color: var(--border); }
+    .legend-item:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 2px; }
+    .legend-item:not(.active) { opacity: 0.42; }
+    .legend-item.active { background: var(--bg); border-color: var(--border); }
     .legend-dot { width: 12px; height: 12px; border-radius: 3px; border: 2px solid transparent; }
     .legend-dot--early { background: var(--early-bg); border-color: var(--early-brd); }
     .legend-dot--midday { background: var(--midday-bg); border-color: var(--midday-brd); }
@@ -61,6 +65,7 @@
     .slot--midday { background: var(--midday-bg); border-color: var(--midday-brd); color: var(--midday-text); }
     .slot--afternoon { background: var(--afternoon-bg); border-color: var(--afternoon-brd); color: var(--afternoon-text); }
     .slot--twilight { background: var(--twilight-bg); border-color: var(--twilight-brd); color: var(--twilight-text); }
+    .slot--hidden { display: none; }
     .slot--new { box-shadow: 0 0 0 2px var(--gold); animation: pulse-new 2s ease-in-out 15; }
     .new-badge { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; background: var(--gold); color: #000; padding: 1px 4px; border-radius: 2px; }
     @keyframes pulse-new { 0%, 100% { box-shadow: 0 0 0 2px var(--gold); } 50% { box-shadow: 0 0 0 5px rgba(255,183,3,0.4); } }
@@ -76,14 +81,14 @@
     <div class="sunset-box">☀️ SUNSET: 8:02 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">5:34 PM ET, Tue May 19</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">2:17 AM ET, Fri May 22</span>)</div>
     </div>
   </header>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot legend-dot--early"></div>Early (pre-10 AM)</div>
-    <div class="legend-item"><div class="legend-dot legend-dot--midday"></div>Midday (10 AM–noon)</div>
-    <div class="legend-item"><div class="legend-dot legend-dot--afternoon"></div>Afternoon (noon+)</div>
-    <div class="legend-item"><div class="legend-dot legend-dot--twilight"></div>Twilight</div>
+  <div class="legend" id="time-filter-bar" aria-label="Time filters">
+    <button type="button" class="legend-item active" data-time-filter="slot--early" aria-pressed="true"><span class="legend-dot legend-dot--early"></span>Early (pre-10 AM)</button>
+    <button type="button" class="legend-item active" data-time-filter="slot--midday" aria-pressed="true"><span class="legend-dot legend-dot--midday"></span>Midday (10 AM–noon)</button>
+    <button type="button" class="legend-item active" data-time-filter="slot--afternoon" aria-pressed="true"><span class="legend-dot legend-dot--afternoon"></span>Afternoon (noon+)</button>
+    <button type="button" class="legend-item active" data-time-filter="slot--twilight" aria-pressed="true"><span class="legend-dot legend-dot--twilight"></span>Twilight</button>
   </div>
   
   <div class="filter-bar" id="day-filter-bar">
@@ -102,892 +107,77 @@
       <div class="card-header">
         <div class="header-title-group">
           
-          <span class="course-name">Miami Lakes (Fully Booked)</span>
+          <span class="course-name">Miami Lakes (Not Yet Released)</span>
         </div>
       </div>
       <div class="card-body">
         
-          <div class="day-row"><div class="no-slots">Fully booked for the dates shown.</div></div>
+          <div class="day-row"><div class="no-slots">Not yet released.</div></div>
         
       </div>
     </div>
     
-    <div class="course-card " id="card-miami-beach">
-      <div class="card-header collapsible-header">
+    <div class="course-card is-collapsed" id="card-miami-beach">
+      <div class="card-header">
         <div class="header-title-group">
-          <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Beach (1 slots)</span>
+          
+          <span class="course-name">Miami Beach (Not Yet Released)</span>
         </div>
       </div>
       <div class="card-body">
         
-          
-          <div class="day-row" data-day="Friday">
-            <div class="day-row-header">
-              <span class="day-label">Fri 22</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-05-22&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <div class="no-slots">No times available</div>
-            
-          </div>
-          
-          <div class="day-row" data-day="Saturday">
-            <div class="day-row-header">
-              <span class="day-label">Sat 23</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-05-23&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <div class="no-slots">No times available</div>
-            
-          </div>
-          
-          <div class="day-row" data-day="Sunday">
-            <div class="day-row-header">
-              <span class="day-label">Sun 24</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-05-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  3:16 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
+          <div class="day-row"><div class="no-slots">Not yet released.</div></div>
         
       </div>
     </div>
     
-    <div class="course-card " id="card-normandy-shores">
-      <div class="card-header collapsible-header">
+    <div class="course-card is-collapsed" id="card-normandy-shores">
+      <div class="card-header">
         <div class="header-title-group">
-          <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (27 slots)</span>
+          
+          <span class="course-name">Normandy Shores (Not Yet Released)</span>
         </div>
       </div>
       <div class="card-body">
         
-          
-          <div class="day-row" data-day="Friday">
-            <div class="day-row-header">
-              <span class="day-label">Fri 22</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-05-22&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  11:48 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:56 AM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:04 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:12 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:20 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:28 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:36 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:52 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:16 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:32 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
-          <div class="day-row" data-day="Saturday">
-            <div class="day-row-header">
-              <span class="day-label">Sat 23</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-05-23&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:48 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:16 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:32 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
-          <div class="day-row" data-day="Sunday">
-            <div class="day-row-header">
-              <span class="day-label">Sun 24</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-05-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:24 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:32 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:40 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:48 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:56 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:04 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:12 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:28 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:36 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:00 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:08 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:16 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:24 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:32 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
+          <div class="day-row"><div class="no-slots">Not yet released.</div></div>
         
       </div>
     </div>
     
-    <div class="course-card " id="card-miami-shores">
-      <div class="card-header collapsible-header">
+    <div class="course-card is-collapsed" id="card-miami-shores">
+      <div class="card-header">
         <div class="header-title-group">
-          <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Shores (48 slots)</span>
+          
+          <span class="course-name">Miami Shores (Not Yet Released)</span>
         </div>
       </div>
       <div class="card-body">
         
-          
-          <div class="day-row" data-day="Friday">
-            <div class="day-row-header">
-              <span class="day-label">Fri 22</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-05-22&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  11:42 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:50 AM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:38 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:46 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:54 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:26 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:42 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:58 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:06 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:14 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:22 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:38 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:46 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:54 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:02 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:10 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:18 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:26 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
-          <div class="day-row" data-day="Saturday">
-            <div class="day-row-header">
-              <span class="day-label">Sat 23</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-05-23&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:58 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:06 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:14 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:22 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:38 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:46 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:54 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
-          <div class="day-row" data-day="Sunday">
-            <div class="day-row-header">
-              <span class="day-label">Sun 24</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/miami-shores-country-club?date=2026-05-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  12:30 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:38 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:46 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:54 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:02 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:10 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:18 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:26 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:34 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:42 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:50 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:58 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:06 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:14 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:22 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:30 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:38 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:46 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:54 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:10 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:18 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:26 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:34 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
+          <div class="day-row"><div class="no-slots">Not yet released.</div></div>
         
       </div>
     </div>
     
-    <div class="course-card " id="card-plantation-preserve">
-      <div class="card-header collapsible-header">
+    <div class="course-card is-collapsed" id="card-plantation-preserve">
+      <div class="card-header">
         <div class="header-title-group">
-          <span class="collapse-icon">▼</span>
-          <span class="course-name">Plantation Preserve (59 slots)</span>
+          
+          <span class="course-name">Plantation Preserve (Not Yet Released)</span>
         </div>
       </div>
       <div class="card-body">
         
-          
-          <div class="day-row" data-day="Friday">
-            <div class="day-row-header">
-              <span class="day-label">Fri 22</span>
-              <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  10:18 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  10:36 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  10:45 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  10:54 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:12 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:21 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:39 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:48 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:57 AM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:06 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:15 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:24 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:33 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:00 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:09 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:18 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:36 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:45 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:54 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:21 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:30 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:39 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:48 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:15 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:24 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
-          <div class="day-row" data-day="Saturday">
-            <div class="day-row-header">
-              <span class="day-label">Sat 23</span>
-              <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:36 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:45 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:54 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:21 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:30 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:48 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:24 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:33 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
-          <div class="day-row" data-day="Sunday">
-            <div class="day-row-header">
-              <span class="day-label">Sun 24</span>
-              <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail" target="_blank">Book</a>
-            </div>
-            
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  10:18 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  10:36 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  10:45 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  10:54 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:30 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:48 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:57 AM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:15 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:24 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:42 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  12:51 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:00 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:09 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:18 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:27 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:36 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:45 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:54 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:12 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:21 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:30 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:39 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:48 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:15 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:24 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  3:33 PM
-                </li>
-                
-              </ul>
-            
-          </div>
-          
+          <div class="day-row"><div class="no-slots">Not yet released.</div></div>
         
       </div>
     </div>
     
   </main>
-  <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
+  <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1779226482;
+    const updateTs = 1779430651;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
@@ -995,43 +185,77 @@
     }
     setInterval(updateTime, 30_000);
     updateTime();
-    (function dayFilters() {
-      const bar = document.getElementById('day-filter-bar');
-      if (!bar) return;
-      const STORAGE_KEY = 'teeTimeMonitor.dayFilters';
-      function loadSaved() {
+    (function filters() {
+      const dayBar = document.getElementById('day-filter-bar');
+      const timeBar = document.getElementById('time-filter-bar');
+      const DAY_STORAGE_KEY = 'teeTimeMonitor.dayFilters';
+      const TIME_STORAGE_KEY = 'teeTimeMonitor.timeFilters';
+      function loadSaved(key) {
         try {
-          const raw = localStorage.getItem(STORAGE_KEY);
+          const raw = localStorage.getItem(key);
           if (raw) return JSON.parse(raw);
         } catch (e) {}
         return null;
       }
-      function saveState() {
+      function saveButtons(container, selector, attr, key) {
+        if (!container) return;
         const map = {};
-        bar.querySelectorAll('.filter-btn').forEach(b => { map[b.dataset.day] = b.classList.contains('active'); });
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(map)); } catch (e) {}
+        container.querySelectorAll(selector).forEach(b => { map[b.dataset[attr]] = b.classList.contains('active'); });
+        try { localStorage.setItem(key, JSON.stringify(map)); } catch (e) {}
       }
-      function applyFromButtons() {
-        bar.querySelectorAll('.filter-btn').forEach(btn => {
-          const show = btn.classList.contains('active');
-          document.querySelectorAll('.day-row[data-day="' + btn.dataset.day + '"]').forEach(r => { r.style.display = show ? 'block' : 'none'; });
+      function hydrateButtons(container, selector, attr, key) {
+        if (!container) return;
+        const saved = loadSaved(key);
+        container.querySelectorAll(selector).forEach(btn => {
+          const value = btn.dataset[attr];
+          if (saved && Object.prototype.hasOwnProperty.call(saved, value)) {
+            btn.classList.toggle('active', !!saved[value]);
+            btn.setAttribute('aria-pressed', String(!!saved[value]));
+          }
         });
-        const anyActive = bar.querySelectorAll('.filter-btn.active').length;
-        const emptyEl = document.getElementById('empty-state-msg');
-        if (emptyEl) emptyEl.style.display = anyActive === 0 ? 'block' : 'none';
       }
-      const saved = loadSaved();
-      bar.querySelectorAll('.filter-btn').forEach(btn => {
-        const day = btn.dataset.day;
-        if (saved && Object.prototype.hasOwnProperty.call(saved, day))
-          btn.classList.toggle('active', !!saved[day]);
-      });
-      applyFromButtons();
-      bar.querySelectorAll('.filter-btn').forEach(btn => {
+      function activeDays() {
+        if (!dayBar) return null;
+        return new Set([...dayBar.querySelectorAll('.filter-btn.active')].map(b => b.dataset.day));
+      }
+      function activeTimes() {
+        return new Set([...timeBar.querySelectorAll('.legend-item.active')].map(b => b.dataset.timeFilter));
+      }
+      function applyFilters() {
+        const days = activeDays();
+        const times = activeTimes();
+        document.querySelectorAll('.slots li').forEach(slot => {
+          const show = [...times].some(cls => slot.classList.contains(cls));
+          slot.classList.toggle('slot--hidden', !show);
+        });
+        document.querySelectorAll('.day-row[data-day]').forEach(row => {
+          const dayMatches = !days || days.has(row.dataset.day);
+          const hasVisibleSlot = !!row.querySelector('.slots li:not(.slot--hidden)');
+          const hasNoSlotMessage = !!row.querySelector('.no-slots');
+          row.style.display = dayMatches && times.size > 0 && (hasVisibleSlot || hasNoSlotMessage) ? 'block' : 'none';
+        });
+        const anyVisible = [...document.querySelectorAll('.day-row[data-day]')].some(row => row.style.display !== 'none');
+        const emptyEl = document.getElementById('empty-state-msg');
+        if (emptyEl) emptyEl.style.display = anyVisible ? 'none' : 'block';
+      }
+      hydrateButtons(dayBar, '.filter-btn', 'day', DAY_STORAGE_KEY);
+      hydrateButtons(timeBar, '.legend-item', 'timeFilter', TIME_STORAGE_KEY);
+      applyFilters();
+      if (dayBar) {
+        dayBar.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            saveButtons(dayBar, '.filter-btn', 'day', DAY_STORAGE_KEY);
+            applyFilters();
+          });
+        });
+      }
+      timeBar.querySelectorAll('.legend-item').forEach(btn => {
         btn.addEventListener('click', () => {
           btn.classList.toggle('active');
-          saveState();
-          applyFromButtons();
+          btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
+          saveButtons(timeBar, '.legend-item', 'timeFilter', TIME_STORAGE_KEY);
+          applyFilters();
         });
       });
     })();
