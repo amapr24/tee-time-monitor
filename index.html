@@ -76,7 +76,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:02 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:01 AM ET, Fri May 22</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:12 AM ET, Fri May 22</span>)</div>
     </div>
   </header>
   <div class="legend">
@@ -102,7 +102,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (5 slots)</span>
+          <span class="course-name">Miami Lakes (6 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -116,8 +116,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   12:44 PM
                 </li>
                 
@@ -148,8 +148,13 @@
                   10:52 AM
                 </li>
                 
-                <li class="slot--afternoon slot--new">
+                <li class="slot--midday slot--new">
                   <span class="new-badge">NEW</span>
+                  11:00 AM
+                </li>
+                
+                <li class="slot--afternoon ">
+                  
                   3:00 PM
                 </li>
                 
@@ -238,14 +243,7 @@
               <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-05-22&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:00 PM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -256,6 +254,11 @@
             </div>
             
               <ul class="slots">
+                
+                <li class="slot--early slot--new">
+                  <span class="new-badge">NEW</span>
+                  9:40 AM
+                </li>
                 
                 <li class="slot--midday ">
                   
@@ -632,8 +635,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   11:57 AM
                 </li>
                 
@@ -756,7 +759,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1779454874;
+    const updateTs = 1779455565;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
