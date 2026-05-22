@@ -762,7 +762,8 @@ HTML_TEMPLATE = """
     .legend-dot--midday { background: var(--midday-bg); border-color: var(--midday-brd); }
     .legend-dot--afternoon { background: var(--afternoon-bg); border-color: var(--afternoon-brd); }
     .legend-dot--twilight { background: var(--twilight-bg); border-color: var(--twilight-brd); }
-    .filter-bar { position: sticky; top: 0; z-index: 50; background: var(--surface); padding: 10px; display: flex; justify-content: center; gap: 6px; border-bottom: 1px solid var(--border); }
+    #sticky-filters { position: sticky; top: 0; z-index: 50; background: var(--surface); }
+    .filter-bar { padding: 10px; display: flex; justify-content: center; gap: 6px; border-bottom: 1px solid var(--border); }
     .filter-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text-sub); padding: 5px 12px; border-radius: 15px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; }
     .filter-btn.active { background: var(--brand-green); color: white; border-color: var(--brand-green); }
     main { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 12px; padding: 12px; max-width: 1400px; margin: 0 auto; }
@@ -809,13 +810,21 @@ HTML_TEMPLATE = """
     <div class="legend-item"><div class="legend-dot legend-dot--afternoon"></div>Afternoon (noon+)</div>
     <div class="legend-item"><div class="legend-dot legend-dot--twilight"></div>Twilight</div>
   </div>
-  {% if filter_days|length > 1 %}
-  <div class="filter-bar" id="day-filter-bar">
-    {% for day in filter_days %}
-    <button type="button" class="filter-btn active" data-day="{{ day }}">{{ day }}</button>
-    {% endfor %}
+  <div id="sticky-filters">
+    <div class="filter-bar" id="time-filter-bar">
+      <button type="button" class="filter-btn active" data-cls="slot--early">Early</button>
+      <button type="button" class="filter-btn active" data-cls="slot--midday">Midday</button>
+      <button type="button" class="filter-btn active" data-cls="slot--afternoon">Afternoon</button>
+      <button type="button" class="filter-btn active" data-cls="slot--twilight">Twilight</button>
+    </div>
+    {% if filter_days|length > 1 %}
+    <div class="filter-bar" id="day-filter-bar">
+      {% for day in filter_days %}
+      <button type="button" class="filter-btn active" data-day="{{ day }}">{{ day }}</button>
+      {% endfor %}
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
   <main id="course-grid">
     {% for c in courses %}
     <div class="course-card {{ 'is-collapsed' if not c.any_slots else '' }}" id="card-{{ c.safe_id }}">
@@ -907,6 +916,57 @@ HTML_TEMPLATE = """
           saveState();
           applyFromButtons();
         });
+      });
+    })();
+    (function timeFilters() {
+      const TIME_CLASSES = ['slot--early', 'slot--midday', 'slot--afternoon', 'slot--twilight'];
+      const bar = document.getElementById('time-filter-bar');
+      if (!bar) return;
+      const STORAGE_KEY = 'teeTimeMonitor.timeFilters';
+      function loadSaved() {
+        try { const r = localStorage.getItem(STORAGE_KEY); if (r) return JSON.parse(r); } catch(e) {}
+        return null;
+      }
+      function saveState() {
+        const map = {};
+        bar.querySelectorAll('.filter-btn').forEach(b => { map[b.dataset.cls] = b.classList.contains('active'); });
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(map)); } catch(e) {}
+      }
+      function applyFromButtons() {
+        const active = new Set();
+        bar.querySelectorAll('.filter-btn.active').forEach(b => active.add(b.dataset.cls));
+        document.querySelectorAll('.slots li').forEach(li => {
+          const show = TIME_CLASSES.some(c => li.classList.contains(c) && active.has(c));
+          li.style.display = show ? '' : 'none';
+        });
+        document.querySelectorAll('.day-row').forEach(row => {
+          const list = row.querySelector('.slots');
+          if (!list) return;
+          const anyVisible = Array.from(list.querySelectorAll('li')).some(li => li.style.display !== 'none');
+          let msg = row.querySelector('.no-slots-filtered');
+          if (!anyVisible) {
+            if (!msg) {
+              msg = document.createElement('div');
+              msg.className = 'no-slots no-slots-filtered';
+              msg.textContent = 'No times match the selected filters.';
+              list.after(msg);
+            }
+            list.style.display = 'none';
+            msg.style.display = '';
+          } else {
+            if (msg) msg.style.display = 'none';
+            list.style.display = '';
+          }
+        });
+      }
+      const saved = loadSaved();
+      bar.querySelectorAll('.filter-btn').forEach(btn => {
+        if (saved && Object.prototype.hasOwnProperty.call(saved, btn.dataset.cls))
+          btn.classList.toggle('active', !!saved[btn.dataset.cls]);
+      });
+      applyFromButtons();
+      bar.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => { btn.classList.toggle('active'); saveState(); applyFromButtons(); });
       });
     })();
     document.querySelectorAll('.collapsible-header').forEach(h => {
