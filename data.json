@@ -1,13 +1,24 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-19T17:34:42.512866-04:00",
+  "generatedAt": "2026-05-21T22:59:32.025826-04:00",
   "courses": [
     {
       "id": "miami-lakes",
       "days": [
         {
           "date": "2026-05-22",
-          "slots": []
+          "slots": [
+            {
+              "time": "7:08 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:32 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-05-23",
@@ -24,7 +35,12 @@
       "days": [
         {
           "date": "2026-05-22",
-          "slots": []
+          "slots": [
+            {
+              "time": "1:32 PM",
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-05-23",
@@ -32,11 +48,7 @@
         },
         {
           "date": "2026-05-24",
-          "slots": [
-            {
-              "time": "3:16 PM"
-            }
-          ]
+          "slots": []
         }
       ]
     },
@@ -47,60 +59,21 @@
           "date": "2026-05-22",
           "slots": [
             {
-              "time": "11:48 AM"
-            },
-            {
-              "time": "11:56 AM"
-            },
-            {
-              "time": "12:04 PM"
-            },
-            {
-              "time": "12:12 PM"
-            },
-            {
-              "time": "12:20 PM"
-            },
-            {
-              "time": "12:28 PM"
-            },
-            {
               "time": "12:36 PM"
             },
             {
-              "time": "12:52 PM"
-            },
-            {
-              "time": "3:16 PM"
-            },
-            {
-              "time": "3:32 PM"
+              "time": "1:00 PM",
+              "isNew": true
             }
           ]
         },
         {
           "date": "2026-05-23",
-          "slots": [
-            {
-              "time": "1:48 PM"
-            },
-            {
-              "time": "3:16 PM"
-            },
-            {
-              "time": "3:32 PM"
-            }
-          ]
+          "slots": []
         },
         {
           "date": "2026-05-24",
           "slots": [
-            {
-              "time": "1:24 PM"
-            },
-            {
-              "time": "1:32 PM"
-            },
             {
               "time": "1:40 PM"
             },
@@ -117,13 +90,11 @@
               "time": "2:12 PM"
             },
             {
-              "time": "2:28 PM"
-            },
-            {
               "time": "2:36 PM"
             },
             {
-              "time": "3:00 PM"
+              "time": "2:52 PM",
+              "isNew": true
             },
             {
               "time": "3:08 PM"
@@ -136,6 +107,14 @@
             },
             {
               "time": "3:32 PM"
+            },
+            {
+              "time": "3:40 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:48 PM",
+              "isNew": true
             }
           ]
         }
@@ -148,37 +127,11 @@
           "date": "2026-05-22",
           "slots": [
             {
-              "time": "11:42 AM"
-            },
-            {
-              "time": "11:50 AM"
-            },
-            {
-              "time": "12:38 PM"
-            },
-            {
-              "time": "12:46 PM"
-            },
-            {
-              "time": "12:54 PM"
-            },
-            {
               "time": "1:26 PM"
             },
             {
-              "time": "1:42 PM"
-            },
-            {
-              "time": "1:58 PM"
-            },
-            {
-              "time": "2:06 PM"
-            },
-            {
-              "time": "2:14 PM"
-            },
-            {
-              "time": "2:22 PM"
+              "time": "1:50 PM",
+              "isNew": true
             },
             {
               "time": "2:38 PM"
@@ -190,16 +143,8 @@
               "time": "2:54 PM"
             },
             {
-              "time": "3:02 PM"
-            },
-            {
-              "time": "3:10 PM"
-            },
-            {
-              "time": "3:18 PM"
-            },
-            {
-              "time": "3:26 PM"
+              "time": "3:50 PM",
+              "isNew": true
             }
           ]
         },
@@ -207,15 +152,6 @@
           "date": "2026-05-23",
           "slots": [
             {
-              "time": "1:58 PM"
-            },
-            {
-              "time": "2:06 PM"
-            },
-            {
-              "time": "2:14 PM"
-            },
-            {
               "time": "2:22 PM"
             },
             {
@@ -226,6 +162,14 @@
             },
             {
               "time": "2:54 PM"
+            },
+            {
+              "time": "3:42 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:50 PM",
+              "isNew": true
             }
           ]
         },
@@ -233,19 +177,11 @@
           "date": "2026-05-24",
           "slots": [
             {
-              "time": "12:30 PM"
-            },
-            {
-              "time": "12:38 PM"
-            },
-            {
-              "time": "12:46 PM"
+              "time": "12:14 PM",
+              "isNew": true
             },
             {
               "time": "12:54 PM"
-            },
-            {
-              "time": "1:02 PM"
             },
             {
               "time": "1:10 PM"
@@ -290,9 +226,6 @@
               "time": "2:54 PM"
             },
             {
-              "time": "3:10 PM"
-            },
-            {
               "time": "3:18 PM"
             },
             {
@@ -300,6 +233,14 @@
             },
             {
               "time": "3:34 PM"
+            },
+            {
+              "time": "3:42 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:50 PM",
+              "isNew": true
             }
           ]
         }
@@ -312,39 +253,11 @@
           "date": "2026-05-22",
           "slots": [
             {
-              "time": "10:18 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:36 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:45 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:54 AM",
-              "holes": 18
-            },
-            {
-              "time": "11:12 AM",
-              "holes": 18
-            },
-            {
-              "time": "11:21 AM",
-              "holes": 18
-            },
-            {
               "time": "11:39 AM",
               "holes": 18
             },
             {
               "time": "11:48 AM",
-              "holes": 18
-            },
-            {
-              "time": "11:57 AM",
               "holes": 18
             },
             {
@@ -364,23 +277,11 @@
               "holes": 18
             },
             {
-              "time": "1:00 PM",
-              "holes": 18
-            },
-            {
               "time": "1:09 PM",
               "holes": 18
             },
             {
-              "time": "1:18 PM",
-              "holes": 18
-            },
-            {
               "time": "1:36 PM",
-              "holes": 18
-            },
-            {
-              "time": "1:45 PM",
               "holes": 18
             },
             {
@@ -400,38 +301,15 @@
               "holes": 18
             },
             {
-              "time": "2:48 PM",
-              "holes": 18
-            },
-            {
-              "time": "3:15 PM",
-              "holes": 18
-            },
-            {
-              "time": "3:24 PM",
-              "holes": 18
+              "time": "3:51 PM",
+              "holes": 18,
+              "isNew": true
             }
           ]
         },
         {
           "date": "2026-05-23",
           "slots": [
-            {
-              "time": "1:36 PM",
-              "holes": 18
-            },
-            {
-              "time": "1:45 PM",
-              "holes": 18
-            },
-            {
-              "time": "1:54 PM",
-              "holes": 18
-            },
-            {
-              "time": "2:21 PM",
-              "holes": 18
-            },
             {
               "time": "2:30 PM",
               "holes": 18
@@ -441,42 +319,15 @@
               "holes": 18
             },
             {
-              "time": "3:24 PM",
-              "holes": 18
-            },
-            {
-              "time": "3:33 PM",
-              "holes": 18
+              "time": "3:51 PM",
+              "holes": 18,
+              "isNew": true
             }
           ]
         },
         {
           "date": "2026-05-24",
           "slots": [
-            {
-              "time": "10:18 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:36 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:45 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:54 AM",
-              "holes": 18
-            },
-            {
-              "time": "11:30 AM",
-              "holes": 18
-            },
-            {
-              "time": "11:48 AM",
-              "holes": 18
-            },
             {
               "time": "11:57 AM",
               "holes": 18
@@ -491,26 +342,6 @@
             },
             {
               "time": "12:42 PM",
-              "holes": 18
-            },
-            {
-              "time": "12:51 PM",
-              "holes": 18
-            },
-            {
-              "time": "1:00 PM",
-              "holes": 18
-            },
-            {
-              "time": "1:09 PM",
-              "holes": 18
-            },
-            {
-              "time": "1:18 PM",
-              "holes": 18
-            },
-            {
-              "time": "1:27 PM",
               "holes": 18
             },
             {
@@ -556,6 +387,11 @@
             {
               "time": "3:33 PM",
               "holes": 18
+            },
+            {
+              "time": "3:51 PM",
+              "holes": 18,
+              "isNew": true
             }
           ]
         }
