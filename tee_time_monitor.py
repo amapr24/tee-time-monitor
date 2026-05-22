@@ -877,30 +877,24 @@ HTML_TEMPLATE = """
     (function filters() {
       const dayBar = document.getElementById('day-filter-bar');
       const timeBar = document.getElementById('time-filter-bar');
-      const DAY_STORAGE_KEY = 'teeTimeMonitor.dayFilters';
-      const TIME_STORAGE_KEY = 'teeTimeMonitor.timeFilters';
-      function loadSaved(key) {
-        try {
-          const raw = localStorage.getItem(key);
-          if (raw) return JSON.parse(raw);
-        } catch (e) {}
-        return null;
+      function saveToHash() {
+        const offDays = [...(dayBar?.querySelectorAll('.filter-btn') || [])].filter(b => !b.classList.contains('active')).map(b => b.dataset.day).join(',');
+        const offTimes = [...timeBar.querySelectorAll('.legend-item')].filter(b => !b.classList.contains('active')).map(b => b.dataset.timeFilter).join(',');
+        const hash = [offDays ? 'd=' + offDays : '', offTimes ? 't=' + offTimes : ''].filter(Boolean).join('&');
+        history.replaceState(null, '', hash ? '#' + hash : location.pathname + location.search);
       }
-      function saveButtons(container, selector, attr, key) {
-        if (!container) return;
-        const map = {};
-        container.querySelectorAll(selector).forEach(b => { map[b.dataset[attr]] = b.classList.contains('active'); });
-        try { localStorage.setItem(key, JSON.stringify(map)); } catch (e) {}
-      }
-      function hydrateButtons(container, selector, attr, key) {
-        if (!container) return;
-        const saved = loadSaved(key);
-        container.querySelectorAll(selector).forEach(btn => {
-          const value = btn.dataset[attr];
-          if (saved && Object.prototype.hasOwnProperty.call(saved, value)) {
-            btn.classList.toggle('active', !!saved[value]);
-            btn.setAttribute('aria-pressed', String(!!saved[value]));
-          }
+      function loadFromHash() {
+        const params = new URLSearchParams(location.hash.slice(1));
+        const offDays = new Set((params.get('d') || '').split(',').filter(Boolean));
+        const offTimes = new Set((params.get('t') || '').split(',').filter(Boolean));
+        dayBar?.querySelectorAll('.filter-btn').forEach(b => {
+          const active = !offDays.has(b.dataset.day);
+          b.classList.toggle('active', active);
+        });
+        timeBar.querySelectorAll('.legend-item').forEach(b => {
+          const active = !offTimes.has(b.dataset.timeFilter);
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-pressed', String(active));
         });
       }
       function activeDays() {
@@ -927,14 +921,13 @@ HTML_TEMPLATE = """
         const emptyEl = document.getElementById('empty-state-msg');
         if (emptyEl) emptyEl.style.display = anyVisible ? 'none' : 'block';
       }
-      hydrateButtons(dayBar, '.filter-btn', 'day', DAY_STORAGE_KEY);
-      hydrateButtons(timeBar, '.legend-item', 'timeFilter', TIME_STORAGE_KEY);
+      loadFromHash();
       applyFilters();
       if (dayBar) {
         dayBar.querySelectorAll('.filter-btn').forEach(btn => {
           btn.addEventListener('click', () => {
             btn.classList.toggle('active');
-            saveButtons(dayBar, '.filter-btn', 'day', DAY_STORAGE_KEY);
+            saveToHash();
             applyFilters();
           });
         });
@@ -943,7 +936,7 @@ HTML_TEMPLATE = """
         btn.addEventListener('click', () => {
           btn.classList.toggle('active');
           btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
-          saveButtons(timeBar, '.legend-item', 'timeFilter', TIME_STORAGE_KEY);
+          saveToHash();
           applyFilters();
         });
       });
