@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-05-23T09:12:08.960826-04:00",
+  "generatedAt": "2026-05-23T09:21:01.831157-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -19,6 +19,11 @@
             {
               "time": "10:52 AM",
               "holes": 18
+            },
+            {
+              "time": "1:56 PM",
+              "holes": 18,
+              "isNew": true
             }
           ]
         },
@@ -41,7 +46,12 @@
         },
         {
           "date": "2026-05-24",
-          "slots": []
+          "slots": [
+            {
+              "time": "3:08 PM",
+              "isNew": true
+            }
+          ]
         }
       ]
     },
@@ -60,7 +70,8 @@
           "date": "2026-05-24",
           "slots": [
             {
-              "time": "11:40 AM"
+              "time": "12:04 PM",
+              "isNew": true
             },
             {
               "time": "12:52 PM"
@@ -78,8 +89,7 @@
               "time": "2:36 PM"
             },
             {
-              "time": "2:44 PM",
-              "isNew": true
+              "time": "2:44 PM"
             },
             {
               "time": "2:52 PM"
@@ -124,72 +134,55 @@
           "date": "2026-05-24",
           "slots": [
             {
-              "time": "12:54 PM",
-              "isNew": true
+              "time": "12:54 PM"
             },
             {
-              "time": "1:10 PM",
-              "isNew": true
+              "time": "1:10 PM"
             },
             {
-              "time": "1:18 PM",
-              "isNew": true
+              "time": "1:18 PM"
             },
             {
-              "time": "1:26 PM",
-              "isNew": true
+              "time": "1:26 PM"
             },
             {
-              "time": "1:34 PM",
-              "isNew": true
+              "time": "1:34 PM"
             },
             {
-              "time": "1:42 PM",
-              "isNew": true
+              "time": "1:42 PM"
             },
             {
-              "time": "1:50 PM",
-              "isNew": true
+              "time": "1:50 PM"
             },
             {
-              "time": "1:58 PM",
-              "isNew": true
+              "time": "1:58 PM"
             },
             {
-              "time": "2:14 PM",
-              "isNew": true
+              "time": "2:14 PM"
             },
             {
-              "time": "2:22 PM",
-              "isNew": true
+              "time": "2:22 PM"
             },
             {
-              "time": "2:30 PM",
-              "isNew": true
+              "time": "2:30 PM"
             },
             {
-              "time": "2:38 PM",
-              "isNew": true
+              "time": "2:38 PM"
             },
             {
-              "time": "2:46 PM",
-              "isNew": true
+              "time": "2:46 PM"
             },
             {
-              "time": "3:26 PM",
-              "isNew": true
+              "time": "3:26 PM"
             },
             {
-              "time": "3:34 PM",
-              "isNew": true
+              "time": "3:34 PM"
             },
             {
-              "time": "3:42 PM",
-              "isNew": true
+              "time": "3:42 PM"
             },
             {
-              "time": "3:50 PM",
-              "isNew": true
+              "time": "3:50 PM"
             }
           ]
         }
