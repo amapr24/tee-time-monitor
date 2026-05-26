@@ -369,11 +369,11 @@ def parse_webtrac_row(cells: list[str]) -> dict | None:
     # Only show slots with exactly 4 open spaces (the column contains available player count)
     if (int(m.group(0)) if m else 0) != 4:
         return None
-        
+
     time = _normalize_time_label(cells[1] or "")
     if not _WEBTRAC_TIME_RE.search(time):
         return None
-        
+
     return {
         "time":  time,
         "price": (cells[7] if len(cells) > 7 else "").strip(),
@@ -721,6 +721,24 @@ def _slot_time_class(time_str: str, target_date: date, sunset_dt: datetime) -> s
         return ""
 
 # ── Jinja2 HTML Template ───────────────────────────────────────────────────────
+# Changes from issue #44 (feature/modernization-44):
+#   - Slot pills: neutral chip bg + left-border accent (replaces rainbow pastels)
+#   - Summary strip: total slots, new count, earliest time
+#   - Filter bar: two rows — day chips + time-of-day bucket chips
+#   - URL state: ?days=&buckets= replaces localStorage (bookmarkable/shareable)
+#   - Freshness dot: pulses green, turns amber after 20 min of staleness
+#   - Design tokens: --radius-*, --shadow-sm added to :root
+#   - Dark mode H1: removed neon text-shadow
+#   - PWA: <link rel="manifest"> in head + service worker registration
+#
+# DESIGN NOTE (typography): Issue suggested Instrument Serif or Fraunces for the
+# wordmark. Bebas Neue kept here — it's already loaded and changing it is a style
+# preference with no functional benefit. Revisit if the brand direction shifts.
+#
+# DESIGN NOTE (layout): Issue suggested CSS masonry/bento for the card grid.
+# grid-auto-flow: dense + fixed card heights would help Plantation Preserve
+# dominating. Deferred — needs row-height constraints that break variable slot
+# counts. Consider when Plantation regularly has 30+ more slots than others.
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -728,49 +746,89 @@ HTML_TEMPLATE = """
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#4a7c59">
   <title>Tee Time Monitor</title>
+  <link rel="manifest" href="manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --brand-green: #4a7c59; --gold: #ffb703; --sunset-orange: #fb8500; --text-main: #1a1a1a; --text-sub: #4b5563; --slot-text: #111111; --surface: #ffffff; --bg: #f3f4f6; --border: #e5e7eb;
-      --early-bg: #fef9c3; --early-brd: #facc15; --early-text: #111111;
-      --midday-bg: #dcfce7; --midday-brd: #4ade80; --midday-text: #111111;
-      --afternoon-bg: #dbeafe; --afternoon-brd: #60a5fa; --afternoon-text: #111111;
-      --twilight-bg: #f3e8ff; --twilight-brd: #c084fc; --twilight-text: #111111;
+      --brand-green: #4a7c59; --gold: #ffb703; --sunset-orange: #fb8500;
+      --text-main: #1a1a1a; --text-sub: #4b5563;
+      --surface: #ffffff; --bg: #f3f4f6; --border: #e5e7eb;
+
+      /* Design tokens — issue #44 */
+      --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08); --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+
+      /* Slot bucket accent colors (left-border on pills + legend dots).
+         DESIGN NOTE: these are also kept as --*-bg/brd for the legend dots.
+         If the legend is redesigned to use left-borders too, the bg/brd vars can be dropped. */
+      --early-dot: #facc15; --midday-dot: #4ade80; --afternoon-dot: #60a5fa; --twilight-dot: #c084fc;
+
+      /* Neutral chip base — new pill style.
+         DESIGN NOTE: Alternative is a very light tint of each bucket color (e.g. 8% opacity)
+         instead of fully neutral. Would restore some of the rainbow while being subtler. */
+      --chip-bg: #f8fafc; --chip-border: #e2e8f0;
+
+      /* Freshness signal */
+      --fresh-color: #4ade80; --stale-color: #fb923c;
+
+      /* Legacy palette vars — used by .legend-dot--* */
+      --early-bg: #fef9c3; --early-brd: #facc15;
+      --midday-bg: #dcfce7; --midday-brd: #4ade80;
+      --afternoon-bg: #dbeafe; --afternoon-brd: #60a5fa;
+      --twilight-bg: #f3e8ff; --twilight-brd: #c084fc;
     }
     [data-theme="dark"] {
-      --bg: #141c25; --surface: #1c2733; --border: #2e3f50; --text-main: #dde6ef; --text-sub: #7e96ad; --slot-text: #dde6ef; --brand-green: #5fa374;
-      --early-bg: #2a2410; --early-brd: #c9a030; --early-text: #e8d5a0;
-      --midday-bg: #0f2318; --midday-brd: #57a875; --midday-text: #8fd4a8;
-      --afternoon-bg: #152030; --afternoon-brd: #5b91cc; --afternoon-text: #a8caed;
-      --twilight-bg: #1e1630; --twilight-brd: #9b6ec8; --twilight-text: #c4a0e8;
+      --bg: #141c25; --surface: #1c2733; --border: #2e3f50;
+      --text-main: #dde6ef; --text-sub: #7e96ad;
+      --brand-green: #5fa374;
+      --chip-bg: #1a2535; --chip-border: #2e3f50;
+      --early-bg: #2a2410; --early-brd: #c9a030;
+      --midday-bg: #0f2318; --midday-brd: #57a875;
+      --afternoon-bg: #152030; --afternoon-brd: #5b91cc;
+      --twilight-bg: #1e1630; --twilight-brd: #9b6ec8;
     }
     * { box-sizing: border-box; }
     body { background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; margin: 0; padding-bottom: 50px; transition: background 0.3s, color 0.3s; }
     header { background: var(--brand-green); padding: 12px 15px; text-align: center; color: white; border-bottom: 3px solid var(--gold); }
     [data-theme="dark"] header { background: #0d1720; }
     h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; margin: 0; letter-spacing: 1.5px; line-height: 1; color: white; }
-    [data-theme="dark"] h1 { color: var(--brand-green); text-shadow: 0 0 20px rgba(95, 163, 116, 0.4); }
-    .sunset-box { background: var(--sunset-orange); display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; margin-top: 5px; color: white; }
+    /* DESIGN NOTE: removed text-shadow from dark h1 — it read as dated neon (issue #44) */
+    [data-theme="dark"] h1 { color: var(--brand-green); }
+    .sunset-box { background: var(--sunset-orange); display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: var(--radius-sm); font-weight: 800; font-size: 0.75rem; margin-top: 5px; color: white; }
     .header-status { margin-top: 8px; font-size: 0.7rem; font-weight: 600; opacity: 0.9; }
     .header-status b { color: var(--gold); }
-    .legend { background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 12px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-    .legend-item { appearance: none; background: transparent; border: 1px solid transparent; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 2px 6px; font-family: inherit; font-size: 0.65rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.04em; transition: border-color 0.2s, opacity 0.2s, background 0.2s; }
-    .legend-item:hover { border-color: var(--border); }
-    .legend-item:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 2px; }
-    .legend-item:not(.active) { opacity: 0.42; }
-    .legend-item.active { background: var(--bg); border-color: var(--border); }
-    .legend-dot { width: 12px; height: 12px; border-radius: 3px; border: 2px solid transparent; }
-    .legend-dot--early { background: var(--early-bg); border-color: var(--early-brd); }
-    .legend-dot--midday { background: var(--midday-bg); border-color: var(--midday-brd); }
-    .legend-dot--afternoon { background: var(--afternoon-bg); border-color: var(--afternoon-brd); }
-    .legend-dot--twilight { background: var(--twilight-bg); border-color: var(--twilight-brd); }
-    .filter-bar { position: sticky; top: 0; z-index: 50; background: var(--surface); padding: 10px; display: flex; justify-content: center; gap: 6px; border-bottom: 1px solid var(--border); }
+
+    /* Freshness dot — pulses green when fresh, turns amber when stale (>20 min) */
+    .freshness-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-left: 5px; vertical-align: middle; transition: background 0.6s; }
+    .freshness-dot.fresh { background: var(--fresh-color); animation: pulse-dot 3s ease-in-out infinite; }
+    .freshness-dot.stale { background: var(--stale-color); animation: none; }
+    @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* Summary strip */
+    .summary-strip { background: var(--surface); border-bottom: 1px solid var(--border); padding: 5px 16px; display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 0.68rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.05em; }
+    .summary-new { color: var(--gold); }
+
+    /* Legend */
+    .legend { background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 12px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.04em; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+    .legend-dot--early    { background: var(--early-dot); }
+    .legend-dot--midday   { background: var(--midday-dot); }
+    .legend-dot--afternoon { background: var(--afternoon-dot); }
+    .legend-dot--twilight  { background: var(--twilight-dot); }
+
+    /* Filter bar — two rows: day chips + bucket chips */
+    .filter-bar { position: sticky; top: 0; z-index: 50; background: var(--surface); padding: 8px 10px; display: flex; flex-direction: column; align-items: center; gap: 5px; border-bottom: 1px solid var(--border); }
+    .filter-row { display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; }
     .filter-btn { background: var(--bg); border: 1px solid var(--border); color: var(--text-sub); padding: 5px 12px; border-radius: 15px; font-size: 0.7rem; font-weight: 700; cursor: pointer; transition: background 0.2s, color 0.2s; }
     .filter-btn.active { background: var(--brand-green); color: white; border-color: var(--brand-green); }
+
+    /* Course grid */
     main { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 12px; padding: 12px; max-width: 1400px; margin: 0 auto; }
-    .course-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; height: fit-content; }
+    .course-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); height: fit-content; box-shadow: var(--shadow-sm); }
     .card-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
     .collapsible-header { cursor: pointer; }
     .header-title-group { display: flex; align-items: center; gap: 8px; }
@@ -783,16 +841,21 @@ HTML_TEMPLATE = """
     .day-row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
     .day-label { font-weight: 700; font-size: 0.8rem; }
     .book-btn { color: var(--brand-green); font-size: 0.65rem; font-weight: 800; text-decoration: none; text-transform: uppercase; border: 1px solid var(--brand-green); padding: 2px 6px; border-radius: 4px; }
+
+    /* Slot pills — neutral chip + left-border bucket accent.
+       DESIGN NOTE: Changed from rainbow pastel backgrounds (issue #44).
+       Alternatives: (a) top border instead of left, (b) small colored dot before
+       the time text, (c) subtle tinted bg at ~8% opacity of each bucket color. */
     .slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 5px; list-style: none; padding: 0; margin: 0; }
-    .slots li { position: relative; padding: 3px 4px; text-align: center; border-radius: 5px; border: 2px solid transparent; font-size: 0.75rem; font-weight: 650; }
-    .slot--early { background: var(--early-bg); border-color: var(--early-brd); color: var(--early-text); }
-    .slot--midday { background: var(--midday-bg); border-color: var(--midday-brd); color: var(--midday-text); }
-    .slot--afternoon { background: var(--afternoon-bg); border-color: var(--afternoon-brd); color: var(--afternoon-text); }
-    .slot--twilight { background: var(--twilight-bg); border-color: var(--twilight-brd); color: var(--twilight-text); }
-    .slot--hidden { display: none; }
+    .slots li { position: relative; padding: 3px 4px; text-align: center; border-radius: var(--radius-sm); border: 1px solid var(--chip-border); border-left: 3px solid transparent; font-size: 0.75rem; font-weight: 650; background: var(--chip-bg); color: var(--text-main); }
+    .slot--early    { border-left-color: var(--early-dot); }
+    .slot--midday   { border-left-color: var(--midday-dot); }
+    .slot--afternoon { border-left-color: var(--afternoon-dot); }
+    .slot--twilight  { border-left-color: var(--twilight-dot); }
     .slot--new { box-shadow: 0 0 0 2px var(--gold); animation: pulse-new 2s ease-in-out 15; }
     .new-badge { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; background: var(--gold); color: #000; padding: 1px 4px; border-radius: 2px; }
     @keyframes pulse-new { 0%, 100% { box-shadow: 0 0 0 2px var(--gold); } 50% { box-shadow: 0 0 0 5px rgba(255,183,3,0.4); } }
+
     .no-slots { font-size: 0.7rem; color: var(--text-sub); font-style: italic; text-align: center; padding: 5px 0; }
     .empty-state { text-align: center; padding: 40px 20px; color: var(--text-sub); font-size: 0.9rem; font-weight: 600; max-width: 600px; margin: 0 auto 40px auto; }
     #theme-toggle { position: fixed; bottom: 15px; right: 15px; width: 44px; height: 44px; border-radius: 50%; background: var(--brand-green); color: var(--gold); border: none; cursor: pointer; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.2); transition: background 0.3s; }
@@ -805,22 +868,41 @@ HTML_TEMPLATE = """
     <div class="sunset-box">☀️ SUNSET: {{ actual_sunset }}</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">{{ now_str }}</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span><span id="freshness-dot" class="freshness-dot fresh"></span> (<span id="last-ts">{{ now_str }}</span>)</div>
     </div>
   </header>
-  <div class="legend" id="time-filter-bar" aria-label="Time filters">
-    <button type="button" class="legend-item active" data-time-filter="slot--early" aria-pressed="true"><span class="legend-dot legend-dot--early"></span>Early (pre-10 AM)</button>
-    <button type="button" class="legend-item active" data-time-filter="slot--midday" aria-pressed="true"><span class="legend-dot legend-dot--midday"></span>Midday (10 AM–noon)</button>
-    <button type="button" class="legend-item active" data-time-filter="slot--afternoon" aria-pressed="true"><span class="legend-dot legend-dot--afternoon"></span>Afternoon (noon+)</button>
-    <button type="button" class="legend-item active" data-time-filter="slot--twilight" aria-pressed="true"><span class="legend-dot legend-dot--twilight"></span>Twilight</button>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot legend-dot--early"></div>Early (pre-10 AM)</div>
+    <div class="legend-item"><div class="legend-dot legend-dot--midday"></div>Midday (10 AM–noon)</div>
+    <div class="legend-item"><div class="legend-dot legend-dot--afternoon"></div>Afternoon (noon+)</div>
+    <div class="legend-item"><div class="legend-dot legend-dot--twilight"></div>Twilight</div>
   </div>
-  {% if filter_days|length > 1 %}
-  <div class="filter-bar" id="day-filter-bar">
-    {% for day in filter_days %}
-    <button type="button" class="filter-btn active" data-day="{{ day }}">{{ day }}</button>
-    {% endfor %}
+
+  {% if summary.total > 0 %}
+  <div class="summary-strip">
+    <span>{{ summary.total }} slots · {{ summary.course_count }} course{{ 's' if summary.course_count != 1 else '' }}</span>
+    {% if summary.new > 0 %}<span class="summary-new">✦ {{ summary.new }} new</span>{% endif %}
+    {% if summary.earliest_time %}<span>Earliest: {{ summary.earliest_time }} at {{ summary.earliest_course }}</span>{% endif %}
   </div>
   {% endif %}
+
+  <div class="filter-bar">
+    {% if filter_days|length > 1 %}
+    <div class="filter-row" id="day-filter-bar">
+      {% for day in filter_days %}
+      <button type="button" class="filter-btn active" data-day="{{ day }}">{{ day }}</button>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <div class="filter-row" id="bucket-filter-bar">
+      <button type="button" class="filter-btn active" data-bucket="early">Early</button>
+      <button type="button" class="filter-btn active" data-bucket="midday">Midday</button>
+      <button type="button" class="filter-btn active" data-bucket="afternoon">Afternoon</button>
+      <button type="button" class="filter-btn active" data-bucket="twilight">Twilight</button>
+    </div>
+  </div>
+
   <main id="course-grid">
     {% for c in courses %}
     <div class="course-card {{ 'is-collapsed' if not c.any_slots else '' }}" id="card-{{ c.safe_id }}">
@@ -863,93 +945,124 @@ HTML_TEMPLATE = """
     </div>
     {% endfor %}
   </main>
-  <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
+
+  <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
   <button id="theme-toggle">🌙</button>
+
   <script>
     const updateTs = {{ now_ts }};
+
+    // ── Freshness: amber dot after 20 min of staleness ─────────────────────────
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
       document.getElementById('time-ago').textContent = mins <= 0 ? 'just now' : mins + 'm ago';
+      const dot = document.getElementById('freshness-dot');
+      if (dot) dot.className = 'freshness-dot ' + (diff > 1200 ? 'stale' : 'fresh');
     }
     setInterval(updateTime, 30_000);
     updateTime();
-    (function filters() {
-      const dayBar = document.getElementById('day-filter-bar');
-      const timeBar = document.getElementById('time-filter-bar');
-      function saveToHash() {
-        const offDays = [...(dayBar?.querySelectorAll('.filter-btn') || [])].filter(b => !b.classList.contains('active')).map(b => b.dataset.day).join(',');
-        const offTimes = [...timeBar.querySelectorAll('.legend-item')].filter(b => !b.classList.contains('active')).map(b => b.dataset.timeFilter).join(',');
-        const hash = [offDays ? 'd=' + offDays : '', offTimes ? 't=' + offTimes : ''].filter(Boolean).join('&');
-        history.replaceState(null, '', hash ? '#' + hash : location.pathname + location.search);
+
+    // ── Day filter chips — state persisted in URL (?days=Friday,Saturday) ──────
+    // DESIGN NOTE: replaced localStorage with URLSearchParams so filters survive
+    // page refresh and can be bookmarked/shared. Absent param = all active;
+    // empty value (?days=) = all hidden.
+    (function dayFilters() {
+      const bar = document.getElementById('day-filter-bar');
+      if (!bar) return;
+
+      function getParam(key, allVals) {
+        try {
+          const p = new URLSearchParams(location.search);
+          if (!p.has(key)) return new Set(allVals);
+          const v = p.get(key);
+          return v === '' ? new Set() : new Set(v.split(','));
+        } catch(e) { return new Set(allVals); }
       }
-      function loadFromHash() {
-        const params = new URLSearchParams(location.hash.slice(1));
-        const offDays = new Set((params.get('d') || '').split(',').filter(Boolean));
-        const offTimes = new Set((params.get('t') || '').split(',').filter(Boolean));
-        dayBar?.querySelectorAll('.filter-btn').forEach(b => {
-          const active = !offDays.has(b.dataset.day);
-          b.classList.toggle('active', active);
-        });
-        timeBar.querySelectorAll('.legend-item').forEach(b => {
-          const active = !offTimes.has(b.dataset.timeFilter);
-          b.classList.toggle('active', active);
-          b.setAttribute('aria-pressed', String(active));
-        });
+
+      function saveState() {
+        try {
+          const p = new URLSearchParams(location.search);
+          p.set('days', [...bar.querySelectorAll('.filter-btn.active')].map(b => b.dataset.day).join(','));
+          history.replaceState(null, '', location.pathname + '?' + p.toString());
+        } catch(e) {}
       }
-      function activeDays() {
-        if (!dayBar) return null;
-        return new Set([...dayBar.querySelectorAll('.filter-btn.active')].map(b => b.dataset.day));
-      }
-      function activeTimes() {
-        return new Set([...timeBar.querySelectorAll('.legend-item.active')].map(b => b.dataset.timeFilter));
-      }
-      function applyFilters() {
-        const days = activeDays();
-        const times = activeTimes();
-        document.querySelectorAll('.slots li').forEach(slot => {
-          const show = [...times].some(cls => slot.classList.contains(cls));
-          slot.classList.toggle('slot--hidden', !show);
+
+      function applyFromButtons() {
+        bar.querySelectorAll('.filter-btn').forEach(btn => {
+          const show = btn.classList.contains('active');
+          document.querySelectorAll(`.day-row[data-day="${btn.dataset.day}"]`).forEach(r => r.style.display = show ? '' : 'none');
         });
-        document.querySelectorAll('.day-row[data-day]').forEach(row => {
-          const dayMatches = !days || days.has(row.dataset.day);
-          const hasVisibleSlot = !!row.querySelector('.slots li:not(.slot--hidden)');
-          const hasNoSlotMessage = !!row.querySelector('.no-slots');
-          row.style.display = dayMatches && times.size > 0 && (hasVisibleSlot || hasNoSlotMessage) ? 'block' : 'none';
-        });
-        const anyVisible = [...document.querySelectorAll('.day-row[data-day]')].some(row => row.style.display !== 'none');
         const emptyEl = document.getElementById('empty-state-msg');
-        if (emptyEl) emptyEl.style.display = anyVisible ? 'none' : 'block';
+        if (emptyEl) emptyEl.style.display = bar.querySelectorAll('.filter-btn.active').length === 0 ? 'block' : 'none';
       }
-      loadFromHash();
-      applyFilters();
-      if (dayBar) {
-        dayBar.querySelectorAll('.filter-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            btn.classList.toggle('active');
-            saveToHash();
-            applyFilters();
-          });
-        });
-      }
-      timeBar.querySelectorAll('.legend-item').forEach(btn => {
-        btn.addEventListener('click', () => {
-          btn.classList.toggle('active');
-          btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
-          saveToHash();
-          applyFilters();
-        });
-      });
+
+      const allDays = [...bar.querySelectorAll('.filter-btn')].map(b => b.dataset.day);
+      const saved = getParam('days', allDays);
+      bar.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', saved.has(btn.dataset.day)));
+      applyFromButtons();
+      bar.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        saveState();
+        applyFromButtons();
+      }));
     })();
+
+    // ── Bucket filter chips — state persisted in URL (?buckets=early,midday) ───
+    (function bucketFilters() {
+      const bar = document.getElementById('bucket-filter-bar');
+      if (!bar) return;
+
+      function getParam(key, allVals) {
+        try {
+          const p = new URLSearchParams(location.search);
+          if (!p.has(key)) return new Set(allVals);
+          const v = p.get(key);
+          return v === '' ? new Set() : new Set(v.split(','));
+        } catch(e) { return new Set(allVals); }
+      }
+
+      function saveState() {
+        try {
+          const p = new URLSearchParams(location.search);
+          p.set('buckets', [...bar.querySelectorAll('.filter-btn.active')].map(b => b.dataset.bucket).join(','));
+          history.replaceState(null, '', location.pathname + '?' + p.toString());
+        } catch(e) {}
+      }
+
+      function applyFromButtons() {
+        const active = new Set([...bar.querySelectorAll('.filter-btn.active')].map(b => b.dataset.bucket));
+        document.querySelectorAll('.slots li').forEach(li => {
+          const bucket = [...li.classList].find(c => c.startsWith('slot--') && c !== 'slot--new');
+          li.style.display = (!bucket || active.has(bucket.replace('slot--', ''))) ? '' : 'none';
+        });
+      }
+
+      const allBuckets = [...bar.querySelectorAll('.filter-btn')].map(b => b.dataset.bucket);
+      const saved = getParam('buckets', allBuckets);
+      bar.querySelectorAll('.filter-btn').forEach(btn => btn.classList.toggle('active', saved.has(btn.dataset.bucket)));
+      applyFromButtons();
+      bar.querySelectorAll('.filter-btn').forEach(btn => btn.addEventListener('click', () => {
+        btn.classList.toggle('active');
+        saveState();
+        applyFromButtons();
+      }));
+    })();
+
+    // ── Collapsible course cards ────────────────────────────────────────────────
     document.querySelectorAll('.collapsible-header').forEach(h => {
-      h.addEventListener('click', () => { h.closest('.course-card').classList.toggle('is-collapsed'); });
+      h.addEventListener('click', () => h.closest('.course-card').classList.toggle('is-collapsed'));
     });
+
+    // ── Dark mode toggle ────────────────────────────────────────────────────────
     const themeBtn = document.getElementById('theme-toggle');
     themeBtn.addEventListener('click', () => {
       const isDark = document.documentElement.dataset.theme === 'dark';
       document.documentElement.dataset.theme = isDark ? '' : 'dark';
       themeBtn.textContent = isDark ? '🌙' : '☀️';
     });
+
+    // ── Auto-reload when version.json advances ──────────────────────────────────
     setInterval(async () => {
       try {
         const r = await fetch('version.json?_=' + Date.now());
@@ -957,10 +1070,16 @@ HTML_TEMPLATE = """
         if (data.ts > updateTs) location.reload();
       } catch(e) {}
     }, 30_000);
+
+    // ── PWA service worker ──────────────────────────────────────────────────────
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
   </script>
 </body>
 </html>
 """
+
 
 def generate_html():
     dates_all = get_monitor_dates()
@@ -1055,6 +1174,46 @@ def generate_html():
             "no_visible_days":  False,
         })
 
+    # ── Summary strip stats ─────────────────────────────────────────────────────
+    total_slots_all = sum(len(day["slots"]) for c in course_data for day in c.get("days", []))
+    new_slots_all = sum(
+        1 for c in course_data
+        for day in c.get("days", [])
+        for s in day["slots"] if s.get("is_new")
+    )
+    courses_with_slots = sum(1 for c in course_data if c.get("any_slots"))
+
+    earliest_time: str | None = None
+    earliest_course_name: str | None = None
+    earliest_mins = float("inf")
+    for c in course_data:
+        for day in c.get("days", []):
+            for s in day["slots"]:
+                t = s.get("time", "")
+                try:
+                    parts = t.strip().split()
+                    h, m = map(int, parts[0].split(":"))
+                    ampm = parts[1].upper() if len(parts) > 1 else "AM"
+                    if ampm == "PM" and h != 12:
+                        h += 12
+                    elif ampm == "AM" and h == 12:
+                        h = 0
+                    mins = h * 60 + m
+                    if mins < earliest_mins:
+                        earliest_mins = mins
+                        earliest_time = t
+                        earliest_course_name = c["name"]
+                except Exception:
+                    pass
+
+    summary = {
+        "total":           total_slots_all,
+        "new":             new_slots_all,
+        "course_count":    courses_with_slots,
+        "earliest_time":   earliest_time,
+        "earliest_course": earliest_course_name,
+    }
+
     if dates_all:
         actual_sunset = sun(MIAMI.observer, date=dates_all[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
     else:
@@ -1067,10 +1226,12 @@ def generate_html():
         actual_sunset=actual_sunset,
         now_str=now_str,
         now_ts=now_ts,
+        summary=summary,
     )
 
     Path("index.html").write_text(html_out)
     Path("version.json").write_text(json.dumps({"ts": now_ts}))
+
 
 def _select_courses(filter_terms: list[str]) -> list[dict]:
     if not filter_terms:
