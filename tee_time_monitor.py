@@ -755,8 +755,12 @@ HTML_TEMPLATE = """
     .sunset-box { background: var(--sunset-orange); display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 6px; font-weight: 800; font-size: 0.75rem; margin-top: 5px; color: white; }
     .header-status { margin-top: 8px; font-size: 0.7rem; font-weight: 600; opacity: 0.9; }
     .header-status b { color: var(--gold); }
-    .legend { background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 12px; display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.65rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.04em; }
+    .legend { background: var(--surface); border-bottom: 1px solid var(--border); padding: 7px 12px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
+    .legend-item { appearance: none; background: transparent; border: 1px solid transparent; border-radius: 14px; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 2px 6px; font-family: inherit; font-size: 0.65rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.04em; transition: border-color 0.2s, opacity 0.2s, background 0.2s; }
+    .legend-item:hover { border-color: var(--border); }
+    .legend-item:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 2px; }
+    .legend-item:not(.active) { opacity: 0.42; }
+    .legend-item.active { background: var(--bg); border-color: var(--border); }
     .legend-dot { width: 12px; height: 12px; border-radius: 3px; border: 2px solid transparent; }
     .legend-dot--early { background: var(--early-bg); border-color: var(--early-brd); }
     .legend-dot--midday { background: var(--midday-bg); border-color: var(--midday-brd); }
@@ -785,6 +789,7 @@ HTML_TEMPLATE = """
     .slot--midday { background: var(--midday-bg); border-color: var(--midday-brd); color: var(--midday-text); }
     .slot--afternoon { background: var(--afternoon-bg); border-color: var(--afternoon-brd); color: var(--afternoon-text); }
     .slot--twilight { background: var(--twilight-bg); border-color: var(--twilight-brd); color: var(--twilight-text); }
+    .slot--hidden { display: none; }
     .slot--new { box-shadow: 0 0 0 2px var(--gold); animation: pulse-new 2s ease-in-out 15; }
     .new-badge { position: absolute; top: -8px; left: 50%; transform: translateX(-50%); font-size: 0.5rem; background: var(--gold); color: #000; padding: 1px 4px; border-radius: 2px; }
     @keyframes pulse-new { 0%, 100% { box-shadow: 0 0 0 2px var(--gold); } 50% { box-shadow: 0 0 0 5px rgba(255,183,3,0.4); } }
@@ -803,11 +808,11 @@ HTML_TEMPLATE = """
       <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">{{ now_str }}</span>)</div>
     </div>
   </header>
-  <div class="legend">
-    <div class="legend-item"><div class="legend-dot legend-dot--early"></div>Early (pre-10 AM)</div>
-    <div class="legend-item"><div class="legend-dot legend-dot--midday"></div>Midday (10 AM–noon)</div>
-    <div class="legend-item"><div class="legend-dot legend-dot--afternoon"></div>Afternoon (noon+)</div>
-    <div class="legend-item"><div class="legend-dot legend-dot--twilight"></div>Twilight</div>
+  <div class="legend" id="time-filter-bar" aria-label="Time filters">
+    <button type="button" class="legend-item active" data-time-filter="slot--early" aria-pressed="true"><span class="legend-dot legend-dot--early"></span>Early (pre-10 AM)</button>
+    <button type="button" class="legend-item active" data-time-filter="slot--midday" aria-pressed="true"><span class="legend-dot legend-dot--midday"></span>Midday (10 AM–noon)</button>
+    <button type="button" class="legend-item active" data-time-filter="slot--afternoon" aria-pressed="true"><span class="legend-dot legend-dot--afternoon"></span>Afternoon (noon+)</button>
+    <button type="button" class="legend-item active" data-time-filter="slot--twilight" aria-pressed="true"><span class="legend-dot legend-dot--twilight"></span>Twilight</button>
   </div>
   {% if filter_days|length > 1 %}
   <div class="filter-bar" id="day-filter-bar">
@@ -858,7 +863,7 @@ HTML_TEMPLATE = """
     </div>
     {% endfor %}
   </main>
-  <div id="empty-state-msg" style="display:none" class="empty-state">Select a day above to see available times.</div>
+  <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
     const updateTs = {{ now_ts }};
@@ -869,43 +874,70 @@ HTML_TEMPLATE = """
     }
     setInterval(updateTime, 30_000);
     updateTime();
-    (function dayFilters() {
-      const bar = document.getElementById('day-filter-bar');
-      if (!bar) return;
-      const STORAGE_KEY = 'teeTimeMonitor.dayFilters';
-      function loadSaved() {
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) return JSON.parse(raw);
-        } catch (e) {}
-        return null;
+    (function filters() {
+      const dayBar = document.getElementById('day-filter-bar');
+      const timeBar = document.getElementById('time-filter-bar');
+      function saveToHash() {
+        const offDays = [...(dayBar?.querySelectorAll('.filter-btn') || [])].filter(b => !b.classList.contains('active')).map(b => b.dataset.day).join(',');
+        const offTimes = [...timeBar.querySelectorAll('.legend-item')].filter(b => !b.classList.contains('active')).map(b => b.dataset.timeFilter).join(',');
+        const hash = [offDays ? 'd=' + offDays : '', offTimes ? 't=' + offTimes : ''].filter(Boolean).join('&');
+        history.replaceState(null, '', hash ? '#' + hash : location.pathname + location.search);
       }
-      function saveState() {
-        const map = {};
-        bar.querySelectorAll('.filter-btn').forEach(b => { map[b.dataset.day] = b.classList.contains('active'); });
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(map)); } catch (e) {}
-      }
-      function applyFromButtons() {
-        bar.querySelectorAll('.filter-btn').forEach(btn => {
-          const show = btn.classList.contains('active');
-          document.querySelectorAll('.day-row[data-day="' + btn.dataset.day + '"]').forEach(r => { r.style.display = show ? 'block' : 'none'; });
+      function loadFromHash() {
+        const params = new URLSearchParams(location.hash.slice(1));
+        const offDays = new Set((params.get('d') || '').split(',').filter(Boolean));
+        const offTimes = new Set((params.get('t') || '').split(',').filter(Boolean));
+        dayBar?.querySelectorAll('.filter-btn').forEach(b => {
+          const active = !offDays.has(b.dataset.day);
+          b.classList.toggle('active', active);
         });
-        const anyActive = bar.querySelectorAll('.filter-btn.active').length;
-        const emptyEl = document.getElementById('empty-state-msg');
-        if (emptyEl) emptyEl.style.display = anyActive === 0 ? 'block' : 'none';
+        timeBar.querySelectorAll('.legend-item').forEach(b => {
+          const active = !offTimes.has(b.dataset.timeFilter);
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-pressed', String(active));
+        });
       }
-      const saved = loadSaved();
-      bar.querySelectorAll('.filter-btn').forEach(btn => {
-        const day = btn.dataset.day;
-        if (saved && Object.prototype.hasOwnProperty.call(saved, day))
-          btn.classList.toggle('active', !!saved[day]);
-      });
-      applyFromButtons();
-      bar.querySelectorAll('.filter-btn').forEach(btn => {
+      function activeDays() {
+        if (!dayBar) return null;
+        return new Set([...dayBar.querySelectorAll('.filter-btn.active')].map(b => b.dataset.day));
+      }
+      function activeTimes() {
+        return new Set([...timeBar.querySelectorAll('.legend-item.active')].map(b => b.dataset.timeFilter));
+      }
+      function applyFilters() {
+        const days = activeDays();
+        const times = activeTimes();
+        document.querySelectorAll('.slots li').forEach(slot => {
+          const show = [...times].some(cls => slot.classList.contains(cls));
+          slot.classList.toggle('slot--hidden', !show);
+        });
+        document.querySelectorAll('.day-row[data-day]').forEach(row => {
+          const dayMatches = !days || days.has(row.dataset.day);
+          const hasVisibleSlot = !!row.querySelector('.slots li:not(.slot--hidden)');
+          const hasNoSlotMessage = !!row.querySelector('.no-slots');
+          row.style.display = dayMatches && times.size > 0 && (hasVisibleSlot || hasNoSlotMessage) ? 'block' : 'none';
+        });
+        const anyVisible = [...document.querySelectorAll('.day-row[data-day]')].some(row => row.style.display !== 'none');
+        const emptyEl = document.getElementById('empty-state-msg');
+        if (emptyEl) emptyEl.style.display = anyVisible ? 'none' : 'block';
+      }
+      loadFromHash();
+      applyFilters();
+      if (dayBar) {
+        dayBar.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            btn.classList.toggle('active');
+            saveToHash();
+            applyFilters();
+          });
+        });
+      }
+      timeBar.querySelectorAll('.legend-item').forEach(btn => {
         btn.addEventListener('click', () => {
           btn.classList.toggle('active');
-          saveState();
-          applyFromButtons();
+          btn.setAttribute('aria-pressed', String(btn.classList.contains('active')));
+          saveToHash();
+          applyFilters();
         });
       });
     })();
