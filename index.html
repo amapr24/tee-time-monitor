@@ -81,7 +81,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:09 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">12:32 PM ET, Mon Jun 1</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">12:42 PM ET, Mon Jun 1</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -158,7 +158,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Beach (10 slots)</span>
+          <span class="course-name">Miami Beach (9 slots)</span>
         </div>
       </div>
       <div class="card-body">
@@ -227,14 +227,7 @@
               <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-06-06&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--twilight ">
-                  
-                  3:56 PM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -756,7 +749,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1780331555;
+    const updateTs = 1780332126;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
