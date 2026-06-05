@@ -98,7 +98,12 @@ COURSES = [
         "address":        "10000 Biscayne Blvd, Miami Shores",
         "phone":          "(305) 795-2369",
         "type":           "chronogolf",
-        "url":            "https://www.chronogolf.com/club/miami-shores-cc",
+        # Marketplace slug (miami-shores-cc) returns no tee times during the
+        # management transition; inventory is exposed via the club booking widget API.
+        "url":            "https://www.chronogolf.com/club/19871/widget?medium=widget&source=club",
+        "chronogolf_club_id": 19871,
+        "chronogolf_course_id": 28341,
+        "chronogolf_affiliation_type_id": 153007,
         "holes":          18,
         "group_size":     4,
         "tee_time_min":   8,
@@ -334,6 +339,96 @@ def parse_chronogolf_card(raw: str) -> dict | None:
         "holes": f"{hole.group(1)} holes" if hole else "",
         "price": price.group(0) if price else "",
     }
+
+def _format_chrono_24h(h: int, minute: str) -> str:
+    ampm = "PM" if h >= 12 else "AM"
+    if h > 12:
+        h -= 12
+    if h == 0:
+        h = 12
+    return f"{h}:{minute} {ampm}"
+
+
+def parse_chronogolf_club_api(entries: list, *, holes: int = 18) -> list[dict]:
+    """Parse /marketplace/clubs/{id}/teetimes JSON (club widget API)."""
+    out, seen = [], set()
+    for entry in entries or []:
+        if entry.get("out_of_capacity"):
+            continue
+        start = entry.get("start_time") or ""
+        m = _CHRONO_24H_RE.search(start)
+        if not m:
+            continue
+        time_str = _format_chrono_24h(int(m.group(1)), m.group(2))
+        key = (time_str, f"{holes} holes")
+        if key in seen:
+            continue
+        seen.add(key)
+        price = ""
+        fees = entry.get("green_fees") or []
+        if fees and fees[0].get("price") is not None:
+            price = f"${fees[0]['price']:.2f}"
+        out.append({"time": time_str, "holes": f"{holes} holes", "price": price})
+    return out
+
+
+def fetch_chronogolf_club_teetimes(course: dict, target_date: date) -> list[dict]:
+    """Fetch tee times from the Chronogolf club widget API (not the marketplace slug)."""
+    club_id = course["chronogolf_club_id"]
+    course_id = course["chronogolf_course_id"]
+    affiliation_id = course["chronogolf_affiliation_type_id"]
+    group_size = course.get("group_size", 4)
+    holes = course.get("holes", 18)
+    params = [
+        ("date", target_date.isoformat()),
+        ("course_id", str(course_id)),
+        ("nb_holes", str(holes)),
+    ]
+    params.extend(("affiliation_type_ids[]", str(affiliation_id)) for _ in range(group_size))
+    url = f"https://www.chronogolf.com/marketplace/clubs/{club_id}/teetimes"
+    try:
+        resp = requests.get(
+            url,
+            params=params,
+            headers={
+                "User-Agent": (
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/122.0.0.0 Safari/537.36"
+                ),
+                "Referer": f"https://www.chronogolf.com/club/{club_id}/widget",
+            },
+            timeout=30,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        if not isinstance(data, list):
+            logger.warning(f"[{course['name']}] {target_date}: unexpected club teetimes response: {type(data)}")
+            return []
+        return parse_chronogolf_club_api(data, holes=holes)
+    except Exception as e:
+        logger.error(f"[{course['name']}] {target_date}: club teetimes API error: {e}")
+        return []
+
+
+def chronogolf_book_url(course: dict, d: date) -> str:
+    if course.get("chronogolf_club_id"):
+        gs = course.get("group_size", 4)
+        aff = course["chronogolf_affiliation_type_id"]
+        aff_ids = ",".join([str(aff)] * gs)
+        return (
+            f"https://www.chronogolf.com/club/{course['chronogolf_club_id']}/widget"
+            f"?medium=widget&source=club#?date={d.isoformat()}"
+            f"&course_id={course['chronogolf_course_id']}"
+            f"&nb_holes={course.get('holes', 18)}"
+            f"&affiliation_type_ids={aff_ids}"
+        )
+    return (
+        f"{course['url']}?date={d.isoformat()}"
+        f"&step=teetimes&holes={course.get('holes', 18)}"
+        f"&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
+    )
+
 
 def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
     out, seen = [], set()
@@ -575,7 +670,10 @@ async def check_day(context, course: dict, target_date: date):
     if course["type"] == "cpsgolf":
         raw = await scrape_cpsgolf(context, course, target_date)
     elif course["type"] == "chronogolf":
-        raw = await scrape_chronogolf(context, course, target_date)
+        if course.get("chronogolf_club_id"):
+            raw = fetch_chronogolf_club_teetimes(course, target_date)
+        else:
+            raw = await scrape_chronogolf(context, course, target_date)
     elif course["type"] == "webtrac":
         raw = await scrape_webtrac(context, course, target_date)
     else:
@@ -1005,11 +1103,7 @@ def generate_html():
             total_slots_count += len(slots)
 
             if course["type"] == "chronogolf":
-                book_url = (
-                    f"{course['url']}?date={d.isoformat()}"
-                    f"&step=teetimes&holes={course.get('holes', 18)}"
-                    f"&coursesIds=&deals=false&groupSize={course.get('group_size', 4)}"
-                )
+                book_url = chronogolf_book_url(course, d)
             elif course["type"] == "cpsgolf":
                 t_max_book = get_sunset_cutoff(d, course["tee_time_max"])
                 book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_book}"
