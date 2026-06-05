@@ -98,7 +98,7 @@ COURSES = [
         "address":        "10000 Biscayne Blvd, Miami Shores",
         "phone":          "(305) 795-2369",
         "type":           "chronogolf",
-        "url":            "https://www.chronogolf.com/club/miami-shores-country-club",
+        "url":            "https://www.chronogolf.com/club/miami-shores-cc",
         "holes":          18,
         "group_size":     4,
         "tee_time_min":   8,
