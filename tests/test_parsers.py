@@ -15,6 +15,7 @@ from tee_time_monitor import (
     parse_cpsgolf_card,
     parse_chronogolf,
     parse_chronogolf_card,
+    parse_chronogolf_club_api,
     parse_webtrac,
     parse_webtrac_row,
 )
@@ -133,6 +134,23 @@ def test_chronogolf_no_tee_times_marker_suppresses_body_fallback():
         "No tee times found Adjust your filters or select another date."
     )
     assert parse_chronogolf([], body) == []
+
+
+def test_chronogolf_club_api_skips_full_slots():
+    entries = [
+        {"start_time": "10:22", "out_of_capacity": False, "green_fees": [{"price": 89.0}]},
+        {"start_time": "06:30", "out_of_capacity": True, "green_fees": [{"price": 89.0}]},
+    ]
+    slots = parse_chronogolf_club_api(entries)
+    assert len(slots) == 1
+    assert slots[0]["time"] == "10:22 AM"
+    assert slots[0]["holes"] == "18 holes"
+
+
+def test_chronogolf_club_api_converts_afternoon_24h():
+    entries = [{"start_time": "13:18", "out_of_capacity": False, "green_fees": [{"price": 79.0}]}]
+    slots = parse_chronogolf_club_api(entries)
+    assert slots[0]["time"] == "1:18 PM"
 
 
 # ── WebTrac ───────────────────────────────────────────────────────────────────
