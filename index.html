@@ -78,10 +78,10 @@
 <body>
   <header>
     <h1>TEE TIME MONITOR</h1>
-    <div class="sunset-box">☀️ SUNSET: 8:09 PM</div>
+    <div class="sunset-box">☀️ SUNSET: 8:10 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:33 PM ET, Fri Jun 5</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">1:05 AM ET, Sat Jun 6</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -103,16 +103,53 @@
   
   <main id="course-grid">
     
-    <div class="course-card is-collapsed" id="card-miami-lakes">
-      <div class="card-header">
+    <div class="course-card " id="card-miami-lakes">
+      <div class="card-header collapsible-header">
         <div class="header-title-group">
-          
-          <span class="course-name">Miami Lakes (Fully Booked)</span>
+          <span class="collapse-icon">▼</span>
+          <span class="course-name">Miami Lakes (1 slots)</span>
         </div>
       </div>
       <div class="card-body">
         
-          <div class="day-row"><div class="no-slots">Fully booked for the dates shown.</div></div>
+          
+          <div class="day-row" data-day="Saturday">
+            <div class="day-row-header">
+              <span class="day-label">Sat 6</span>
+              <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=2026-06-06 16:00:07.477738-04:00" target="_blank">Book</a>
+            </div>
+            
+              <ul class="slots">
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  1:56 PM
+                </li>
+                
+              </ul>
+            
+          </div>
+          
+          <div class="day-row" data-day="Sunday">
+            <div class="day-row-header">
+              <span class="day-label">Sun 7</span>
+              <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=2026-06-07 16:00:32.114841-04:00" target="_blank">Book</a>
+            </div>
+            
+              <div class="no-slots">No times available</div>
+            
+          </div>
+          
+          <div class="day-row" data-day="Friday">
+            <div class="day-row-header">
+              <span class="day-label">Fri 12</span>
+              <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=2026-06-12 16:02:24.866244-04:00" target="_blank">Book</a>
+            </div>
+            
+              <div class="no-slots">No times available</div>
+            
+          </div>
+          
         
       </div>
     </div>
@@ -135,21 +172,11 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (25 slots)</span>
+          <span class="course-name">Normandy Shores (24 slots)</span>
         </div>
       </div>
       <div class="card-body">
         
-          
-          <div class="day-row" data-day="Friday">
-            <div class="day-row-header">
-              <span class="day-label">Fri 5</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-06-05&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
-            </div>
-            
-              <div class="no-slots">No times available</div>
-            
-          </div>
           
           <div class="day-row" data-day="Saturday">
             <div class="day-row-header">
@@ -210,11 +237,6 @@
             </div>
             
               <ul class="slots">
-                
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
-                  11:24 AM
-                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -308,21 +330,11 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Shores (35 slots)</span>
+          <span class="course-name">Miami Shores (34 slots)</span>
         </div>
       </div>
       <div class="card-body">
         
-          
-          <div class="day-row" data-day="Friday">
-            <div class="day-row-header">
-              <span class="day-label">Fri 5</span>
-              <a class="book-btn" href="https://www.chronogolf.com/club/19871/widget?medium=widget&source=club#?date=2026-06-05&course_id=28341&nb_holes=18&affiliation_type_ids=153007,153007,153007,153007" target="_blank">Book</a>
-            </div>
-            
-              <div class="no-slots">No times available</div>
-            
-          </div>
           
           <div class="day-row" data-day="Saturday">
             <div class="day-row-header">
@@ -367,13 +379,13 @@
                   2:54 PM
                 </li>
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   3:10 PM
                 </li>
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   3:26 PM
                 </li>
                 
@@ -399,14 +411,9 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   10:22 AM
-                </li>
-                
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
-                  11:34 AM
                 </li>
                 
                 <li class="slot--midday ">
@@ -531,21 +538,11 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Plantation Preserve (31 slots)</span>
+          <span class="course-name">Plantation Preserve (30 slots)</span>
         </div>
       </div>
       <div class="card-body">
         
-          
-          <div class="day-row" data-day="Friday">
-            <div class="day-row-header">
-              <span class="day-label">Fri 5</span>
-              <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail" target="_blank">Book</a>
-            </div>
-            
-              <div class="no-slots">No times available</div>
-            
-          </div>
           
           <div class="day-row" data-day="Saturday">
             <div class="day-row-header">
@@ -558,11 +555,6 @@
                 <li class="slot--afternoon ">
                   
                   2:21 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:30 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -597,8 +589,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   11:39 AM
                 </li>
                 
@@ -734,7 +726,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1780706015;
+    const updateTs = 1780722323;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
