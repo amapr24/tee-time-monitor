@@ -58,6 +58,7 @@ COURSES = [
         "name":           "Miami Lakes",
         "address":        "6801 Miami Lakes Dr, Miami Lakes",
         "phone":          "(305) 558-4653",
+        "website":        "https://www.miamilakesgolf.com/",
         "type":           "cpsgolf",
         "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
         "tee_time_min":   6,
@@ -69,6 +70,7 @@ COURSES = [
         "name":           "Miami Beach",
         "address":        "2301 Alton Rd, Miami Beach",
         "phone":          "(305) 532-3350",
+        "website":        "https://miamibeachgolfclub.com/",
         "type":           "chronogolf",
         "url":            "https://www.chronogolf.com/club/miami-beach-golf-club",
         "holes":          18,
@@ -83,6 +85,7 @@ COURSES = [
         "name":           "Normandy Shores",
         "address":        "2401 Biarritz Dr, Miami Beach",
         "phone":          "(305) 868-6502",
+        "website":        "https://www.normandyshoresgolfclub.com/",
         "type":           "chronogolf",
         "url":            "https://www.chronogolf.com/club/normandy-shores-golf-course",
         "holes":          18,
@@ -97,6 +100,7 @@ COURSES = [
         "name":           "Miami Shores",
         "address":        "10000 Biscayne Blvd, Miami Shores",
         "phone":          "(305) 795-2369",
+        "website":        "https://www.miamishoresgolf.com/",
         "type":           "chronogolf",
         # Marketplace slug (miami-shores-cc) returns no tee times during the
         # management transition; inventory is exposed via the club booking widget API.
@@ -116,6 +120,7 @@ COURSES = [
         "name":           "Plantation Preserve",
         "address":        "7050 W Broward Blvd, Plantation",
         "phone":          "(954) 585-5020",
+        "website":        "https://www.plantation.org/government/departments/parks-recreation/plantation-preserve-golf-course-club",
         "type":           "webtrac",
         "url":            "https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail",
         "tee_time_min":   8,
@@ -873,6 +878,11 @@ HTML_TEMPLATE = """
     .collapsible-header { cursor: pointer; }
     .header-title-group { display: flex; align-items: center; gap: 8px; }
     .course-name { font-weight: 800; font-size: 0.95rem; color: var(--brand-green); }
+    .course-links { display: flex; align-items: center; gap: 2px; flex-shrink: 0; margin-left: 8px; }
+    .course-link { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; color: var(--text-sub); opacity: 0.5; text-decoration: none; transition: opacity 0.2s, background 0.2s, color 0.2s; }
+    .course-link:hover { opacity: 1; background: var(--bg); color: var(--brand-green); }
+    .course-link:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 1px; opacity: 1; }
+    .course-link svg { width: 15px; height: 15px; display: block; }
     .collapse-icon { font-size: 0.6rem; transition: transform 0.3s; color: var(--text-sub); display: inline-block; line-height: 1; transform-origin: 50% 50%; transform: rotate(0deg); }
     .course-card.is-collapsed .collapse-icon { transform: rotate(-90deg); }
     .course-card.is-collapsed .card-body { display: none; }
@@ -927,6 +937,12 @@ HTML_TEMPLATE = """
           {% if c.any_slots %}<span class="collapse-icon">▼</span>{% endif %}
           <span class="course-name">{{ c.display_name }}</span>
         </div>
+        {% if c.phone or c.website %}
+        <div class="course-links">
+          {% if c.phone %}<a class="course-link" href="{{ c.phone_tel }}" title="Call {{ c.name }}: {{ c.phone }}" aria-label="Call {{ c.name }} at {{ c.phone }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>{% endif %}
+          {% if c.website %}<a class="course-link" href="{{ c.website }}" target="_blank" rel="noopener noreferrer" title="Visit {{ c.name }} website" aria-label="{{ c.name }} website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>{% endif %}
+        </div>
+        {% endif %}
       </div>
       <div class="card-body">
         {% if c.any_slots %}
@@ -1042,6 +1058,9 @@ HTML_TEMPLATE = """
     document.querySelectorAll('.collapsible-header').forEach(h => {
       h.addEventListener('click', () => { h.closest('.course-card').classList.toggle('is-collapsed'); });
     });
+    document.querySelectorAll('.course-link').forEach(a => {
+      a.addEventListener('click', e => e.stopPropagation());
+    });
     const themeBtn = document.getElementById('theme-toggle');
     themeBtn.addEventListener('click', () => {
       const isDark = document.documentElement.dataset.theme === 'dark';
@@ -1084,6 +1103,9 @@ def generate_html():
                 "all_not_released": False,
                 "days":             [],
                 "no_visible_days":  True,
+                "phone":            course.get("phone"),
+                "phone_tel":        "tel:+1" + re.sub(r"\D", "", course["phone"]) if course.get("phone") else None,
+                "website":          course.get("website"),
             })
             continue
 
@@ -1147,6 +1169,9 @@ def generate_html():
             "all_not_released": all_not_released,
             "days":             days_for_course,
             "no_visible_days":  False,
+            "phone":            course.get("phone"),
+            "phone_tel":        "tel:+1" + re.sub(r"\D", "", course["phone"]) if course.get("phone") else None,
+            "website":          course.get("website"),
         })
 
     if dates_all:
