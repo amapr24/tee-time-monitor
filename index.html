@@ -86,7 +86,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:12 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:17 AM ET, Tue Jun 9</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:29 AM ET, Tue Jun 9</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -108,11 +108,11 @@
   
   <main id="course-grid">
     
-    <div class="course-card is-collapsed" id="card-miami-lakes">
-      <div class="card-header">
+    <div class="course-card " id="card-miami-lakes">
+      <div class="card-header collapsible-header">
         <div class="header-title-group">
-          
-          <span class="course-name">Miami Lakes (Fully Booked)</span>
+          <span class="collapse-icon">▼</span>
+          <span class="course-name">Miami Lakes (2 slots)</span>
         </div>
         
         <div class="course-links">
@@ -123,7 +123,49 @@
       </div>
       <div class="card-body">
         
-          <div class="day-row"><div class="no-slots">Fully booked for the dates shown.</div></div>
+          
+          <div class="day-row" data-day="Friday">
+            <div class="day-row-header">
+              <span class="day-label">Fri 12</span>
+              <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=2026-06-12 16:02:24.866244-04:00" target="_blank">Book</a>
+            </div>
+            
+              <div class="no-slots">No times available</div>
+            
+          </div>
+          
+          <div class="day-row" data-day="Saturday">
+            <div class="day-row-header">
+              <span class="day-label">Sat 13</span>
+              <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=2026-06-13 16:02:45.127145-04:00" target="_blank">Book</a>
+            </div>
+            
+              <div class="no-slots">No times available</div>
+            
+          </div>
+          
+          <div class="day-row" data-day="Sunday">
+            <div class="day-row-header">
+              <span class="day-label">Sun 14</span>
+              <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=2026-06-14 16:03:04.558820-04:00" target="_blank">Book</a>
+            </div>
+            
+              <ul class="slots">
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:08 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:40 PM
+                </li>
+                
+              </ul>
+            
+          </div>
+          
         
       </div>
     </div>
@@ -659,7 +701,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Shores (118 slots)</span>
+          <span class="course-name">Miami Shores (115 slots)</span>
         </div>
         
         <div class="course-links">
@@ -1057,21 +1099,6 @@
             </div>
             
               <ul class="slots">
-                
-                <li class="slot--early ">
-                  
-                  9:42 AM
-                </li>
-                
-                <li class="slot--early ">
-                  
-                  9:50 AM
-                </li>
-                
-                <li class="slot--early ">
-                  
-                  9:58 AM
-                </li>
                 
                 <li class="slot--midday ">
                   
@@ -1826,7 +1853,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1781000228;
+    const updateTs = 1781000988;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
