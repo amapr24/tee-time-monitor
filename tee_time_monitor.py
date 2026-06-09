@@ -128,6 +128,7 @@ COURSES = [
         "cache_file":     "cache_plantation.json",
         "skip_past_dates": True,
         "booking_window_days": 5,
+        "default_collapsed": True,
     },
 ]
 
@@ -931,7 +932,7 @@ HTML_TEMPLATE = """
   {% endif %}
   <main id="course-grid">
     {% for c in courses %}
-    <div class="course-card {{ 'is-collapsed' if not c.any_slots else '' }}" id="card-{{ c.safe_id }}">
+    <div class="course-card {{ 'is-collapsed' if (not c.any_slots or c.default_collapsed) else '' }}" id="card-{{ c.safe_id }}">
       <div class="{{ 'card-header collapsible-header' if c.any_slots else 'card-header' }}">
         <div class="header-title-group">
           {% if c.any_slots %}<span class="collapse-icon">▼</span>{% endif %}
@@ -1101,6 +1102,7 @@ def generate_html():
                 "display_name":     f"{course['name']} (no days in booking window)",
                 "any_slots":        False,
                 "all_not_released": False,
+                "default_collapsed": course.get("default_collapsed", False),
                 "days":             [],
                 "no_visible_days":  True,
                 "phone":            course.get("phone"),
@@ -1167,6 +1169,7 @@ def generate_html():
             "display_name":     display_name,
             "any_slots":        any_slots,
             "all_not_released": all_not_released,
+            "default_collapsed": course.get("default_collapsed", False),
             "days":             days_for_course,
             "no_visible_days":  False,
             "phone":            course.get("phone"),
