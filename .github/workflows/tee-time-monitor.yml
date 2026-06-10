@@ -3,6 +3,12 @@ name: Tee Time Monitor Miami
 on:
   workflow_dispatch:  # triggered externally by cron-job.org
 
+# Only one run at a time. If a second trigger arrives while one is running,
+# it waits rather than cancelling so no scrape is silently dropped.
+concurrency:
+  group: tee-time-monitor
+  cancel-in-progress: false
+
 permissions:
   contents: write   # needed to commit index.html back to repo
 
@@ -80,7 +86,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase
           git add index.html version.json data.json
           git diff --staged --quiet || git commit -m "Update tee times"
-          git pull --rebase
           git push
