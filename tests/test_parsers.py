@@ -237,3 +237,22 @@ def test_cpsgolf_book_url_falls_back_to_course_max(monkeypatch):
     monkeypatch.setattr(tee_time_monitor, "get_sunset_cutoff", lambda d, fb: fb)
     course = {"url": "https://x.example/search-teetime", "tee_time_min": 6, "tee_time_max": 15}
     assert cpsgolf_book_url(course, date(2026, 6, 12)).endswith("&TeeOffTimeMax=15")
+
+
+# ── Cache maintenance ─────────────────────────────────────────────────────────
+
+def test_save_cache_prunes_past_dates(tmp_path):
+    import json
+    from datetime import timedelta
+
+    cache_file = tmp_path / "cache_test.json"
+    today = tee_time_monitor._now_et().date()
+    stale = (today - timedelta(days=3)).isoformat()
+    cache_file.write_text(json.dumps({stale: [{"time": "7:00 AM"}]}))
+
+    target = today + timedelta(days=2)
+    tee_time_monitor.save_cache(cache_file, target, [{"time": "8:00 AM"}])
+
+    data = json.loads(cache_file.read_text())
+    assert target.isoformat() in data
+    assert stale not in data

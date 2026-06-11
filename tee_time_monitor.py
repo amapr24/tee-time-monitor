@@ -642,6 +642,10 @@ def save_cache(cache_file: Path, d: date, slots: list[dict]):
     except Exception as e:
         logger.error(f"Cache read error for {d}: {e}")
     all_cache[d.isoformat()] = slots
+    # Prune dates already in the past so the file (re-uploaded to the Actions
+    # cache on every run) doesn't accumulate every date ever scraped.
+    today_iso = _now_et().date().isoformat()
+    all_cache = {k: v for k, v in all_cache.items() if k >= today_iso}
     try:
         cache_file.write_text(json.dumps(all_cache, indent=2))
     except Exception as e:
