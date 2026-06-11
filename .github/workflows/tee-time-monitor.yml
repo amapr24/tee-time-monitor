@@ -92,5 +92,10 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add index.html version.json data.json
           git diff --staged --quiet || git commit -m "Update tee times"
-          git pull --rebase
+          # -X theirs: a queued run starts from the SHA resolved at dispatch
+          # time, so when a slow run outlasts the cron interval the next run
+          # rebases its regenerated files over the previous run's commit —
+          # conflicting on every line. Always resolve in favor of this run's
+          # (newer) output.
+          git pull --rebase -X theirs
           git push
