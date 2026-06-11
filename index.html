@@ -88,7 +88,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:12 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:01 PM ET, Thu Jun 11</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">6:11 PM ET, Thu Jun 11</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -114,7 +114,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (1 slots)</span>
+          <span class="course-name">Miami Lakes (2 slots)</span>
         </div>
         
         <div class="course-links">
@@ -134,8 +134,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   10:12 AM
                 </li>
                 
@@ -149,7 +149,14 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=16" target="_blank">Book</a>
             </div>
             
-              <div class="no-slots">No times available</div>
+              <ul class="slots">
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  12:28 PM
+                </li>
+                
+              </ul>
             
           </div>
           
@@ -267,7 +274,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (40 slots)</span>
+          <span class="course-name">Normandy Shores (41 slots)</span>
         </div>
         
         <div class="course-links">
@@ -290,6 +297,11 @@
                 <li class="slot--early ">
                   
                   8:20 AM
+                </li>
+                
+                <li class="slot--early slot--new">
+                  <span class="new-badge">NEW</span>
+                  9:00 AM
                 </li>
                 
                 <li class="slot--midday ">
@@ -1235,7 +1247,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1781215268;
+    const updateTs = 1781215866;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
