@@ -68,9 +68,6 @@ jobs:
 
       - name: Run monitor
         env:
-          EMAIL_SENDER:   ${{ secrets.EMAIL_SENDER }}
-          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-          EMAIL_TO:       ${{ secrets.EMAIL_TO }}
           PUSHOVER_USER:  ${{ secrets.PUSHOVER_USER }}
           PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
         run: |
@@ -88,7 +85,7 @@ jobs:
             cache_plantation.json
           key: teetime-cache-${{ github.run_id }}
 
-      - name: Commit and push index.html and version.json
+      - name: Commit and push generated output (index.html, data.json, version.json)
         if: always()
         run: |
           git config user.name  "github-actions[bot]"

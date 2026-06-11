@@ -1,6 +1,6 @@
 """
-Tee Time Monitor -- Miami-area courses (CPS + Chronogolf)
-Checks multiple golf courses and sends email + Pushover push notifications
+Tee Time Monitor -- Miami-area courses (CPS Golf, Chronogolf, WebTrac)
+Checks multiple golf courses and sends Pushover push notifications
 when new tee times appear.
 """
 
@@ -12,11 +12,9 @@ import json
 import os
 import random
 import re
-import smtplib
 import sys
 import logging
 from datetime import date, timedelta, datetime
-from email.mime.text import MIMEText
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlencode
@@ -40,13 +38,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── Email / Pushover credentials ───────────────────────────────────────────────
-
-SMTP_SERVER    = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT      = int(os.environ.get("SMTP_PORT", "587"))
-EMAIL_SENDER   = os.environ.get("EMAIL_SENDER")
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
-EMAIL_TO       = os.environ.get("EMAIL_TO")
+# ── Pushover credentials ───────────────────────────────────────────────────────
 
 PUSHOVER_USER  = os.environ.get("PUSHOVER_USER")
 PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
@@ -531,25 +523,6 @@ def send_pushover(title: str, message: str):
     except Exception as e:
         logger.error(f"Pushover error: {e}")
 
-def send_email(subject: str, body: str):
-    if not all([EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_TO]):
-        return
-    recipients = [e.strip() for e in EMAIL_TO.split(",")]
-    msg = MIMEText(body, "plain")
-    msg["Subject"] = subject
-    msg["From"]    = EMAIL_SENDER
-    msg["To"]      = ", ".join(recipients)
-    try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_SENDER, recipients, msg.as_string())
-    except Exception as e:
-        logger.error(f"Email error: {e}")
-
-def notify(subject: str, body: str, push_msg: str):
-    send_pushover(subject, push_msg)
-
 async def launch_browser(playwright):
     browser = await playwright.chromium.launch(
         headless=True,
@@ -728,7 +701,7 @@ async def check_course(playwright, course: dict, dates: list[date]) -> list[str]
     """Manage browser for course and group notifications by course.
     Returns list of detected-date labels for main() to consolidate into one nudge."""
     browser, context = await launch_browser(playwright)
-    course_new_slots = {}  # date_label -> list of slots
+    course_new_slots = {}  # date -> list of slots
     detected_labels = []
 
     monitored = set(DEFAULT_SCRAPE_WEEKDAYS) | set(EXTRA_SCRAPE_WEEKDAYS)
@@ -743,23 +716,26 @@ async def check_course(playwright, course: dict, dates: list[date]) -> list[str]
                 if detected and notify_day:
                     detected_labels.append(detected)
                 if new_slots and notify_day:
-                    course_new_slots[d.strftime("%a %-d")] = new_slots
+                    course_new_slots[d] = new_slots
             except Exception as e:
                 logger.exception(f"Error checking {course['name']} on {d}: {e}")
             await asyncio.sleep(random.uniform(1.5, 3.5))
 
         if course_new_slots:
-            name = course["name"]
-            subject = f"Tee Time Alert - {name}"
+            subject = f"Tee Time Alert - {course['name']}"
             lines = []
-            for date_label, slots in course_new_slots.items():
+            for d, slots in course_new_slots.items():
                 times_str = ", ".join(s.get("time", "?") for s in slots)
-                lines.append(f"{date_label} - {times_str}")
-            if course["type"] != "chronogolf":
+                lines.append(f"{d.strftime('%a %-d')} - {times_str}")
+            if course["type"] == "chronogolf":
+                # Per-date deep links into the booking widget (one-tap booking).
+                lines.extend(
+                    f"\n{d.strftime('%a %-d')}: {chronogolf_book_url(course, d)}"
+                    for d in course_new_slots
+                )
+            else:
                 lines.append(f"\n{course['url']}")
-            push_msg = "\n".join(lines)
-            email_body = f"New tee times opened at {name}:\n\n" + push_msg
-            notify(subject, email_body, push_msg)
+            send_pushover(subject, "\n".join(lines))
 
     finally:
         await browser.close()
@@ -841,6 +817,8 @@ HTML_TEMPLATE = """
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tee Time Monitor</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d2b1a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
