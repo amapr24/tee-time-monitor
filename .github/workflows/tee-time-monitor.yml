@@ -3,8 +3,11 @@ name: Tee Time Monitor Miami
 on:
   workflow_dispatch:  # triggered externally by cron-job.org
 
-# Only one run at a time. If a second trigger arrives while one is running,
-# it waits rather than cancelling so no scrape is silently dropped.
+# Only one run at a time, and runs are never cancelled mid-flight (a cancelled
+# run could lose a scrape that already happened). Note: GitHub keeps at most
+# ONE pending run per group — while a run executes, a newer dispatch replaces
+# the queued one, so some 10-minute cron triggers are dropped by design. The
+# job timeout below caps how long a hung run can block the group.
 concurrency:
   group: tee-time-monitor
   cancel-in-progress: false
@@ -15,6 +18,7 @@ permissions:
 jobs:
   check-tee-times:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
@@ -25,17 +29,20 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Keyed on requirements.txt so a dependency bump invalidates the cache
+      # (a static key freezes after its first save — actions/cache only saves
+      # on a miss — and would serve stale packages forever).
       - name: Cache pip packages
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-playwright-requests-astral
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
 
       - name: Cache Playwright Chromium
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-chromium
+          key: ${{ runner.os }}-playwright-${{ hashFiles('requirements.txt') }}
 
       - name: Install dependencies
         run: |
