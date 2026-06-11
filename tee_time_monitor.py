@@ -613,7 +613,15 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
     page = await context.new_page()
     try:
         base_url = course["url"].split("?")[0]
-        await goto_with_retry(page, base_url + "?module=GR&display=Detail", wait_until="networkidle", timeout=60_000)
+        # domcontentloaded + explicit element waits instead of networkidle:
+        # the site's edge intermittently leaves connections hanging (bot
+        # filtering), which stalls networkidle for the full timeout even when
+        # the page itself arrived and is usable.
+        await goto_with_retry(page, base_url + "?module=GR&display=Detail", attempts=2, wait_until="domcontentloaded", timeout=30_000)
+        try:
+            await page.wait_for_selector("#_csrf_token", state="attached", timeout=15_000)
+        except Exception:
+            pass  # token missing/late — evaluate below falls back to ""
         csrf = await page.evaluate("() => document.querySelector('#_csrf_token')?.value || ''")
         params = {
             "Action": "Start",
@@ -626,7 +634,12 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
             "module": "GR",
             "grwebsearch_buttonsearch": "yes",
         }
-        await goto_with_retry(page, base_url + "?" + urlencode(params), wait_until="networkidle", timeout=60_000)
+        await goto_with_retry(page, base_url + "?" + urlencode(params), attempts=2, wait_until="domcontentloaded", timeout=30_000)
+        # The results table is server-rendered (WebTrac includes it even with
+        # zero result rows). Its absence means a block/challenge page or a
+        # layout change — fail the date loudly (cache preserved) rather than
+        # record a false "no slots".
+        await page.wait_for_selector("#grwebsearch_output_table", state="attached", timeout=15_000)
         rows = await page.evaluate("() => Array.from(document.querySelectorAll('#grwebsearch_output_table tbody tr')).map(row => Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim()))")
         return parse_webtrac(rows)
     finally:
@@ -731,12 +744,14 @@ async def check_course(browser, course: dict, dates: list[date]) -> list[str]:
     detected_labels = []
 
     monitored = set(DEFAULT_SCRAPE_WEEKDAYS) | set(EXTRA_SCRAPE_WEEKDAYS)
+    consecutive_failures = 0
     try:
         for d in dates:
             if not is_within_booking_window(course, d):
                 continue
             try:
                 new_slots, detected = await check_day(context, course, d)
+                consecutive_failures = 0
                 # Pushover for any weekday we actively monitor (default Fri–Sun; add extras in EXTRA_SCRAPE_WEEKDAYS).
                 notify_day = d.weekday() in monitored
                 if detected and notify_day:
@@ -745,6 +760,13 @@ async def check_course(browser, course: dict, dates: list[date]) -> list[str]:
                     course_new_slots[d] = new_slots
             except Exception as e:
                 logger.exception(f"Error checking {course['name']} on {d}: {e}")
+                consecutive_failures += 1
+                # A site that's down fails every date the same way; eating the
+                # full retry budget for each one can stretch the run past the
+                # cron interval. Cached data keeps serving the skipped dates.
+                if consecutive_failures >= 2:
+                    logger.error(f"[{course['name']}] {consecutive_failures} consecutive failures — skipping remaining dates this run.")
+                    break
             await asyncio.sleep(random.uniform(1.5, 3.5))
 
         if course_new_slots:
