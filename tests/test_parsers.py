@@ -256,3 +256,19 @@ def test_save_cache_prunes_past_dates(tmp_path):
     data = json.loads(cache_file.read_text())
     assert target.isoformat() in data
     assert stale not in data
+
+
+# ── Sunset cutoff ─────────────────────────────────────────────────────────────
+
+def test_sunset_cutoff_is_4h10m_before_sunset():
+    from datetime import timedelta
+
+    d = date(2026, 6, 12)
+    sunset = tee_time_monitor.get_sunset(d)
+    cutoff = tee_time_monitor.get_sunset_cutoff(d, 15)
+    assert cutoff == sunset - timedelta(hours=4, minutes=10)
+
+
+def test_sunset_cutoff_falls_back_when_sunset_unknown(monkeypatch):
+    monkeypatch.setattr(tee_time_monitor, "get_sunset", lambda d: None)
+    assert tee_time_monitor.get_sunset_cutoff(date(2026, 6, 12), 15) == 15

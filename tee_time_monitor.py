@@ -145,13 +145,18 @@ DEFAULT_SCRAPE_WEEKDAYS: tuple[int, ...] = (4, 5, 6)
 EXTRA_SCRAPE_WEEKDAYS: tuple[int, ...] = ()
 
 @lru_cache(maxsize=32)
-def get_sunset_cutoff(target_date: date, fallback_hour: int) -> datetime | int:
+def get_sunset(target_date: date) -> datetime | None:
     try:
-        s = sun(MIAMI.observer, date=target_date, tzinfo=ET)
-        return s["sunset"] - timedelta(hours=4, minutes=10)
+        return sun(MIAMI.observer, date=target_date, tzinfo=ET)["sunset"]
     except Exception as e:
         logger.error(f"Sunset calc failed for {target_date}: {e}")
-        return fallback_hour
+        return None
+
+def get_sunset_cutoff(target_date: date, fallback_hour: int) -> datetime | int:
+    """Effective upper bound for playable tee times: sunset − 4 h 10 m.
+    Falls back to the course's configured hour if the sunset calc fails."""
+    sunset = get_sunset(target_date)
+    return sunset - timedelta(hours=4, minutes=10) if sunset else fallback_hour
 
 def get_monitor_dates() -> list[date]:
     """Dates in the next 7 days whose weekday is included in scrape config (ET)."""
@@ -1118,7 +1123,7 @@ def generate_html():
         total_slots_count = 0
         for d in dates_vis:
             cache_file = CACHE_DIR / course["cache_file"]
-            sunset_dt = sun(MIAMI.observer, date=d, tzinfo=ET)["sunset"]
+            sunset_dt = get_sunset(d)
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             cached = load_cache(cache_file, d)
             not_released = cached is None
@@ -1179,10 +1184,8 @@ def generate_html():
             "website":          course.get("website"),
         })
 
-    if dates_all:
-        actual_sunset = sun(MIAMI.observer, date=dates_all[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
-    else:
-        actual_sunset = sun(MIAMI.observer, date=datetime.now(ET).date(), tzinfo=ET)["sunset"].strftime("%-I:%M %p")
+    header_sunset = get_sunset(dates_all[0] if dates_all else _now_et().date())
+    actual_sunset = header_sunset.strftime("%-I:%M %p") if header_sunset else "—"
 
     template = Template(HTML_TEMPLATE)
     html_out = template.render(
