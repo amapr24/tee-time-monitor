@@ -10,7 +10,12 @@ won't catch it — but they will catch a parser regression where the text is
 still recognizable but we stop extracting it correctly.
 """
 
+import re
+from datetime import date
+
+import tee_time_monitor
 from tee_time_monitor import (
+    cpsgolf_book_url,
     parse_cpsgolf,
     parse_cpsgolf_card,
     parse_chronogolf,
@@ -213,3 +218,57 @@ def test_webtrac_parses_multiple_rows_filtering_non_four():
     ]
     slots = parse_webtrac(rows)
     assert [s["time"] for s in slots] == ["7:00 AM"]
+
+
+# ── Booking URLs ──────────────────────────────────────────────────────────────
+
+def test_cpsgolf_book_url_time_bounds_are_integer_hours():
+    # Regression: the sunset-cutoff datetime used to be interpolated raw into
+    # the URL ("...TeeOffTimeMax=2026-06-12 16:02:24.866244-04:00").
+    course = {"url": "https://x.example/search-teetime", "tee_time_min": 6, "tee_time_max": 15}
+    url = cpsgolf_book_url(course, date(2026, 6, 12))
+    assert re.fullmatch(
+        r"https://x\.example/search-teetime\?TeeOffTimeMin=6&TeeOffTimeMax=\d{1,2}", url
+    )
+
+
+def test_cpsgolf_book_url_falls_back_to_course_max(monkeypatch):
+    # When the sunset calc fails, get_sunset_cutoff returns the fallback hour as-is.
+    monkeypatch.setattr(tee_time_monitor, "get_sunset_cutoff", lambda d, fb: fb)
+    course = {"url": "https://x.example/search-teetime", "tee_time_min": 6, "tee_time_max": 15}
+    assert cpsgolf_book_url(course, date(2026, 6, 12)).endswith("&TeeOffTimeMax=15")
+
+
+# ── Cache maintenance ─────────────────────────────────────────────────────────
+
+def test_save_cache_prunes_past_dates(tmp_path):
+    import json
+    from datetime import timedelta
+
+    cache_file = tmp_path / "cache_test.json"
+    today = tee_time_monitor._now_et().date()
+    stale = (today - timedelta(days=3)).isoformat()
+    cache_file.write_text(json.dumps({stale: [{"time": "7:00 AM"}]}))
+
+    target = today + timedelta(days=2)
+    tee_time_monitor.save_cache(cache_file, target, [{"time": "8:00 AM"}])
+
+    data = json.loads(cache_file.read_text())
+    assert target.isoformat() in data
+    assert stale not in data
+
+
+# ── Sunset cutoff ─────────────────────────────────────────────────────────────
+
+def test_sunset_cutoff_is_4h10m_before_sunset():
+    from datetime import timedelta
+
+    d = date(2026, 6, 12)
+    sunset = tee_time_monitor.get_sunset(d)
+    cutoff = tee_time_monitor.get_sunset_cutoff(d, 15)
+    assert cutoff == sunset - timedelta(hours=4, minutes=10)
+
+
+def test_sunset_cutoff_falls_back_when_sunset_unknown(monkeypatch):
+    monkeypatch.setattr(tee_time_monitor, "get_sunset", lambda d: None)
+    assert tee_time_monitor.get_sunset_cutoff(date(2026, 6, 12), 15) == 15

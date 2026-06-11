@@ -1,6 +1,6 @@
 """
-Tee Time Monitor -- Miami-area courses (CPS + Chronogolf)
-Checks multiple golf courses and sends email + Pushover push notifications
+Tee Time Monitor -- Miami-area courses (CPS Golf, Chronogolf, WebTrac)
+Checks multiple golf courses and sends Pushover push notifications
 when new tee times appear.
 """
 
@@ -10,13 +10,12 @@ import argparse
 import asyncio
 import json
 import os
+from contextlib import AsyncExitStack
 import random
 import re
-import smtplib
 import sys
 import logging
 from datetime import date, timedelta, datetime
-from email.mime.text import MIMEText
 from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlencode
@@ -40,13 +39,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# ── Email / Pushover credentials ───────────────────────────────────────────────
-
-SMTP_SERVER    = os.environ.get("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT      = int(os.environ.get("SMTP_PORT", "587"))
-EMAIL_SENDER   = os.environ.get("EMAIL_SENDER")
-EMAIL_PASSWORD = os.environ.get("EMAIL_PASSWORD")
-EMAIL_TO       = os.environ.get("EMAIL_TO")
+# ── Pushover credentials ───────────────────────────────────────────────────────
 
 PUSHOVER_USER  = os.environ.get("PUSHOVER_USER")
 PUSHOVER_TOKEN = os.environ.get("PUSHOVER_TOKEN")
@@ -63,6 +56,10 @@ COURSES = [
         "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
         "tee_time_min":   6,
         "tee_time_max":   15,
+        # The site pre-filters the tee sheet by the URL's TeeOffTimeMax, so
+        # request a wider window than tee_time_max and let the sunset cutoff
+        # (≈16:00 ET in June) do the real trimming.
+        "scrape_time_max": 17,
         "cache_file":     "cache_miami_lakes.json",
         "skip_past_dates": True,
     },
@@ -152,13 +149,18 @@ DEFAULT_SCRAPE_WEEKDAYS: tuple[int, ...] = (4, 5, 6)
 EXTRA_SCRAPE_WEEKDAYS: tuple[int, ...] = ()
 
 @lru_cache(maxsize=32)
-def get_sunset_cutoff(target_date: date, fallback_hour: int) -> datetime | int:
+def get_sunset(target_date: date) -> datetime | None:
     try:
-        s = sun(MIAMI.observer, date=target_date, tzinfo=ET)
-        return s["sunset"] - timedelta(hours=4, minutes=10)
+        return sun(MIAMI.observer, date=target_date, tzinfo=ET)["sunset"]
     except Exception as e:
         logger.error(f"Sunset calc failed for {target_date}: {e}")
-        return fallback_hour
+        return None
+
+def get_sunset_cutoff(target_date: date, fallback_hour: int) -> datetime | int:
+    """Effective upper bound for playable tee times: sunset − 4 h 10 m.
+    Falls back to the course's configured hour if the sunset calc fails."""
+    sunset = get_sunset(target_date)
+    return sunset - timedelta(hours=4, minutes=10) if sunset else fallback_hour
 
 def get_monitor_dates() -> list[date]:
     """Dates in the next 7 days whose weekday is included in scrape config (ET)."""
@@ -436,6 +438,13 @@ def chronogolf_book_url(course: dict, d: date) -> str:
     )
 
 
+def cpsgolf_book_url(course: dict, d: date) -> str:
+    t_max = get_sunset_cutoff(d, course["tee_time_max"])
+    if isinstance(t_max, datetime):
+        t_max = t_max.hour  # site expects an integer hour, not a datetime
+    return f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max}"
+
+
 def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
     out, seen = [], set()
     for raw in card_texts:
@@ -508,7 +517,7 @@ def send_pushover(title: str, message: str):
     if not all([PUSHOVER_USER, PUSHOVER_TOKEN]):
         return
     try:
-        requests.post(
+        resp = requests.post(
             "https://api.pushover.net/1/messages.json",
             data={
                 "token":    PUSHOVER_TOKEN,
@@ -520,33 +529,21 @@ def send_pushover(title: str, message: str):
             },
             timeout=10,
         )
+        resp.raise_for_status()
     except Exception as e:
         logger.error(f"Pushover error: {e}")
 
-def send_email(subject: str, body: str):
-    if not all([EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_TO]):
-        return
-    recipients = [e.strip() for e in EMAIL_TO.split(",")]
-    msg = MIMEText(body, "plain")
-    msg["Subject"] = subject
-    msg["From"]    = EMAIL_SENDER
-    msg["To"]      = ", ".join(recipients)
-    try:
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(EMAIL_SENDER, EMAIL_PASSWORD)
-            server.sendmail(EMAIL_SENDER, recipients, msg.as_string())
-    except Exception as e:
-        logger.error(f"Email error: {e}")
-
-def notify(subject: str, body: str, push_msg: str):
-    send_pushover(subject, push_msg)
+def course_needs_browser(course: dict) -> bool:
+    """Chronogolf club-API courses are fetched with plain requests — no browser."""
+    return not (course["type"] == "chronogolf" and course.get("chronogolf_club_id"))
 
 async def launch_browser(playwright):
-    browser = await playwright.chromium.launch(
+    return await playwright.chromium.launch(
         headless=True,
         args=["--disable-blink-features=AutomationControlled", "--no-sandbox"],
     )
+
+async def new_course_context(browser):
     context = await browser.new_context(
         user_agent=(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -558,10 +555,11 @@ async def launch_browser(playwright):
     await context.add_init_script(
         "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
     )
-    return browser, context
+    return context
 
 async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]:
-    base_url, t_min, t_max = course["url"], course["tee_time_min"], course["tee_time_max"]
+    base_url, t_min = course["url"], course["tee_time_min"]
+    t_max = course.get("scrape_time_max", course["tee_time_max"])
     url = f"{base_url}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}"
     page = await context.new_page()
     try:
@@ -654,6 +652,10 @@ def save_cache(cache_file: Path, d: date, slots: list[dict]):
     except Exception as e:
         logger.error(f"Cache read error for {d}: {e}")
     all_cache[d.isoformat()] = slots
+    # Prune dates already in the past so the file (re-uploaded to the Actions
+    # cache on every run) doesn't accumulate every date ever scraped.
+    today_iso = _now_et().date().isoformat()
+    all_cache = {k: v for k, v in all_cache.items() if k >= today_iso}
     try:
         cache_file.write_text(json.dumps(all_cache, indent=2))
     except Exception as e:
@@ -677,7 +679,9 @@ async def check_day(context, course: dict, target_date: date):
         raw = await scrape_cpsgolf(context, course, target_date)
     elif course["type"] == "chronogolf":
         if course.get("chronogolf_club_id"):
-            raw = fetch_chronogolf_club_teetimes(course, target_date)
+            # Blocking requests call — keep it off the event loop so a slow
+            # API response doesn't stall the other courses' scrapes.
+            raw = await asyncio.to_thread(fetch_chronogolf_club_teetimes, course, target_date)
         else:
             raw = await scrape_chronogolf(context, course, target_date)
     elif course["type"] == "webtrac":
@@ -716,11 +720,14 @@ async def check_day(context, course: dict, target_date: date):
 
     return new_slots, None
 
-async def check_course(playwright, course: dict, dates: list[date]) -> list[str]:
-    """Manage browser for course and group notifications by course.
+async def check_course(browser, course: dict, dates: list[date]) -> list[str]:
+    """Scrape all dates for one course and group notifications by course.
+    Courses share one browser but get their own context (cookies/UA isolation,
+    so each course still looks like a returning human visitor); API-only
+    courses get no context at all.
     Returns list of detected-date labels for main() to consolidate into one nudge."""
-    browser, context = await launch_browser(playwright)
-    course_new_slots = {}  # date_label -> list of slots
+    context = await new_course_context(browser) if course_needs_browser(course) else None
+    course_new_slots = {}  # date -> list of slots
     detected_labels = []
 
     monitored = set(DEFAULT_SCRAPE_WEEKDAYS) | set(EXTRA_SCRAPE_WEEKDAYS)
@@ -735,26 +742,30 @@ async def check_course(playwright, course: dict, dates: list[date]) -> list[str]
                 if detected and notify_day:
                     detected_labels.append(detected)
                 if new_slots and notify_day:
-                    course_new_slots[d.strftime("%a %-d")] = new_slots
+                    course_new_slots[d] = new_slots
             except Exception as e:
                 logger.exception(f"Error checking {course['name']} on {d}: {e}")
             await asyncio.sleep(random.uniform(1.5, 3.5))
 
         if course_new_slots:
-            name = course["name"]
-            subject = f"Tee Time Alert - {name}"
+            subject = f"Tee Time Alert - {course['name']}"
             lines = []
-            for date_label, slots in course_new_slots.items():
+            for d, slots in course_new_slots.items():
                 times_str = ", ".join(s.get("time", "?") for s in slots)
-                lines.append(f"{date_label} - {times_str}")
-            if course["type"] != "chronogolf":
+                lines.append(f"{d.strftime('%a %-d')} - {times_str}")
+            if course["type"] == "chronogolf":
+                # Per-date deep links into the booking widget (one-tap booking).
+                lines.extend(
+                    f"\n{d.strftime('%a %-d')}: {chronogolf_book_url(course, d)}"
+                    for d in course_new_slots
+                )
+            else:
                 lines.append(f"\n{course['url']}")
-            push_msg = "\n".join(lines)
-            email_body = f"New tee times opened at {name}:\n\n" + push_msg
-            notify(subject, email_body, push_msg)
+            await asyncio.to_thread(send_pushover, subject, "\n".join(lines))
 
     finally:
-        await browser.close()
+        if context:
+            await context.close()
 
     return detected_labels
 
@@ -833,6 +844,8 @@ HTML_TEMPLATE = """
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tee Time Monitor</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0d2b1a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -1115,7 +1128,7 @@ def generate_html():
         total_slots_count = 0
         for d in dates_vis:
             cache_file = CACHE_DIR / course["cache_file"]
-            sunset_dt = sun(MIAMI.observer, date=d, tzinfo=ET)["sunset"]
+            sunset_dt = get_sunset(d)
             t_max_day = get_sunset_cutoff(d, course["tee_time_max"])
             cached = load_cache(cache_file, d)
             not_released = cached is None
@@ -1129,8 +1142,7 @@ def generate_html():
             if course["type"] == "chronogolf":
                 book_url = chronogolf_book_url(course, d)
             elif course["type"] == "cpsgolf":
-                t_max_book = get_sunset_cutoff(d, course["tee_time_max"])
-                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_book}"
+                book_url = cpsgolf_book_url(course, d)
             else:
                 book_url = course["url"]
 
@@ -1177,10 +1189,8 @@ def generate_html():
             "website":          course.get("website"),
         })
 
-    if dates_all:
-        actual_sunset = sun(MIAMI.observer, date=dates_all[0], tzinfo=ET)["sunset"].strftime("%-I:%M %p")
-    else:
-        actual_sunset = sun(MIAMI.observer, date=datetime.now(ET).date(), tzinfo=ET)["sunset"].strftime("%-I:%M %p")
+    header_sunset = get_sunset(dates_all[0] if dates_all else _now_et().date())
+    actual_sunset = header_sunset.strftime("%-I:%M %p") if header_sunset else "—"
 
     template = Template(HTML_TEMPLATE)
     html_out = template.render(
@@ -1205,11 +1215,19 @@ def _select_courses(filter_terms: list[str]) -> list[dict]:
 
 async def main(courses: list[dict]):
     dates = get_monitor_dates()
-    async with async_playwright() as playwright:
+    async with AsyncExitStack() as stack:
+        browser = None
+        if any(course_needs_browser(c) for c in courses):
+            playwright = await stack.enter_async_context(async_playwright())
+            browser = await launch_browser(playwright)
+            stack.push_async_callback(browser.close)
         results = await asyncio.gather(
-            *[check_course(playwright, course, dates) for course in courses],
+            *[check_course(browser, course, dates) for course in courses],
             return_exceptions=True,
         )
+    for course, result in zip(courses, results):
+        if isinstance(result, BaseException):
+            logger.error(f"[{course['name']}] course run failed: {result!r}", exc_info=result)
     all_detected = [label for r in results if isinstance(r, list) for label in r]
     if all_detected:
         send_pushover("Tee Time Monitor – Now Tracking", "\n".join(all_detected))
