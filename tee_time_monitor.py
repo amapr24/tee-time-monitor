@@ -10,6 +10,7 @@ import argparse
 import asyncio
 import json
 import os
+from contextlib import AsyncExitStack
 import random
 import re
 import sys
@@ -523,11 +524,17 @@ def send_pushover(title: str, message: str):
     except Exception as e:
         logger.error(f"Pushover error: {e}")
 
+def course_needs_browser(course: dict) -> bool:
+    """Chronogolf club-API courses are fetched with plain requests — no browser."""
+    return not (course["type"] == "chronogolf" and course.get("chronogolf_club_id"))
+
 async def launch_browser(playwright):
-    browser = await playwright.chromium.launch(
+    return await playwright.chromium.launch(
         headless=True,
         args=["--disable-blink-features=AutomationControlled", "--no-sandbox"],
     )
+
+async def new_course_context(browser):
     context = await browser.new_context(
         user_agent=(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -539,7 +546,7 @@ async def launch_browser(playwright):
     await context.add_init_script(
         "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
     )
-    return browser, context
+    return context
 
 async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]:
     base_url, t_min, t_max = course["url"], course["tee_time_min"], course["tee_time_max"]
@@ -658,7 +665,9 @@ async def check_day(context, course: dict, target_date: date):
         raw = await scrape_cpsgolf(context, course, target_date)
     elif course["type"] == "chronogolf":
         if course.get("chronogolf_club_id"):
-            raw = fetch_chronogolf_club_teetimes(course, target_date)
+            # Blocking requests call — keep it off the event loop so a slow
+            # API response doesn't stall the other courses' scrapes.
+            raw = await asyncio.to_thread(fetch_chronogolf_club_teetimes, course, target_date)
         else:
             raw = await scrape_chronogolf(context, course, target_date)
     elif course["type"] == "webtrac":
@@ -697,10 +706,13 @@ async def check_day(context, course: dict, target_date: date):
 
     return new_slots, None
 
-async def check_course(playwright, course: dict, dates: list[date]) -> list[str]:
-    """Manage browser for course and group notifications by course.
+async def check_course(browser, course: dict, dates: list[date]) -> list[str]:
+    """Scrape all dates for one course and group notifications by course.
+    Courses share one browser but get their own context (cookies/UA isolation,
+    so each course still looks like a returning human visitor); API-only
+    courses get no context at all.
     Returns list of detected-date labels for main() to consolidate into one nudge."""
-    browser, context = await launch_browser(playwright)
+    context = await new_course_context(browser) if course_needs_browser(course) else None
     course_new_slots = {}  # date -> list of slots
     detected_labels = []
 
@@ -735,10 +747,11 @@ async def check_course(playwright, course: dict, dates: list[date]) -> list[str]
                 )
             else:
                 lines.append(f"\n{course['url']}")
-            send_pushover(subject, "\n".join(lines))
+            await asyncio.to_thread(send_pushover, subject, "\n".join(lines))
 
     finally:
-        await browser.close()
+        if context:
+            await context.close()
 
     return detected_labels
 
@@ -1190,9 +1203,14 @@ def _select_courses(filter_terms: list[str]) -> list[dict]:
 
 async def main(courses: list[dict]):
     dates = get_monitor_dates()
-    async with async_playwright() as playwright:
+    async with AsyncExitStack() as stack:
+        browser = None
+        if any(course_needs_browser(c) for c in courses):
+            playwright = await stack.enter_async_context(async_playwright())
+            browser = await launch_browser(playwright)
+            stack.push_async_callback(browser.close)
         results = await asyncio.gather(
-            *[check_course(playwright, course, dates) for course in courses],
+            *[check_course(browser, course, dates) for course in courses],
             return_exceptions=True,
         )
     for course, result in zip(courses, results):
