@@ -86,7 +86,7 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git pull --rebase
           git add index.html version.json data.json
           git diff --staged --quiet || git commit -m "Update tee times"
+          git pull --rebase
           git push
