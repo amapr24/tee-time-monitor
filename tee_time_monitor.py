@@ -56,6 +56,10 @@ COURSES = [
         "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
         "tee_time_min":   6,
         "tee_time_max":   15,
+        # The site pre-filters the tee sheet by the URL's TeeOffTimeMax, so
+        # request a wider window than tee_time_max and let the sunset cutoff
+        # (≈16:00 ET in June) do the real trimming.
+        "scrape_time_max": 17,
         "cache_file":     "cache_miami_lakes.json",
         "skip_past_dates": True,
     },
@@ -554,7 +558,8 @@ async def new_course_context(browser):
     return context
 
 async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]:
-    base_url, t_min, t_max = course["url"], course["tee_time_min"], course["tee_time_max"]
+    base_url, t_min = course["url"], course["tee_time_min"]
+    t_max = course.get("scrape_time_max", course["tee_time_max"])
     url = f"{base_url}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}"
     page = await context.new_page()
     try:
