@@ -3,7 +3,12 @@ name: Tests
 on:
   pull_request:
   push:
-    branches: [main, dev, production]
+    branches: [main, production]
+    # Generated-output commits (PAT pushes every ~10 min) don't need pytest.
+    paths-ignore:
+      - index.html
+      - data.json
+      - version.json
 
 jobs:
   pytest:
