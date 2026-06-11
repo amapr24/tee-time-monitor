@@ -635,10 +635,11 @@ async def scrape_webtrac(context, course: dict, target_date: date) -> list[dict]
             "grwebsearch_buttonsearch": "yes",
         }
         await goto_with_retry(page, base_url + "?" + urlencode(params), attempts=2, wait_until="domcontentloaded", timeout=30_000)
-        try:
-            await page.wait_for_selector("#grwebsearch_output_table tbody tr", state="attached", timeout=15_000)
-        except Exception:
-            pass  # no rows rendered for this date — evaluate returns []
+        # The results table is server-rendered (WebTrac includes it even with
+        # zero result rows). Its absence means a block/challenge page or a
+        # layout change — fail the date loudly (cache preserved) rather than
+        # record a false "no slots".
+        await page.wait_for_selector("#grwebsearch_output_table", state="attached", timeout=15_000)
         rows = await page.evaluate("() => Array.from(document.querySelectorAll('#grwebsearch_output_table tbody tr')).map(row => Array.from(row.querySelectorAll('td')).map(td => td.innerText.trim()))")
         return parse_webtrac(rows)
     finally:
