@@ -436,6 +436,13 @@ def chronogolf_book_url(course: dict, d: date) -> str:
     )
 
 
+def cpsgolf_book_url(course: dict, d: date) -> str:
+    t_max = get_sunset_cutoff(d, course["tee_time_max"])
+    if isinstance(t_max, datetime):
+        t_max = t_max.hour  # site expects an integer hour, not a datetime
+    return f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max}"
+
+
 def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
     out, seen = [], set()
     for raw in card_texts:
@@ -508,7 +515,7 @@ def send_pushover(title: str, message: str):
     if not all([PUSHOVER_USER, PUSHOVER_TOKEN]):
         return
     try:
-        requests.post(
+        resp = requests.post(
             "https://api.pushover.net/1/messages.json",
             data={
                 "token":    PUSHOVER_TOKEN,
@@ -520,6 +527,7 @@ def send_pushover(title: str, message: str):
             },
             timeout=10,
         )
+        resp.raise_for_status()
     except Exception as e:
         logger.error(f"Pushover error: {e}")
 
@@ -1129,8 +1137,7 @@ def generate_html():
             if course["type"] == "chronogolf":
                 book_url = chronogolf_book_url(course, d)
             elif course["type"] == "cpsgolf":
-                t_max_book = get_sunset_cutoff(d, course["tee_time_max"])
-                book_url = f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max_book}"
+                book_url = cpsgolf_book_url(course, d)
             else:
                 book_url = course["url"]
 
@@ -1210,6 +1217,9 @@ async def main(courses: list[dict]):
             *[check_course(playwright, course, dates) for course in courses],
             return_exceptions=True,
         )
+    for course, result in zip(courses, results):
+        if isinstance(result, BaseException):
+            logger.error(f"[{course['name']}] course run failed: {result!r}", exc_info=result)
     all_detected = [label for r in results if isinstance(r, list) for label in r]
     if all_detected:
         send_pushover("Tee Time Monitor – Now Tracking", "\n".join(all_detected))
