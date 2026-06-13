@@ -1,14 +1,10 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-12T23:50:53.894016-04:00",
+  "generatedAt": "2026-06-13T00:00:59.761140-04:00",
   "courses": [
     {
       "id": "miami-lakes",
       "days": [
-        {
-          "date": "2026-06-12",
-          "slots": []
-        },
         {
           "date": "2026-06-13",
           "slots": []
@@ -16,16 +12,16 @@
         {
           "date": "2026-06-14",
           "slots": []
+        },
+        {
+          "date": "2026-06-19",
+          "slots": []
         }
       ]
     },
     {
       "id": "miami-beach",
       "days": [
-        {
-          "date": "2026-06-12",
-          "slots": []
-        },
         {
           "date": "2026-06-13",
           "slots": [
@@ -65,10 +61,6 @@
     {
       "id": "normandy-shores",
       "days": [
-        {
-          "date": "2026-06-12",
-          "slots": []
-        },
         {
           "date": "2026-06-13",
           "slots": [
@@ -147,10 +139,6 @@
     {
       "id": "miami-shores",
       "days": [
-        {
-          "date": "2026-06-12",
-          "slots": []
-        },
         {
           "date": "2026-06-13",
           "slots": [
@@ -266,10 +254,6 @@
     {
       "id": "plantation-preserve",
       "days": [
-        {
-          "date": "2026-06-12",
-          "slots": []
-        },
         {
           "date": "2026-06-13",
           "slots": [
