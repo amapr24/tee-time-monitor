@@ -88,7 +88,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:14 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:01 PM ET, Tue Jun 16</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:11 PM ET, Tue Jun 16</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -114,7 +114,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (2 slots)</span>
+          <span class="course-name">Miami Lakes (1 slots)</span>
         </div>
         
         <div class="course-links">
@@ -156,11 +156,6 @@
                 
                 <li class="slot--twilight ">
                   
-                  3:56 PM
-                </li>
-                
-                <li class="slot--twilight ">
-                  
                   4:04 PM
                 </li>
                 
@@ -176,7 +171,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Beach (22 slots)</span>
+          <span class="course-name">Miami Beach (23 slots)</span>
         </div>
         
         <div class="course-links">
@@ -195,6 +190,11 @@
             </div>
             
               <ul class="slots">
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  12:52 PM
+                </li>
                 
                 <li class="slot--twilight ">
                   
@@ -342,7 +342,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (45 slots)</span>
+          <span class="course-name">Normandy Shores (46 slots)</span>
         </div>
         
         <div class="course-links">
@@ -418,6 +418,11 @@
             </div>
             
               <ul class="slots">
+                
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  10:12 AM
+                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -1650,7 +1655,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1781654464;
+    const updateTs = 1781655082;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
