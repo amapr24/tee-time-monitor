@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-19T10:21:56.024694-04:00",
+  "generatedAt": "2026-06-19T10:31:08.083429-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -11,16 +11,7 @@
         },
         {
           "date": "2026-06-20",
-          "slots": [
-            {
-              "time": "12:44 PM",
-              "holes": 18
-            },
-            {
-              "time": "1:32 PM",
-              "holes": 18
-            }
-          ]
+          "slots": []
         },
         {
           "date": "2026-06-21",
@@ -138,6 +129,10 @@
           "date": "2026-06-20",
           "slots": [
             {
+              "time": "1:40 PM",
+              "isNew": true
+            },
+            {
               "time": "2:28 PM"
             },
             {
@@ -171,6 +166,10 @@
           "slots": [
             {
               "time": "9:56 AM"
+            },
+            {
+              "time": "10:44 AM",
+              "isNew": true
             },
             {
               "time": "1:08 PM"
@@ -473,10 +472,6 @@
           "date": "2026-06-19",
           "slots": [
             {
-              "time": "10:27 AM",
-              "holes": 18
-            },
-            {
               "time": "10:36 AM",
               "holes": 18
             },
@@ -549,10 +544,6 @@
               "holes": 18
             },
             {
-              "time": "2:03 PM",
-              "holes": 18
-            },
-            {
               "time": "2:12 PM",
               "holes": 18
             },
@@ -608,6 +599,11 @@
             {
               "time": "9:33 AM",
               "holes": 18
+            },
+            {
+              "time": "10:09 AM",
+              "holes": 18,
+              "isNew": true
             },
             {
               "time": "11:03 AM",
@@ -722,6 +718,16 @@
         {
           "date": "2026-06-21",
           "slots": [
+            {
+              "time": "10:45 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:54 AM",
+              "holes": 18,
+              "isNew": true
+            },
             {
               "time": "11:03 AM",
               "holes": 18
