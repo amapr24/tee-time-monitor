@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-06-21T10:21:17.709951-04:00",
+  "generatedAt": "2026-06-21T10:30:54.618345-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -10,8 +10,7 @@
           "slots": [
             {
               "time": "2:44 PM",
-              "holes": 18,
-              "isNew": true
+              "holes": 18
             },
             {
               "time": "3:08 PM",
@@ -43,10 +42,6 @@
               "holes": 18
             },
             {
-              "time": "12:20 PM",
-              "holes": 18
-            },
-            {
               "time": "3:40 PM",
               "holes": 18
             },
@@ -72,9 +67,6 @@
         {
           "date": "2026-06-21",
           "slots": [
-            {
-              "time": "2:28 PM"
-            },
             {
               "time": "3:00 PM"
             }
@@ -165,9 +157,6 @@
         {
           "date": "2026-06-21",
           "slots": [
-            {
-              "time": "2:20 PM"
-            },
             {
               "time": "2:36 PM"
             },
@@ -283,13 +272,8 @@
           "date": "2026-06-21",
           "slots": [
             {
-              "time": "10:22 AM",
-              "holes": 18
-            },
-            {
               "time": "10:46 AM",
-              "holes": 18,
-              "isNew": true
+              "holes": 18
             },
             {
               "time": "12:14 PM",
@@ -587,6 +571,11 @@
           "date": "2026-06-21",
           "slots": [
             {
+              "time": "10:45 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
               "time": "10:54 AM",
               "holes": 18
             },
@@ -625,6 +614,11 @@
             {
               "time": "12:15 PM",
               "holes": 18
+            },
+            {
+              "time": "12:24 PM",
+              "holes": 18,
+              "isNew": true
             },
             {
               "time": "12:33 PM",
