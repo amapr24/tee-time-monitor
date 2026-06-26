@@ -88,7 +88,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:15 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">12:01 PM ET, Fri Jun 26</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">12:10 PM ET, Fri Jun 26</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -211,9 +211,9 @@
             
               <ul class="slots">
                 
-                <li class="slot--early ">
-                  
-                  9:48 AM
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  11:56 AM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -273,7 +273,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (30 slots)</span>
+          <span class="course-name">Normandy Shores (29 slots)</span>
         </div>
         
         <div class="course-links">
@@ -291,14 +291,7 @@
               <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-06-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--twilight ">
-                  
-                  4:04 PM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -860,7 +853,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Plantation Preserve (71 slots)</span>
+          <span class="course-name">Plantation Preserve (69 slots)</span>
         </div>
         
         <div class="course-links">
@@ -879,11 +872,6 @@
             </div>
             
               <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  12:06 PM
-                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -933,11 +921,6 @@
                 <li class="slot--afternoon ">
                   
                   1:54 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:21 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -1271,7 +1254,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1782489660;
+    const updateTs = 1782490258;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
