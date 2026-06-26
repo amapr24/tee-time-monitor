@@ -88,7 +88,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:15 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">10:41 PM ET, Thu Jun 25</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">10:50 PM ET, Thu Jun 25</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -114,7 +114,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (1 slots)</span>
+          <span class="course-name">Miami Lakes (2 slots)</span>
         </div>
         
         <div class="course-links">
@@ -132,7 +132,14 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=16" target="_blank">Book</a>
             </div>
             
-              <div class="no-slots">No times available</div>
+              <ul class="slots">
+                
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  10:04 AM
+                </li>
+                
+              </ul>
             
           </div>
           
@@ -1480,7 +1487,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1782441661;
+    const updateTs = 1782442253;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
