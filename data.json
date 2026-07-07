@@ -1,21 +1,79 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-07T13:51:11.198826-04:00",
+  "generatedAt": "2026-07-07T14:01:16.432030-04:00",
   "courses": [
     {
       "id": "miami-lakes",
       "days": [
         {
           "date": "2026-07-10",
-          "slots": []
+          "slots": [
+            {
+              "time": "11:48 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:56 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-07-11",
-          "slots": []
+          "slots": [
+            {
+              "time": "3:48 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "4:04 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-07-12",
-          "slots": []
+          "slots": [
+            {
+              "time": "3:16 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:24 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:32 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:40 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:48 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:56 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "4:04 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         }
       ]
     },
@@ -27,9 +85,6 @@
           "slots": [
             {
               "time": "12:20 PM"
-            },
-            {
-              "time": "12:28 PM"
             },
             {
               "time": "1:48 PM"
@@ -386,8 +441,7 @@
               "time": "3:40 PM"
             },
             {
-              "time": "3:48 PM",
-              "isNew": true
+              "time": "3:48 PM"
             }
           ]
         }
