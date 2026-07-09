@@ -88,7 +88,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:15 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">1:50 PM ET, Thu Jul 9</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">2:01 PM ET, Thu Jul 9</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -114,7 +114,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Lakes (4 slots)</span>
+          <span class="course-name">Miami Lakes (3 slots)</span>
         </div>
         
         <div class="course-links">
@@ -132,14 +132,7 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=16" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  11:48 AM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -409,7 +402,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (60 slots)</span>
+          <span class="course-name">Normandy Shores (61 slots)</span>
         </div>
         
         <div class="course-links">
@@ -560,6 +553,11 @@
             </div>
             
               <ul class="slots">
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  1:16 PM
+                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -765,7 +763,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Shores (87 slots)</span>
+          <span class="course-name">Miami Shores (86 slots)</span>
         </div>
         
         <div class="course-links">
@@ -798,11 +796,6 @@
                 <li class="slot--midday ">
                   
                   10:54 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
-                  11:10 AM
                 </li>
                 
                 <li class="slot--midday ">
@@ -1256,7 +1249,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Plantation Preserve (69 slots)</span>
+          <span class="course-name">Plantation Preserve (71 slots)</span>
         </div>
         
         <div class="course-links">
@@ -1412,6 +1405,16 @@
             </div>
             
               <ul class="slots">
+                
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  10:09 AM
+                </li>
+                
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  10:18 AM
+                </li>
                 
                 <li class="slot--midday ">
                   
@@ -1657,7 +1660,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1783619459;
+    const updateTs = 1783620071;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
