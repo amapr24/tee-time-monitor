@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-16T11:01:10.883160-04:00",
+  "generatedAt": "2026-07-16T11:10:57.800089-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -14,8 +14,7 @@
             },
             {
               "time": "11:32 AM",
-              "holes": 18,
-              "isNew": true
+              "holes": 18
             },
             {
               "time": "12:36 PM",
@@ -28,8 +27,7 @@
           "slots": [
             {
               "time": "1:40 PM",
-              "holes": 18,
-              "isNew": true
+              "holes": 18
             }
           ]
         },
@@ -76,6 +74,10 @@
               "time": "12:44 PM"
             },
             {
+              "time": "1:00 PM",
+              "isNew": true
+            },
+            {
               "time": "1:08 PM"
             },
             {
@@ -94,8 +96,7 @@
               "time": "2:20 PM"
             },
             {
-              "time": "2:28 PM",
-              "isNew": true
+              "time": "2:28 PM"
             },
             {
               "time": "3:08 PM"
@@ -274,9 +275,6 @@
               "time": "12:44 PM"
             },
             {
-              "time": "3:08 PM"
-            },
-            {
               "time": "3:16 PM"
             },
             {
@@ -292,8 +290,7 @@
               "time": "3:48 PM"
             },
             {
-              "time": "3:56 PM",
-              "isNew": true
+              "time": "3:56 PM"
             }
           ]
         },
@@ -599,6 +596,11 @@
           "date": "2026-07-18",
           "slots": [
             {
+              "time": "10:54 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
               "time": "1:26 PM",
               "holes": 18
             },
@@ -669,6 +671,11 @@
             {
               "time": "3:58 PM",
               "holes": 18
+            },
+            {
+              "time": "9:10 AM",
+              "holes": 18,
+              "isNew": true
             }
           ]
         },
@@ -1039,10 +1046,6 @@
               "holes": 18
             },
             {
-              "time": "10:27 AM",
-              "holes": 18
-            },
-            {
               "time": "10:54 AM",
               "holes": 18
             },
@@ -1181,8 +1184,7 @@
           "slots": [
             {
               "time": "9:24 AM",
-              "holes": 18,
-              "isNew": true
+              "holes": 18
             },
             {
               "time": "9:33 AM",
