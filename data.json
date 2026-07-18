@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-17T20:12:14.555803-04:00",
+  "generatedAt": "2026-07-17T20:21:32.189738-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -11,21 +11,11 @@
         },
         {
           "date": "2026-07-18",
-          "slots": [
-            {
-              "time": "3:32 PM",
-              "holes": 18
-            }
-          ]
+          "slots": []
         },
         {
           "date": "2026-07-19",
-          "slots": [
-            {
-              "time": "2:20 PM",
-              "holes": 18
-            }
-          ]
+          "slots": []
         }
       ]
     },
@@ -42,13 +32,95 @@
         },
         {
           "date": "2026-07-19",
+          "slots": []
+        }
+      ]
+    },
+    {
+      "id": "normandy-shores",
+      "days": [
+        {
+          "date": "2026-07-17",
+          "slots": []
+        },
+        {
+          "date": "2026-07-18",
           "slots": [
             {
-              "time": "11:56 AM",
+              "time": "12:04 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:24 PM",
+              "isNew": true
+            },
+            {
+              "time": "2:44 PM",
+              "isNew": true
+            },
+            {
+              "time": "2:52 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:00 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:16 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:32 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:40 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:48 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:56 PM",
+              "isNew": true
+            }
+          ]
+        },
+        {
+          "date": "2026-07-19",
+          "slots": [
+            {
+              "time": "10:20 AM",
+              "isNew": true
+            },
+            {
+              "time": "10:28 AM",
+              "isNew": true
+            },
+            {
+              "time": "12:04 PM",
               "isNew": true
             },
             {
               "time": "12:12 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:20 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:28 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:36 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:44 PM",
               "isNew": true
             },
             {
@@ -88,6 +160,10 @@
               "isNew": true
             },
             {
+              "time": "2:04 PM",
+              "isNew": true
+            },
+            {
               "time": "2:12 PM",
               "isNew": true
             },
@@ -110,53 +186,8 @@
             {
               "time": "2:52 PM",
               "isNew": true
-            },
-            {
-              "time": "3:00 PM",
-              "isNew": true
-            },
-            {
-              "time": "3:08 PM",
-              "isNew": true
-            },
-            {
-              "time": "3:16 PM",
-              "isNew": true
-            },
-            {
-              "time": "3:24 PM",
-              "isNew": true
-            },
-            {
-              "time": "3:32 PM",
-              "isNew": true
-            },
-            {
-              "time": "3:40 PM",
-              "isNew": true
-            },
-            {
-              "time": "3:48 PM",
-              "isNew": true
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": "normandy-shores",
-      "days": [
-        {
-          "date": "2026-07-17",
-          "slots": []
-        },
-        {
-          "date": "2026-07-18",
-          "slots": []
-        },
-        {
-          "date": "2026-07-19",
-          "slots": []
         }
       ]
     },
@@ -169,7 +200,73 @@
         },
         {
           "date": "2026-07-18",
-          "slots": []
+          "slots": [
+            {
+              "time": "1:26 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:42 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:50 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:58 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "2:14 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "2:22 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "2:46 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "2:54 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:26 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:34 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:42 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:50 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "3:58 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-07-19",
