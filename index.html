@@ -88,7 +88,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:13 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">1:20 PM ET, Sat Jul 18</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">1:31 PM ET, Sat Jul 18</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -132,7 +132,14 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=16" target="_blank">Book</a>
             </div>
             
-              <div class="no-slots">No times available</div>
+              <ul class="slots">
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  1:32 PM
+                </li>
+                
+              </ul>
             
           </div>
           
@@ -142,14 +149,7 @@
               <a class="book-btn" href="https://miamilakes.cps.golf/onlineresweb/search-teetime?TeeOffTimeMin=6&TeeOffTimeMax=16" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--midday ">
-                  
-                  11:00 AM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -363,11 +363,6 @@
             
               <ul class="slots">
                 
-                <li class="slot--early ">
-                  
-                  9:40 AM
-                </li>
-                
                 <li class="slot--midday ">
                   
                   11:24 AM
@@ -481,6 +476,11 @@
                 <li class="slot--afternoon ">
                   
                   2:36 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  2:44 PM
                 </li>
                 
               </ul>
@@ -739,7 +739,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Plantation Preserve (53 slots)</span>
+          <span class="course-name">Plantation Preserve (52 slots)</span>
         </div>
         
         <div class="course-links">
@@ -758,11 +758,6 @@
             </div>
             
               <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:27 PM
-                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -1048,7 +1043,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1784395255;
+    const updateTs = 1784395871;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
