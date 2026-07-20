@@ -88,7 +88,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:12 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:51 PM ET, Sun Jul 19</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">10:11 PM ET, Sun Jul 19</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -343,11 +343,6 @@
                 
                 <li class="slot--early ">
                   
-                  8:36 AM
-                </li>
-                
-                <li class="slot--early ">
-                  
                   8:44 AM
                 </li>
                 
@@ -446,6 +441,11 @@
                   11:40 AM
                 </li>
                 
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  11:48 AM
+                </li>
+                
               </ul>
             
           </div>
@@ -458,7 +458,7 @@
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Shores (46 slots)</span>
+          <span class="course-name">Miami Shores (45 slots)</span>
         </div>
         
         <div class="course-links">
@@ -661,11 +661,6 @@
                 <li class="slot--afternoon ">
                   
                   1:50 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  1:58 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -997,7 +992,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1784512292;
+    const updateTs = 1784513475;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
