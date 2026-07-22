@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-22T12:21:00.311679-04:00",
+  "generatedAt": "2026-07-22T12:31:30.016554-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -116,7 +116,104 @@
       "days": [
         {
           "date": "2026-07-24",
-          "slots": []
+          "slots": [
+            {
+              "time": "8:52 AM",
+              "isNew": true
+            },
+            {
+              "time": "9:16 AM",
+              "isNew": true
+            },
+            {
+              "time": "9:24 AM",
+              "isNew": true
+            },
+            {
+              "time": "9:32 AM",
+              "isNew": true
+            },
+            {
+              "time": "9:48 AM",
+              "isNew": true
+            },
+            {
+              "time": "9:56 AM",
+              "isNew": true
+            },
+            {
+              "time": "10:04 AM",
+              "isNew": true
+            },
+            {
+              "time": "10:12 AM",
+              "isNew": true
+            },
+            {
+              "time": "10:20 AM",
+              "isNew": true
+            },
+            {
+              "time": "10:28 AM",
+              "isNew": true
+            },
+            {
+              "time": "10:36 AM",
+              "isNew": true
+            },
+            {
+              "time": "10:44 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:00 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:08 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:16 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:24 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:32 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:48 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:56 AM",
+              "isNew": true
+            },
+            {
+              "time": "12:04 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:12 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:20 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:28 PM",
+              "isNew": true
+            },
+            {
+              "time": "12:36 PM",
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-07-25",
@@ -824,8 +921,7 @@
           "slots": [
             {
               "time": "10:27 AM",
-              "holes": 18,
-              "isNew": true
+              "holes": 18
             },
             {
               "time": "10:36 AM",
