@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-22T09:01:25.050874-04:00",
+  "generatedAt": "2026-07-22T09:11:03.481548-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -200,6 +200,10 @@
         {
           "date": "2026-07-25",
           "slots": [
+            {
+              "time": "1:40 PM",
+              "isNew": true
+            },
             {
               "time": "2:12 PM"
             },
@@ -777,10 +781,6 @@
         {
           "date": "2026-07-25",
           "slots": [
-            {
-              "time": "11:03 AM",
-              "holes": 18
-            },
             {
               "time": "11:12 AM",
               "holes": 18
