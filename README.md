@@ -4,10 +4,10 @@ A high-performance monitoring system for Miami-area golf courses. This tool auto
 
 ## 🚀 Overview
 
-Booking a weekend tee time in Miami is often a race against time. **Tee Time Monitor** solves this by checking multiple booking platforms (CPS Golf, Chronogolf, and WebTrac) every 10 minutes. When a new slot opens within your preferred window, you get a notification instantly.
+Booking a weekend tee time in Miami is often a race against time. **Tee Time Monitor** solves this by checking multiple booking platforms (Chronogolf and WebTrac) every 10 minutes. When a new slot opens within your preferred window, you get a notification instantly.
 
 ### Key Features
-- **Multi-Platform Support:** Custom scrapers for CPS Golf, Chronogolf, and WebTrac.
+- **Multi-Platform Support:** Custom scrapers for Chronogolf and WebTrac.
 
 
   | Course | Booking platform |
@@ -15,7 +15,7 @@ Booking a weekend tee time in Miami is often a race against time. **Tee Time Mon
   | Miami Beach | Chronogolf |
   | Miami Shores | Chronogolf (club JSON API — no browser) |
   | Normandy Shores | Chronogolf |
-  | Miami Lakes | CPS Golf |
+  | Miami Lakes | Chronogolf |
   | Plantation Preserve | WebTrac |
 
 
@@ -81,7 +81,7 @@ POST https://api.github.com/repos/<owner>/<repo>/actions/workflows/tee-time-moni
 Each run commits the regenerated `index.html` / `data.json` / `version.json` back to the repo, which GitHub Pages serves as the live dashboard.
 
 ## 🛠 Adding New Courses
-To add a new course, update the `COURSES` list in `tee_time_monitor.py` with the course's metadata, booking URL, and the appropriate scraper type (`cpsgolf`, `chronogolf`, or `webtrac`).
+To add a new course, update the `COURSES` list in `tee_time_monitor.py` with the course's metadata, booking URL, and the appropriate scraper type (`chronogolf` or `webtrac`).
 
 ---
 
