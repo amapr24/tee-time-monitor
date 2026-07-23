@@ -1,5 +1,5 @@
 """
-Tee Time Monitor -- Miami-area courses (CPS Golf, Chronogolf, WebTrac)
+Tee Time Monitor -- Miami-area courses (Chronogolf, WebTrac)
 Checks multiple golf courses and sends Pushover push notifications
 when new tee times appear.
 """
@@ -52,16 +52,15 @@ COURSES = [
         "address":        "6801 Miami Lakes Dr, Miami Lakes",
         "phone":          "(305) 558-4653",
         "website":        "https://www.miamilakesgolf.com/",
-        "type":           "cpsgolf",
-        "url":            "https://miamilakes.cps.golf/onlineresweb/search-teetime",
+        "type":           "chronogolf",
+        "url":            "https://www.chronogolf.com/club/miami-lakes-golf-club",
+        "holes":          18,
+        "group_size":     4,
         "tee_time_min":   6,
         "tee_time_max":   15,
-        # The site pre-filters the tee sheet by the URL's TeeOffTimeMax, so
-        # request a wider window than tee_time_max and let the sunset cutoff
-        # (≈16:00 ET in June) do the real trimming.
-        "scrape_time_max": 17,
         "cache_file":     "cache_miami_lakes.json",
         "skip_past_dates": True,
+        "booking_window_days": 5,
     },
     {
         "name":           "Miami Beach",
@@ -265,8 +264,6 @@ def deduplicate_slots(slots: list[dict], t_min: int, t_max: int) -> list[dict]:
             out.append(slot)
     return out
 
-_CPS_TIME_RE    = re.compile(r"(\d{1,2}:\d{2})\s*P\s*M|(\d{1,2}:\d{2})\s*A\s*M", re.I)
-_CPS_HOLE_RE    = re.compile(r"\d+\s*HOLE", re.I)
 _PRICE_RE       = re.compile(r"\$[\d,.]+")
 _CHRONO_12H_RE  = re.compile(r"(\d{1,2}:\d{2})\s*(AM|PM)", re.I)
 _CHRONO_24H_RE  = re.compile(r"\b([01]?\d|2[0-3]):(\d{2})\b")
@@ -280,46 +277,6 @@ def _collapse(raw: str) -> str:
 def _normalize_time_label(time_str: str) -> str:
     t = _collapse(time_str)
     return re.sub(r"\b(am|pm)\b", lambda m: m.group(1).upper(), t, flags=re.I)
-
-def parse_cpsgolf_card(raw: str) -> dict | None:
-    raw = _collapse(raw)
-    if not raw:
-        return None
-    m = _CPS_TIME_RE.search(raw)
-    if not m:
-        return None
-    time_base = m.group(1) or m.group(2)
-    ampm = "PM" if m.group(1) else "AM"
-    holes, price = _CPS_HOLE_RE.search(raw), _PRICE_RE.search(raw)
-    return {
-        "time":  f"{time_base} {ampm}",
-        "holes": holes.group(0) if holes else "",
-        "price": price.group(0) if price else "",
-    }
-
-def parse_cpsgolf(card_texts: list[str], body_text: str = "") -> list[dict]:
-    out, seen = [], set()
-    for raw in card_texts:
-        slot = parse_cpsgolf_card(raw)
-        if not slot:
-            continue
-        key = (slot["time"], slot["holes"])
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append(slot)
-    if out:
-        return out
-    for m in _CPS_TIME_RE.finditer(_collapse(body_text)):
-        time_base = m.group(1) or m.group(2)
-        ampm = "PM" if m.group(1) else "AM"
-        time = f"{time_base} {ampm}"
-        key = (time, "")
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append({"time": time, "holes": "", "price": ""})
-    return out
 
 def parse_chronogolf_card(raw: str) -> dict | None:
     raw = _collapse(raw)
@@ -438,13 +395,6 @@ def chronogolf_book_url(course: dict, d: date) -> str:
     )
 
 
-def cpsgolf_book_url(course: dict, d: date) -> str:
-    t_max = get_sunset_cutoff(d, course["tee_time_max"])
-    if isinstance(t_max, datetime):
-        t_max = t_max.hour  # site expects an integer hour, not a datetime
-    return f"{course['url']}?TeeOffTimeMin={course['tee_time_min']}&TeeOffTimeMax={t_max}"
-
-
 def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
     out, seen = [], set()
     for raw in card_texts:
@@ -557,40 +507,6 @@ async def new_course_context(browser):
     )
     return context
 
-async def scrape_cpsgolf(context, course: dict, target_date: date) -> list[dict]:
-    base_url, t_min = course["url"], course["tee_time_min"]
-    t_max = course.get("scrape_time_max", course["tee_time_max"])
-    url = f"{base_url}?TeeOffTimeMin={t_min}&TeeOffTimeMax={t_max}"
-    page = await context.new_page()
-    try:
-        await goto_with_retry(page, url, wait_until="networkidle", timeout=60_000)
-        await human_delay(page, 2000, 4000)
-        target_month_str = target_date.strftime("%B %Y")
-        for _ in range(12):
-            header = await page.evaluate("() => { const pat = /^[A-Za-z]+ \\d{4}$/; const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false); let node; while ((node = walker.nextNode())) { const t = node.textContent.trim(); if (pat.test(t)) return t; } return ''; }")
-            if target_month_str in (header or "").strip():
-                break
-            if not header:
-                logger.warning(f"[{course['name']}] {target_date}: no calendar month header detected; aborting.")
-                return []
-            advanced = await page.evaluate("() => { const topbar = document.querySelector('.topbar-container'); const btns = Array.from(topbar ? topbar.querySelectorAll('button') : []); const nextBtn = btns.find(b => !b.disabled && !b.classList.contains('topbar-title')); if (nextBtn) { nextBtn.click(); return true; } return false; }")
-            if not advanced:
-                logger.warning(f"[{course['name']}] {target_date}: next-month button not found (stuck on '{header}'); aborting.")
-                return []
-            await human_delay(page, 600, 1200)
-        else:
-            logger.warning(f"[{course['name']}] {target_date}: couldn't reach {target_month_str} after 12 advances; aborting.")
-            return []
-        day_num = str(target_date.day)
-        clicked = await page.evaluate(f"() => {{ const target = '{day_num}'; for (const btn of document.querySelectorAll('button.btn-day-unit')) {{ if (btn.disabled) continue; const span = btn.parentElement?.querySelector('.day-background-upper'); const txt = (span?.innerText || '').trim(); if (txt !== target) continue; if ((span?.className || '').includes('prev-month')) continue; btn.click(); return true; }} return null; }}")
-        if not clicked:
-            return []
-        await human_delay(page, 3000, 5000)
-        card_texts, body_text = await page.evaluate("() => { const selectors = ['[class*=\"teetime\"]', '[class*=\"tee-time\"]', '[class*=\"timeslot\"]', '[class*=\"time-slot\"]', '[class*=\"booking\"]', '[class*=\"result-item\"]', '[class*=\"search-result\"]', '[class*=\"tee-card\"]']; let cards = []; for (const sel of selectors) { const found = document.querySelectorAll(sel); if (found.length > 0) { cards = Array.from(found); break; } } return [cards.map(c => c.innerText), document.body.innerText]; }")
-        return parse_cpsgolf(card_texts, body_text)
-    finally:
-        await page.close()
-
 async def scrape_chronogolf(context, course: dict, target_date: date) -> list[dict]:
     base_url = course["url"]
     date_str = target_date.isoformat()
@@ -688,9 +604,7 @@ async def check_day(context, course: dict, target_date: date):
     if course.get("skip_past_dates") and target_date < datetime.now(ET).date():
         return [], None
 
-    if course["type"] == "cpsgolf":
-        raw = await scrape_cpsgolf(context, course, target_date)
-    elif course["type"] == "chronogolf":
+    if course["type"] == "chronogolf":
         if course.get("chronogolf_club_id"):
             # Blocking requests call — keep it off the event loop so a slow
             # API response doesn't stall the other courses' scrapes.
@@ -1163,8 +1077,6 @@ def generate_html():
 
             if course["type"] == "chronogolf":
                 book_url = chronogolf_book_url(course, d)
-            elif course["type"] == "cpsgolf":
-                book_url = cpsgolf_book_url(course, d)
             else:
                 book_url = course["url"]
 

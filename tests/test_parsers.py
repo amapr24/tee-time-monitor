@@ -2,7 +2,7 @@
 Parser tests — exercise the pure-Python extraction logic without a browser.
 
 Fixtures mimic the innerText Playwright's `page.evaluate` would return:
-- cpsgolf / chronogolf scrapers return a list of card innerText strings
+- chronogolf scraper returns a list of card innerText strings
 - webtrac scraper returns a list of rows where each row is a list of td innerTexts
 
 If a site DOM changes shape (new card wrapper, new table layout), these tests
@@ -10,72 +10,16 @@ won't catch it — but they will catch a parser regression where the text is
 still recognizable but we stop extracting it correctly.
 """
 
-import re
 from datetime import date
 
 import tee_time_monitor
 from tee_time_monitor import (
-    cpsgolf_book_url,
-    parse_cpsgolf,
-    parse_cpsgolf_card,
     parse_chronogolf,
     parse_chronogolf_card,
     parse_chronogolf_club_api,
     parse_webtrac,
     parse_webtrac_row,
 )
-
-
-# ── CPS Golf ──────────────────────────────────────────────────────────────────
-
-def test_cpsgolf_card_basic():
-    # Note: regex captures "18 HOLE" (no trailing S) — mirrors existing JS behavior.
-    raw = "7:30 AM\n18 HOLES\n$65.00"
-    assert parse_cpsgolf_card(raw) == {
-        "time":  "7:30 AM",
-        "holes": "18 HOLE",
-        "price": "$65.00",
-    }
-
-
-def test_cpsgolf_card_pm_with_spaces_in_ampm():
-    # CPS sometimes renders time with spaces between digits and A/P/M
-    raw = "2:15 P M   9 HOLES   $40.00"
-    slot = parse_cpsgolf_card(raw)
-    assert slot["time"] == "2:15 PM"
-    assert slot["holes"] == "9 HOLE"
-    assert slot["price"] == "$40.00"
-
-
-def test_cpsgolf_card_no_match():
-    assert parse_cpsgolf_card("Book your tee time today!") is None
-    assert parse_cpsgolf_card("") is None
-
-
-def test_cpsgolf_dedups_by_time_and_holes():
-    cards = [
-        "7:30 AM 18 HOLES $65.00",
-        "7:30 AM 18 HOLES $65.00",  # dup
-        "7:30 AM 9 HOLES $40.00",   # different holes — keep
-    ]
-    slots = parse_cpsgolf(cards)
-    assert len(slots) == 2
-    assert {s["holes"] for s in slots} == {"18 HOLE", "9 HOLE"}
-
-
-def test_cpsgolf_falls_back_to_body_text():
-    body = "Available times include 8:00 AM and 10:30 AM and 2:15 PM for booking."
-    slots = parse_cpsgolf([], body)
-    times = [s["time"] for s in slots]
-    assert times == ["8:00 AM", "10:30 AM", "2:15 PM"]
-
-
-def test_cpsgolf_skips_fallback_when_cards_found():
-    cards = ["7:30 AM 18 HOLES"]
-    body = "Also 11:00 AM somewhere"
-    slots = parse_cpsgolf(cards, body)
-    assert len(slots) == 1
-    assert slots[0]["time"] == "7:30 AM"
 
 
 # ── Chronogolf ────────────────────────────────────────────────────────────────
@@ -222,21 +166,19 @@ def test_webtrac_parses_multiple_rows_filtering_non_four():
 
 # ── Booking URLs ──────────────────────────────────────────────────────────────
 
-def test_cpsgolf_book_url_time_bounds_are_integer_hours():
-    # Regression: the sunset-cutoff datetime used to be interpolated raw into
-    # the URL ("...TeeOffTimeMax=2026-06-12 16:02:24.866244-04:00").
-    course = {"url": "https://x.example/search-teetime", "tee_time_min": 6, "tee_time_max": 15}
-    url = cpsgolf_book_url(course, date(2026, 6, 12))
-    assert re.fullmatch(
-        r"https://x\.example/search-teetime\?TeeOffTimeMin=6&TeeOffTimeMax=\d{1,2}", url
+def test_chronogolf_book_url_marketplace_slug():
+    # Marketplace-slug courses (no chronogolf_club_id) build a per-date deep link
+    # onto the club URL with the teetimes step + holes/groupSize query params.
+    course = {
+        "url": "https://www.chronogolf.com/club/miami-lakes-golf-club",
+        "holes": 18,
+        "group_size": 4,
+    }
+    url = tee_time_monitor.chronogolf_book_url(course, date(2026, 6, 12))
+    assert url == (
+        "https://www.chronogolf.com/club/miami-lakes-golf-club"
+        "?date=2026-06-12&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4"
     )
-
-
-def test_cpsgolf_book_url_falls_back_to_course_max(monkeypatch):
-    # When the sunset calc fails, get_sunset_cutoff returns the fallback hour as-is.
-    monkeypatch.setattr(tee_time_monitor, "get_sunset_cutoff", lambda d, fb: fb)
-    course = {"url": "https://x.example/search-teetime", "tee_time_min": 6, "tee_time_max": 15}
-    assert cpsgolf_book_url(course, date(2026, 6, 12)).endswith("&TeeOffTimeMax=15")
 
 
 # ── Cache maintenance ─────────────────────────────────────────────────────────
