@@ -395,6 +395,25 @@ def chronogolf_book_url(course: dict, d: date) -> str:
     )
 
 
+def course_book_url(course: dict) -> str:
+    """Course-level booking link for the card header (not date-specific).
+
+    For Chronogolf *marketplace* courses, deep-link straight into today's full
+    tee-sheet calendar (`step=teetimes`) with the holes/group-size filters left
+    empty (`holes=`, `groupSize=0`) so every available time shows — rather than
+    the club landing page's course-info view with its small booking widget that
+    makes you hunt for a day before you can reach the tee sheet. Club-widget
+    (Miami Shores) and WebTrac (Plantation) courses already point their `url`
+    straight at the booking interface, so use it as-is."""
+    if course["type"] == "chronogolf" and not course.get("chronogolf_club_id"):
+        today = _now_et().date()
+        return (
+            f"{course['url']}?date={today.isoformat()}"
+            f"&step=teetimes&holes=&coursesIds=&deals=false&groupSize=0"
+        )
+    return course["url"]
+
+
 def parse_chronogolf(card_texts: list[str], body_text: str = "") -> list[dict]:
     out, seen = [], set()
     for raw in card_texts:
@@ -1064,7 +1083,7 @@ def generate_html():
                 "phone":            course.get("phone"),
                 "phone_tel":        "tel:+1" + re.sub(r"\D", "", course["phone"]) if course.get("phone") else None,
                 "website":          course.get("website"),
-                "book_url":         course["url"],
+                "book_url":         course_book_url(course),
             })
             continue
 
@@ -1129,7 +1148,7 @@ def generate_html():
             "phone":            course.get("phone"),
             "phone_tel":        "tel:+1" + re.sub(r"\D", "", course["phone"]) if course.get("phone") else None,
             "website":          course.get("website"),
-            "book_url":         course["url"],
+            "book_url":         course_book_url(course),
         })
 
     header_sunset = get_sunset(dates_all[0] if dates_all else _now_et().date())

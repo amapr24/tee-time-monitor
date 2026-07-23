@@ -181,6 +181,34 @@ def test_chronogolf_book_url_marketplace_slug():
     )
 
 
+def test_course_book_url_chronogolf_marketplace_opens_full_calendar(monkeypatch):
+    # The card-header link deep-links into today's full tee-sheet (step=teetimes)
+    # with the holes/group-size filters left empty so every time shows.
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    monkeypatch.setattr(tee_time_monitor, "_now_et",
+                        lambda: datetime(2026, 7, 23, 9, 0, tzinfo=et))
+    course = {"type": "chronogolf", "url": "https://www.chronogolf.com/club/miami-lakes-golf-club"}
+    assert tee_time_monitor.course_book_url(course) == (
+        "https://www.chronogolf.com/club/miami-lakes-golf-club"
+        "?date=2026-07-23&step=teetimes&holes=&coursesIds=&deals=false&groupSize=0"
+    )
+
+
+def test_course_book_url_club_and_webtrac_use_configured_url():
+    # Club-widget (has chronogolf_club_id) and WebTrac courses already point their
+    # url at the booking interface — the header link uses it verbatim.
+    club = {
+        "type": "chronogolf",
+        "chronogolf_club_id": 19871,
+        "url": "https://www.chronogolf.com/club/19871/widget?medium=widget&source=club",
+    }
+    assert tee_time_monitor.course_book_url(club) == club["url"]
+    webtrac = {"type": "webtrac", "url": "https://parks.example/webtrac/web/search.html?module=GR"}
+    assert tee_time_monitor.course_book_url(webtrac) == webtrac["url"]
+
+
 # ── Cache maintenance ─────────────────────────────────────────────────────────
 
 def test_save_cache_prunes_past_dates(tmp_path):
