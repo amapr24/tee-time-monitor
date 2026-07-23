@@ -833,6 +833,10 @@ HTML_TEMPLATE = """
     .course-link:hover { opacity: 1; background: var(--bg); color: var(--brand-green); }
     .course-link:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 1px; opacity: 1; }
     .course-link svg { width: 15px; height: 15px; display: block; }
+    .card-footer { padding: 8px 14px; border-top: 1px solid var(--border); text-align: center; }
+    .course-home-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 600; color: var(--text-sub); text-decoration: none; letter-spacing: 0.02em; opacity: 0.72; transition: opacity 0.2s, color 0.2s; }
+    .course-home-link:hover { opacity: 1; color: var(--brand-green); }
+    .course-home-link:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 2px; opacity: 1; }
     .collapse-icon { font-size: 0.6rem; transition: transform 0.3s; color: var(--text-sub); display: inline-block; line-height: 1; transform-origin: 50% 50%; transform: rotate(0deg); }
     .course-card.is-collapsed .collapse-icon { transform: rotate(-90deg); }
     .course-card.is-collapsed .card-body { display: none; }
@@ -887,12 +891,10 @@ HTML_TEMPLATE = """
           {% if c.any_slots %}<span class="collapse-icon">▼</span>{% endif %}
           <span class="course-name">{{ c.display_name }}</span>
         </div>
-        {% if c.phone or c.website %}
         <div class="course-links">
           {% if c.phone %}<a class="course-link" href="{{ c.phone_tel }}" title="Call {{ c.name }}: {{ c.phone }}" aria-label="Call {{ c.name }} at {{ c.phone }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>{% endif %}
-          {% if c.website %}<a class="course-link" href="{{ c.website }}" target="_blank" rel="noopener noreferrer" title="Visit {{ c.name }} website" aria-label="{{ c.name }} website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>{% endif %}
+          <a class="course-link" href="{{ c.book_url }}" target="_blank" rel="noopener noreferrer" title="Book tee times at {{ c.name }}" aria-label="Book tee times at {{ c.name }}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></a>
         </div>
-        {% endif %}
       </div>
       <div class="card-body">
         {% if c.any_slots %}
@@ -924,6 +926,11 @@ HTML_TEMPLATE = """
           <div class="day-row"><div class="no-slots">{{ 'Not yet released.' if c.all_not_released else 'Fully booked for the dates shown.' }}</div></div>
         {% endif %}
       </div>
+      {% if c.website %}
+      <div class="card-footer">
+        <a class="course-home-link" href="{{ c.website }}" target="_blank" rel="noopener noreferrer">{{ c.name }} website ↗</a>
+      </div>
+      {% endif %}
     </div>
     {% endfor %}
   </main>
@@ -1057,6 +1064,7 @@ def generate_html():
                 "phone":            course.get("phone"),
                 "phone_tel":        "tel:+1" + re.sub(r"\D", "", course["phone"]) if course.get("phone") else None,
                 "website":          course.get("website"),
+                "book_url":         course["url"],
             })
             continue
 
@@ -1121,6 +1129,7 @@ def generate_html():
             "phone":            course.get("phone"),
             "phone_tel":        "tel:+1" + re.sub(r"\D", "", course["phone"]) if course.get("phone") else None,
             "website":          course.get("website"),
+            "book_url":         course["url"],
         })
 
     header_sunset = get_sunset(dates_all[0] if dates_all else _now_et().date())
