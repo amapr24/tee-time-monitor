@@ -58,6 +58,10 @@
     .course-link:hover { opacity: 1; background: var(--bg); color: var(--brand-green); }
     .course-link:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 1px; opacity: 1; }
     .course-link svg { width: 15px; height: 15px; display: block; }
+    .card-footer { padding: 8px 14px; border-top: 1px solid var(--border); text-align: center; }
+    .course-home-link { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 600; color: var(--text-sub); text-decoration: none; letter-spacing: 0.02em; opacity: 0.72; transition: opacity 0.2s, color 0.2s; }
+    .course-home-link:hover { opacity: 1; color: var(--brand-green); }
+    .course-home-link:focus-visible { outline: 2px solid var(--brand-green); outline-offset: 2px; opacity: 1; }
     .collapse-icon { font-size: 0.6rem; transition: transform 0.3s; color: var(--text-sub); display: inline-block; line-height: 1; transform-origin: 50% 50%; transform: rotate(0deg); }
     .course-card.is-collapsed .collapse-icon { transform: rotate(-90deg); }
     .course-card.is-collapsed .card-body { display: none; }
@@ -88,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 8:10 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">2:01 PM ET, Thu Jul 23</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">2:22 PM ET, Thu Jul 23</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -110,38 +114,108 @@
   
   <main id="course-grid">
     
-    <div class="course-card is-collapsed" id="card-miami-lakes">
-      <div class="card-header">
+    <div class="course-card " id="card-miami-lakes">
+      <div class="card-header collapsible-header">
         <div class="header-title-group">
-          
-          <span class="course-name">Miami Lakes (Fully Booked)</span>
+          <span class="collapse-icon">▼</span>
+          <span class="course-name">Miami Lakes (7 slots)</span>
         </div>
-        
         <div class="course-links">
           <a class="course-link" href="tel:+13055584653" title="Call Miami Lakes: (305) 558-4653" aria-label="Call Miami Lakes at (305) 558-4653"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
-          <a class="course-link" href="https://www.miamilakesgolf.com/" target="_blank" rel="noopener noreferrer" title="Visit Miami Lakes website" aria-label="Miami Lakes website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>
+          <a class="course-link" href="https://www.chronogolf.com/club/miami-lakes-golf-club?date=2026-07-23&step=teetimes&holes=&coursesIds=&deals=false&groupSize=0" target="_blank" rel="noopener noreferrer" title="Book tee times at Miami Lakes" aria-label="Book tee times at Miami Lakes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></a>
         </div>
-        
       </div>
       <div class="card-body">
         
-          <div class="day-row"><div class="no-slots">Fully booked for the dates shown.</div></div>
+          
+          <div class="day-row" data-day="Friday">
+            <div class="day-row-header">
+              <span class="day-label">Fri 24</span>
+              <a class="book-btn" href="https://www.chronogolf.com/club/miami-lakes-golf-club?date=2026-07-24&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
+            </div>
+            
+              <div class="no-slots">No times available</div>
+            
+          </div>
+          
+          <div class="day-row" data-day="Saturday">
+            <div class="day-row-header">
+              <span class="day-label">Sat 25</span>
+              <a class="book-btn" href="https://www.chronogolf.com/club/miami-lakes-golf-club?date=2026-07-25&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
+            </div>
+            
+              <ul class="slots">
+                
+                <li class="slot--twilight slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:50 PM
+                </li>
+                
+              </ul>
+            
+          </div>
+          
+          <div class="day-row" data-day="Sunday">
+            <div class="day-row-header">
+              <span class="day-label">Sun 26</span>
+              <a class="book-btn" href="https://www.chronogolf.com/club/miami-lakes-golf-club?date=2026-07-26&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
+            </div>
+            
+              <ul class="slots">
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  2:50 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:10 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:20 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:30 PM
+                </li>
+                
+                <li class="slot--twilight slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:40 PM
+                </li>
+                
+                <li class="slot--twilight slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:50 PM
+                </li>
+                
+              </ul>
+            
+          </div>
+          
         
       </div>
+      
+      <div class="card-footer">
+        <a class="course-home-link" href="https://www.miamilakesgolf.com/" target="_blank" rel="noopener noreferrer">Miami Lakes website ↗</a>
+      </div>
+      
     </div>
     
     <div class="course-card " id="card-miami-beach">
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Miami Beach (15 slots)</span>
+          <span class="course-name">Miami Beach (16 slots)</span>
         </div>
-        
         <div class="course-links">
           <a class="course-link" href="tel:+13055323350" title="Call Miami Beach: (305) 532-3350" aria-label="Call Miami Beach at (305) 532-3350"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
-          <a class="course-link" href="https://miamibeachgolfclub.com/" target="_blank" rel="noopener noreferrer" title="Visit Miami Beach website" aria-label="Miami Beach website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>
+          <a class="course-link" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-07-23&step=teetimes&holes=&coursesIds=&deals=false&groupSize=0" target="_blank" rel="noopener noreferrer" title="Book tee times at Miami Beach" aria-label="Book tee times at Miami Beach"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></a>
         </div>
-        
       </div>
       <div class="card-body">
         
@@ -157,6 +231,11 @@
                 <li class="slot--afternoon ">
                   
                   1:56 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  3:08 PM
                 </li>
                 
               </ul>
@@ -259,20 +338,23 @@
           
         
       </div>
+      
+      <div class="card-footer">
+        <a class="course-home-link" href="https://miamibeachgolfclub.com/" target="_blank" rel="noopener noreferrer">Miami Beach website ↗</a>
+      </div>
+      
     </div>
     
     <div class="course-card " id="card-normandy-shores">
       <div class="card-header collapsible-header">
         <div class="header-title-group">
           <span class="collapse-icon">▼</span>
-          <span class="course-name">Normandy Shores (55 slots)</span>
+          <span class="course-name">Normandy Shores (54 slots)</span>
         </div>
-        
         <div class="course-links">
           <a class="course-link" href="tel:+13058686502" title="Call Normandy Shores: (305) 868-6502" aria-label="Call Normandy Shores at (305) 868-6502"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
-          <a class="course-link" href="https://www.normandyshoresgolfclub.com/" target="_blank" rel="noopener noreferrer" title="Visit Normandy Shores website" aria-label="Normandy Shores website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>
+          <a class="course-link" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-07-23&step=teetimes&holes=&coursesIds=&deals=false&groupSize=0" target="_blank" rel="noopener noreferrer" title="Book tee times at Normandy Shores" aria-label="Book tee times at Normandy Shores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></a>
         </div>
-        
       </div>
       <div class="card-body">
         
@@ -416,11 +498,6 @@
             </div>
             
               <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:48 PM
-                </li>
                 
                 <li class="slot--afternoon ">
                   
@@ -590,6 +667,11 @@
           
         
       </div>
+      
+      <div class="card-footer">
+        <a class="course-home-link" href="https://www.normandyshoresgolfclub.com/" target="_blank" rel="noopener noreferrer">Normandy Shores website ↗</a>
+      </div>
+      
     </div>
     
     <div class="course-card " id="card-miami-shores">
@@ -598,12 +680,10 @@
           <span class="collapse-icon">▼</span>
           <span class="course-name">Miami Shores (63 slots)</span>
         </div>
-        
         <div class="course-links">
           <a class="course-link" href="tel:+13057952369" title="Call Miami Shores: (305) 795-2369" aria-label="Call Miami Shores at (305) 795-2369"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
-          <a class="course-link" href="https://www.miamishoresgolf.com/" target="_blank" rel="noopener noreferrer" title="Visit Miami Shores website" aria-label="Miami Shores website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>
+          <a class="course-link" href="https://www.chronogolf.com/club/19871/widget?medium=widget&source=club" target="_blank" rel="noopener noreferrer" title="Book tee times at Miami Shores" aria-label="Book tee times at Miami Shores"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></a>
         </div>
-        
       </div>
       <div class="card-body">
         
@@ -961,6 +1041,11 @@
           
         
       </div>
+      
+      <div class="card-footer">
+        <a class="course-home-link" href="https://www.miamishoresgolf.com/" target="_blank" rel="noopener noreferrer">Miami Shores website ↗</a>
+      </div>
+      
     </div>
     
     <div class="course-card is-collapsed" id="card-plantation-preserve">
@@ -969,12 +1054,10 @@
           <span class="collapse-icon">▼</span>
           <span class="course-name">Plantation Preserve (90 slots)</span>
         </div>
-        
         <div class="course-links">
           <a class="course-link" href="tel:+19545855020" title="Call Plantation Preserve: (954) 585-5020" aria-label="Call Plantation Preserve at (954) 585-5020"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></a>
-          <a class="course-link" href="https://www.plantation.org/government/departments/parks-recreation/plantation-preserve-golf-course-club" target="_blank" rel="noopener noreferrer" title="Visit Plantation Preserve website" aria-label="Plantation Preserve website"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></a>
+          <a class="course-link" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail" target="_blank" rel="noopener noreferrer" title="Book tee times at Plantation Preserve" aria-label="Book tee times at Plantation Preserve"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></a>
         </div>
-        
       </div>
       <div class="card-body">
         
@@ -1467,13 +1550,18 @@
           
         
       </div>
+      
+      <div class="card-footer">
+        <a class="course-home-link" href="https://www.plantation.org/government/departments/parks-recreation/plantation-preserve-golf-course-club" target="_blank" rel="noopener noreferrer">Plantation Preserve website ↗</a>
+      </div>
+      
     </div>
     
   </main>
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1784829668;
+    const updateTs = 1784830930;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
