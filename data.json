@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-24T09:41:30.933611-04:00",
+  "generatedAt": "2026-07-24T09:51:34.793584-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -12,6 +12,14 @@
         {
           "date": "2026-07-25",
           "slots": [
+            {
+              "time": "1:20 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:30 PM",
+              "isNew": true
+            },
             {
               "time": "1:50 PM"
             },
@@ -119,12 +127,6 @@
           "date": "2026-07-24",
           "slots": [
             {
-              "time": "1:40 PM"
-            },
-            {
-              "time": "1:48 PM"
-            },
-            {
               "time": "2:04 PM"
             },
             {
@@ -150,6 +152,10 @@
         {
           "date": "2026-07-25",
           "slots": [
+            {
+              "time": "10:12 AM",
+              "isNew": true
+            },
             {
               "time": "10:28 AM"
             },
@@ -280,10 +286,6 @@
           "date": "2026-07-24",
           "slots": [
             {
-              "time": "9:50 AM",
-              "holes": 18
-            },
-            {
               "time": "9:58 AM",
               "holes": 18
             },
@@ -401,10 +403,6 @@
               "holes": 18
             },
             {
-              "time": "3:18 PM",
-              "holes": 18
-            },
-            {
               "time": "3:26 PM",
               "holes": 18
             },
@@ -426,9 +424,18 @@
           "date": "2026-07-26",
           "slots": [
             {
-              "time": "10:46 AM",
+              "time": "9:50 AM",
               "holes": 18,
               "isNew": true
+            },
+            {
+              "time": "10:14 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:46 AM",
+              "holes": 18
             },
             {
               "time": "10:54 AM",
