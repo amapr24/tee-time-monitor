@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-07-26T00:51:39.092456-04:00",
+  "generatedAt": "2026-07-26T01:01:29.328637-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -163,8 +163,7 @@
               "time": "12:28 PM"
             },
             {
-              "time": "12:36 PM",
-              "isNew": true
+              "time": "12:36 PM"
             }
           ]
         }
@@ -308,8 +307,7 @@
               "time": "11:40 AM"
             },
             {
-              "time": "11:48 AM",
-              "isNew": true
+              "time": "11:48 AM"
             }
           ]
         }
