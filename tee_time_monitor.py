@@ -50,7 +50,7 @@ COURSES = [
     {
         "name":           "Miami Lakes",
         "address":        "6801 Miami Lakes Dr, Miami Lakes",
-        "phone":          "(305) 558-4653",
+        "phone":          "(305) 820-8088",
         "website":        "https://www.miamilakesgolf.com/",
         "type":           "chronogolf",
         "url":            "https://www.chronogolf.com/club/miami-lakes-golf-club",
