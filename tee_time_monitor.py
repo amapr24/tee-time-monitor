@@ -95,7 +95,7 @@ COURSES = [
     {
         "name":           "Miami Shores",
         "address":        "10000 Biscayne Blvd, Miami Shores",
-        "phone":          "(305) 795-2369",
+        "phone":          "(305) 795-2360",
         "website":        "https://www.miamishoresgolf.com/",
         "type":           "chronogolf",
         # Marketplace slug (miami-shores-cc) returns no tee times during the
