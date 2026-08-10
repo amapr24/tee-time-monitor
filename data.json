@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-10T00:01:14.366861-04:00",
+  "generatedAt": "2026-08-10T00:10:57.347419-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -28,18 +28,6 @@
         {
           "date": "2026-08-15",
           "slots": [
-            {
-              "time": "2:00 PM"
-            },
-            {
-              "time": "2:10 PM"
-            },
-            {
-              "time": "2:20 PM"
-            },
-            {
-              "time": "2:30 PM"
-            },
             {
               "time": "2:40 PM"
             },
@@ -149,19 +137,10 @@
           "date": "2026-08-15",
           "slots": [
             {
-              "time": "9:56 AM"
-            },
-            {
-              "time": "10:20 AM"
-            },
-            {
               "time": "10:52 AM"
             },
             {
               "time": "11:24 AM"
-            },
-            {
-              "time": "11:32 AM"
             },
             {
               "time": "11:40 AM"
@@ -219,6 +198,18 @@
             },
             {
               "time": "3:00 PM"
+            },
+            {
+              "time": "3:08 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:16 PM",
+              "isNew": true
+            },
+            {
+              "time": "3:24 PM",
+              "isNew": true
             }
           ]
         }
@@ -709,27 +700,7 @@
           "date": "2026-08-15",
           "slots": [
             {
-              "time": "9:33 AM",
-              "holes": 18
-            },
-            {
-              "time": "9:42 AM",
-              "holes": 18
-            },
-            {
               "time": "9:51 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:00 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:18 AM",
-              "holes": 18
-            },
-            {
-              "time": "10:27 AM",
               "holes": 18
             },
             {
