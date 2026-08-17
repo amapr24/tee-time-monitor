@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-17T00:11:24.155472-04:00",
+  "generatedAt": "2026-08-17T00:21:15.999324-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -41,9 +41,6 @@
           "date": "2026-08-22",
           "slots": [
             {
-              "time": "1:00 PM"
-            },
-            {
               "time": "1:10 PM"
             },
             {
@@ -54,9 +51,6 @@
             },
             {
               "time": "1:50 PM"
-            },
-            {
-              "time": "2:00 PM"
             },
             {
               "time": "2:10 PM"
@@ -227,28 +221,22 @@
               "time": "1:56 PM"
             },
             {
-              "time": "2:04 PM",
-              "isNew": true
+              "time": "2:04 PM"
             },
             {
-              "time": "2:12 PM",
-              "isNew": true
+              "time": "2:12 PM"
             },
             {
-              "time": "2:20 PM",
-              "isNew": true
+              "time": "2:20 PM"
             },
             {
-              "time": "2:28 PM",
-              "isNew": true
+              "time": "2:28 PM"
             },
             {
-              "time": "2:36 PM",
-              "isNew": true
+              "time": "2:36 PM"
             },
             {
-              "time": "2:44 PM",
-              "isNew": true
+              "time": "2:44 PM"
             }
           ]
         }
@@ -338,8 +326,7 @@
           "date": "2026-08-22",
           "slots": [
             {
-              "time": "10:12 AM",
-              "isNew": true
+              "time": "10:12 AM"
             },
             {
               "time": "11:56 AM"
@@ -396,24 +383,19 @@
               "time": "2:28 PM"
             },
             {
-              "time": "2:36 PM",
-              "isNew": true
+              "time": "2:36 PM"
             },
             {
-              "time": "2:44 PM",
-              "isNew": true
+              "time": "2:44 PM"
             },
             {
-              "time": "2:52 PM",
-              "isNew": true
+              "time": "2:52 PM"
             },
             {
-              "time": "3:00 PM",
-              "isNew": true
+              "time": "3:00 PM"
             },
             {
-              "time": "3:08 PM",
-              "isNew": true
+              "time": "3:08 PM"
             }
           ]
         }
@@ -815,7 +797,172 @@
         },
         {
           "date": "2026-08-22",
-          "slots": []
+          "slots": [
+            {
+              "time": "9:24 AM",
+              "holes": 18
+            },
+            {
+              "time": "9:33 AM",
+              "holes": 18
+            },
+            {
+              "time": "9:42 AM",
+              "holes": 18
+            },
+            {
+              "time": "9:51 AM",
+              "holes": 18
+            },
+            {
+              "time": "10:00 AM",
+              "holes": 18
+            },
+            {
+              "time": "10:09 AM",
+              "holes": 18
+            },
+            {
+              "time": "10:18 AM",
+              "holes": 18
+            },
+            {
+              "time": "10:27 AM",
+              "holes": 18
+            },
+            {
+              "time": "10:36 AM",
+              "holes": 18
+            },
+            {
+              "time": "10:45 AM",
+              "holes": 18
+            },
+            {
+              "time": "10:54 AM",
+              "holes": 18
+            },
+            {
+              "time": "11:03 AM",
+              "holes": 18
+            },
+            {
+              "time": "11:12 AM",
+              "holes": 18
+            },
+            {
+              "time": "11:21 AM",
+              "holes": 18
+            },
+            {
+              "time": "11:39 AM",
+              "holes": 18
+            },
+            {
+              "time": "11:48 AM",
+              "holes": 18
+            },
+            {
+              "time": "11:57 AM",
+              "holes": 18
+            },
+            {
+              "time": "12:06 PM",
+              "holes": 18
+            },
+            {
+              "time": "12:15 PM",
+              "holes": 18
+            },
+            {
+              "time": "12:24 PM",
+              "holes": 18
+            },
+            {
+              "time": "12:33 PM",
+              "holes": 18
+            },
+            {
+              "time": "12:42 PM",
+              "holes": 18
+            },
+            {
+              "time": "12:51 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:00 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:09 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:18 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:27 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:36 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:45 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:54 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:03 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:12 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:21 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:30 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:39 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:48 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:57 PM",
+              "holes": 18
+            },
+            {
+              "time": "3:06 PM",
+              "holes": 18
+            },
+            {
+              "time": "3:15 PM",
+              "holes": 18
+            },
+            {
+              "time": "3:24 PM",
+              "holes": 18
+            },
+            {
+              "time": "3:33 PM",
+              "holes": 18
+            }
+          ]
         }
       ]
     }
