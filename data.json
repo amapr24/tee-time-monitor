@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-08-21T11:50:55.144323-04:00",
+  "generatedAt": "2026-08-21T12:01:02.933931-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -19,17 +19,18 @@
               "time": "12:20 PM"
             },
             {
-              "time": "1:00 PM",
-              "isNew": true
-            },
-            {
-              "time": "1:40 PM"
+              "time": "1:00 PM"
             }
           ]
         },
         {
           "date": "2026-08-23",
-          "slots": []
+          "slots": [
+            {
+              "time": "12:00 PM",
+              "isNew": true
+            }
+          ]
         }
       ]
     },
@@ -144,6 +145,10 @@
               "time": "1:24 PM"
             },
             {
+              "time": "1:40 PM",
+              "isNew": true
+            },
+            {
               "time": "1:48 PM"
             },
             {
@@ -245,14 +250,6 @@
         {
           "date": "2026-08-21",
           "slots": [
-            {
-              "time": "11:50 AM",
-              "holes": 18
-            },
-            {
-              "time": "11:58 AM",
-              "holes": 18
-            },
             {
               "time": "12:06 PM",
               "holes": 18
@@ -371,10 +368,6 @@
               "holes": 18
             },
             {
-              "time": "1:02 PM",
-              "holes": 18
-            },
-            {
               "time": "1:10 PM",
               "holes": 18
             },
@@ -403,6 +396,11 @@
               "holes": 18
             },
             {
+              "time": "2:14 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
               "time": "2:22 PM",
               "holes": 18
             },
@@ -427,10 +425,6 @@
         {
           "date": "2026-08-23",
           "slots": [
-            {
-              "time": "10:22 AM",
-              "holes": 18
-            },
             {
               "time": "10:54 AM",
               "holes": 18
