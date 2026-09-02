@@ -92,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:36 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">4:11 PM ET, Wed Sep 2</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">4:21 PM ET, Wed Sep 2</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -218,8 +218,8 @@
                   10:44 AM
                 </li>
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   11:08 AM
                 </li>
                 
@@ -238,8 +238,8 @@
                   12:20 PM
                 </li>
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   1:08 PM
                 </li>
                 
@@ -452,11 +452,6 @@
                 
                 <li class="slot--midday ">
                   
-                  11:00 AM
-                </li>
-                
-                <li class="slot--midday ">
-                  
                   11:08 AM
                 </li>
                 
@@ -513,6 +508,11 @@
                 <li class="slot--afternoon ">
                   
                   12:44 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  12:52 PM
                 </li>
                 
               </ul>
@@ -1509,7 +1509,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1788379867;
+    const updateTs = 1788380463;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
