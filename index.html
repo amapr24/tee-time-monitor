@@ -92,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:34 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">7:31 AM ET, Sun Sep 6</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">7:41 AM ET, Sun Sep 6</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -383,11 +383,6 @@
                 
                 <li class="slot--early ">
                   
-                  9:32 AM
-                </li>
-                
-                <li class="slot--early ">
-                  
                   9:40 AM
                 </li>
                 
@@ -459,6 +454,11 @@
                 <li class="slot--midday ">
                   
                   11:56 AM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  12:04 PM
                 </li>
                 
               </ul>
@@ -1479,7 +1479,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1788694274;
+    const updateTs = 1788694879;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
