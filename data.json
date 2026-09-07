@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-07T03:20:53.210318-04:00",
+  "generatedAt": "2026-09-07T03:31:00.290694-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -9,60 +9,46 @@
           "date": "2026-09-11",
           "slots": [
             {
-              "time": "11:10 AM",
-              "isNew": true
+              "time": "11:10 AM"
             },
             {
-              "time": "11:20 AM",
-              "isNew": true
+              "time": "11:20 AM"
             },
             {
-              "time": "11:30 AM",
-              "isNew": true
+              "time": "11:30 AM"
             },
             {
-              "time": "11:40 AM",
-              "isNew": true
+              "time": "11:40 AM"
             },
             {
-              "time": "11:50 AM",
-              "isNew": true
+              "time": "11:50 AM"
             },
             {
-              "time": "12:00 PM",
-              "isNew": true
+              "time": "12:00 PM"
             },
             {
-              "time": "12:10 PM",
-              "isNew": true
+              "time": "12:10 PM"
             },
             {
-              "time": "12:20 PM",
-              "isNew": true
+              "time": "12:20 PM"
             },
             {
-              "time": "12:30 PM",
-              "isNew": true
+              "time": "12:30 PM"
             },
             {
-              "time": "12:40 PM",
-              "isNew": true
+              "time": "12:40 PM"
             },
             {
-              "time": "12:50 PM",
-              "isNew": true
+              "time": "12:50 PM"
             },
             {
-              "time": "1:00 PM",
-              "isNew": true
+              "time": "1:00 PM"
             },
             {
-              "time": "1:20 PM",
-              "isNew": true
+              "time": "1:20 PM"
             },
             {
-              "time": "1:50 PM",
-              "isNew": true
+              "time": "1:50 PM"
             }
           ]
         },
