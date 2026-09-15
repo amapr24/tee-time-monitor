@@ -92,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:21 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">11:22 AM ET, Tue Sep 15</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">11:30 AM ET, Tue Sep 15</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -265,11 +265,6 @@
             
               <ul class="slots">
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
-                  12:20 PM
-                </li>
-                
                 <li class="slot--afternoon ">
                   
                   12:28 PM
@@ -278,6 +273,11 @@
                 <li class="slot--afternoon ">
                   
                   12:36 PM
+                </li>
+                
+                <li class="slot--afternoon slot--new">
+                  <span class="new-badge">NEW</span>
+                  12:44 PM
                 </li>
                 
                 <li class="slot--afternoon ">
@@ -517,8 +517,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--afternoon slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--afternoon ">
+                  
                   1:48 PM
                 </li>
                 
@@ -694,8 +694,8 @@
                   3:00 PM
                 </li>
                 
-                <li class="slot--twilight slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--twilight ">
+                  
                   3:08 PM
                 </li>
                 
@@ -1502,8 +1502,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   10:09 AM
                 </li>
                 
@@ -1669,7 +1669,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1789485772;
+    const updateTs = 1789486258;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
