@@ -92,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:06 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">1:52 PM ET, Mon Sep 28</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">2:01 PM ET, Mon Sep 28</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -284,8 +284,8 @@
                   2:20 PM
                 </li>
                 
-                <li class="slot--twilight slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--twilight ">
+                  
                   2:52 PM
                 </li>
                 
@@ -391,6 +391,16 @@
                   9:48 AM
                 </li>
                 
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  10:20 AM
+                </li>
+                
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  10:28 AM
+                </li>
+                
                 <li class="slot--midday ">
                   
                   10:36 AM
@@ -474,16 +484,6 @@
                 <li class="slot--afternoon ">
                   
                   2:28 PM
-                </li>
-                
-                <li class="slot--afternoon ">
-                  
-                  2:36 PM
-                </li>
-                
-                <li class="slot--twilight ">
-                  
-                  2:44 PM
                 </li>
                 
               </ul>
@@ -1139,7 +1139,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1790617962;
+    const updateTs = 1790618489;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
