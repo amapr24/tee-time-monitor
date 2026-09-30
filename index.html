@@ -92,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 7:06 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:11 AM ET, Wed Sep 30</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:20 AM ET, Wed Sep 30</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -196,6 +196,11 @@
             
               <ul class="slots">
                 
+                <li class="slot--early slot--new">
+                  <span class="new-badge">NEW</span>
+                  9:32 AM
+                </li>
+                
                 <li class="slot--midday ">
                   
                   10:28 AM
@@ -253,14 +258,7 @@
               <a class="book-btn" href="https://www.chronogolf.com/club/miami-beach-golf-club?date=2026-10-04&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
-                  10:52 AM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -589,8 +587,8 @@
                   2:36 PM
                 </li>
                 
-                <li class="slot--twilight slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--twilight ">
+                  
                   2:44 PM
                 </li>
                 
@@ -913,8 +911,8 @@
                   10:09 AM
                 </li>
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   10:27 AM
                 </li>
                 
@@ -1262,8 +1260,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--early slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--early ">
+                  
                   9:15 AM
                 </li>
                 
@@ -1379,7 +1377,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1790770266;
+    const updateTs = 1790770853;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
