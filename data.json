@@ -1,17 +1,30 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-04T23:51:10.848877-04:00",
+  "generatedAt": "2026-10-05T00:00:55.906462-04:00",
   "courses": [
     {
       "id": "miami-lakes",
       "days": [
         {
-          "date": "2026-10-04",
+          "date": "2026-10-09",
           "slots": []
         },
         {
-          "date": "2026-10-09",
-          "slots": []
+          "date": "2026-10-10",
+          "slots": [
+            {
+              "time": "1:10 PM"
+            },
+            {
+              "time": "2:20 PM"
+            },
+            {
+              "time": "2:30 PM"
+            },
+            {
+              "time": "2:40 PM"
+            }
+          ]
         }
       ]
     },
@@ -19,11 +32,11 @@
       "id": "miami-beach",
       "days": [
         {
-          "date": "2026-10-04",
+          "date": "2026-10-09",
           "slots": []
         },
         {
-          "date": "2026-10-09",
+          "date": "2026-10-10",
           "slots": []
         }
       ]
@@ -31,10 +44,6 @@
     {
       "id": "normandy-shores",
       "days": [
-        {
-          "date": "2026-10-04",
-          "slots": []
-        },
         {
           "date": "2026-10-09",
           "slots": [
@@ -51,16 +60,53 @@
               "time": "11:56 AM"
             }
           ]
+        },
+        {
+          "date": "2026-10-10",
+          "slots": [
+            {
+              "time": "11:48 AM"
+            },
+            {
+              "time": "11:56 AM"
+            },
+            {
+              "time": "12:12 PM"
+            },
+            {
+              "time": "12:20 PM"
+            },
+            {
+              "time": "12:28 PM"
+            },
+            {
+              "time": "12:36 PM"
+            },
+            {
+              "time": "12:44 PM"
+            },
+            {
+              "time": "1:40 PM"
+            },
+            {
+              "time": "1:48 PM"
+            },
+            {
+              "time": "1:56 PM"
+            },
+            {
+              "time": "2:36 PM"
+            },
+            {
+              "time": "2:44 PM"
+            }
+          ]
         }
       ]
     },
     {
       "id": "miami-shores",
       "days": [
-        {
-          "date": "2026-10-04",
-          "slots": []
-        },
         {
           "date": "2026-10-09",
           "slots": [
@@ -169,16 +215,16 @@
               "holes": 18
             }
           ]
+        },
+        {
+          "date": "2026-10-10",
+          "slots": []
         }
       ]
     },
     {
       "id": "plantation-preserve",
       "days": [
-        {
-          "date": "2026-10-04",
-          "slots": []
-        },
         {
           "date": "2026-10-09",
           "slots": [
@@ -192,6 +238,71 @@
             },
             {
               "time": "2:48 PM",
+              "holes": 18
+            }
+          ]
+        },
+        {
+          "date": "2026-10-10",
+          "slots": [
+            {
+              "time": "12:24 PM",
+              "holes": 18
+            },
+            {
+              "time": "12:33 PM",
+              "holes": 18
+            },
+            {
+              "time": "12:42 PM",
+              "holes": 18
+            },
+            {
+              "time": "12:51 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:09 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:18 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:27 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:36 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:45 PM",
+              "holes": 18
+            },
+            {
+              "time": "1:54 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:03 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:12 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:21 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:30 PM",
+              "holes": 18
+            },
+            {
+              "time": "2:39 PM",
               "holes": 18
             }
           ]
