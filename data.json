@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-10-25T00:01:22.794538-04:00",
+  "generatedAt": "2026-10-25T00:11:44.924811-04:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -26,19 +26,7 @@
           "date": "2026-10-30",
           "slots": [
             {
-              "time": "9:16 AM"
-            },
-            {
-              "time": "9:40 AM"
-            },
-            {
-              "time": "9:48 AM"
-            },
-            {
               "time": "9:56 AM"
-            },
-            {
-              "time": "10:44 AM"
             },
             {
               "time": "10:52 AM"
@@ -60,9 +48,6 @@
             },
             {
               "time": "11:40 AM"
-            },
-            {
-              "time": "11:48 AM"
             },
             {
               "time": "11:56 AM"
@@ -96,6 +81,26 @@
             },
             {
               "time": "1:32 PM"
+            },
+            {
+              "time": "1:40 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:48 PM",
+              "isNew": true
+            },
+            {
+              "time": "1:56 PM",
+              "isNew": true
+            },
+            {
+              "time": "2:04 PM",
+              "isNew": true
+            },
+            {
+              "time": "2:12 PM",
+              "isNew": true
             }
           ]
         }
@@ -140,9 +145,6 @@
           "date": "2026-10-30",
           "slots": [
             {
-              "time": "8:12 AM"
-            },
-            {
               "time": "8:20 AM"
             },
             {
@@ -153,9 +155,6 @@
             },
             {
               "time": "8:44 AM"
-            },
-            {
-              "time": "8:52 AM"
             },
             {
               "time": "9:08 AM"
@@ -210,6 +209,14 @@
             },
             {
               "time": "11:40 AM"
+            },
+            {
+              "time": "11:48 AM",
+              "isNew": true
+            },
+            {
+              "time": "11:56 AM",
+              "isNew": true
             }
           ]
         }
