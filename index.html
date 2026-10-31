@@ -92,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 6:39 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:01 AM ET, Sat Oct 31</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:11 AM ET, Sat Oct 31</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -324,14 +324,7 @@
               <a class="book-btn" href="https://www.chronogolf.com/club/19871/widget?medium=widget&source=club#?date=2026-10-31&course_id=28341&nb_holes=18&affiliation_type_ids=153007,153007,153007,153007" target="_blank">Book</a>
             </div>
             
-              <ul class="slots">
-                
-                <li class="slot--afternoon ">
-                  
-                  1:54 PM
-                </li>
-                
-              </ul>
+              <div class="no-slots">No times available</div>
             
           </div>
           
@@ -345,6 +338,11 @@
                 
                 <li class="slot--early slot--new">
                   <span class="new-badge">NEW</span>
+                  9:06 AM
+                </li>
+                
+                <li class="slot--early ">
+                  
                   9:15 AM
                 </li>
                 
@@ -465,7 +463,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1793448086;
+    const updateTs = 1793448681;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
