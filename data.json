@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-03T06:51:35.075034-05:00",
+  "generatedAt": "2026-11-03T07:01:30.849217-05:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -66,7 +66,78 @@
         },
         {
           "date": "2026-11-08",
-          "slots": []
+          "slots": [
+            {
+              "time": "10:51 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "11:00 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "11:09 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "11:18 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "11:27 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "11:36 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "11:45 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "11:54 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:03 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:12 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:21 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:30 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:39 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:15 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         }
       ]
     },
