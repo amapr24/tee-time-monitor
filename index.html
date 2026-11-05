@@ -92,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 5:35 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">7:31 AM ET, Thu Nov 5</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">7:41 AM ET, Thu Nov 5</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -187,11 +187,6 @@
                   11:24 AM
                 </li>
                 
-                <li class="slot--afternoon ">
-                  
-                  12:36 PM
-                </li>
-                
               </ul>
             
           </div>
@@ -202,7 +197,14 @@
               <a class="book-btn" href="https://www.chronogolf.com/club/normandy-shores-golf-course?date=2026-11-07&step=teetimes&holes=18&coursesIds=&deals=false&groupSize=4" target="_blank">Book</a>
             </div>
             
-              <div class="no-slots">No times available</div>
+              <ul class="slots">
+                
+                <li class="slot--midday slot--new">
+                  <span class="new-badge">NEW</span>
+                  11:32 AM
+                </li>
+                
+              </ul>
             
           </div>
           
@@ -464,7 +466,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1793881902;
+    const updateTs = 1793882472;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
