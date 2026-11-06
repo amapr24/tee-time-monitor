@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-06T09:51:14.912541-05:00",
+  "generatedAt": "2026-11-06T10:01:29.171202-05:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -45,12 +45,7 @@
         },
         {
           "date": "2026-11-07",
-          "slots": [
-            {
-              "time": "1:16 PM",
-              "isNew": true
-            }
-          ]
+          "slots": []
         },
         {
           "date": "2026-11-08",
