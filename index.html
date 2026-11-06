@@ -92,7 +92,7 @@
     <div class="sunset-box">☀️ SUNSET: 5:35 PM</div>
     <div class="header-status">
       <div style="margin-bottom:4px"><b>Automatically checked every 10–15 minutes</b></div>
-      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">8:51 AM ET, Fri Nov 6</span>)</div>
+      <div>Last updated: <span id="time-ago">just now</span> (<span id="last-ts">9:01 AM ET, Fri Nov 6</span>)</div>
     </div>
   </header>
   <div class="legend" id="time-filter-bar" aria-label="Time filters">
@@ -192,8 +192,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   10:52 AM
                 </li>
                 
@@ -262,8 +262,8 @@
             
               <ul class="slots">
                 
-                <li class="slot--midday slot--new">
-                  <span class="new-badge">NEW</span>
+                <li class="slot--midday ">
+                  
                   10:33 AM
                 </li>
                 
@@ -302,11 +302,6 @@
             
               <ul class="slots">
                 
-                <li class="slot--early ">
-                  
-                  8:57 AM
-                </li>
-                
                 <li class="slot--midday ">
                   
                   11:21 AM
@@ -332,7 +327,14 @@
               <a class="book-btn" href="https://parks.plantation.org/webtrac/web/search.html?module=GR&display=Detail" target="_blank">Book</a>
             </div>
             
-              <div class="no-slots">No times available</div>
+              <ul class="slots">
+                
+                <li class="slot--early slot--new">
+                  <span class="new-badge">NEW</span>
+                  9:51 AM
+                </li>
+                
+              </ul>
             
           </div>
           
@@ -371,7 +373,7 @@
   <div id="empty-state-msg" style="display:none" class="empty-state">Select at least one day and time range to see available times.</div>
   <button id="theme-toggle">🌙</button>
   <script>
-    const updateTs = 1793973090;
+    const updateTs = 1793973702;
     function updateTime() {
       const diff = Math.floor(Date.now() / 1000) - updateTs;
       const mins = Math.floor(diff / 60);
