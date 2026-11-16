@@ -1,16 +1,16 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-15T23:51:37.132331-05:00",
+  "generatedAt": "2026-11-16T00:01:26.817633-05:00",
   "courses": [
     {
       "id": "miami-lakes",
       "days": [
         {
-          "date": "2026-11-15",
+          "date": "2026-11-20",
           "slots": []
         },
         {
-          "date": "2026-11-20",
+          "date": "2026-11-21",
           "slots": []
         }
       ]
@@ -19,27 +19,30 @@
       "id": "miami-beach",
       "days": [
         {
-          "date": "2026-11-15",
-          "slots": []
-        },
-        {
           "date": "2026-11-20",
           "slots": [
             {
-              "time": "11:16 AM",
-              "isNew": true
+              "time": "11:16 AM"
             },
             {
-              "time": "11:24 AM",
-              "isNew": true
+              "time": "11:24 AM"
             },
             {
-              "time": "12:44 PM",
-              "isNew": true
+              "time": "12:44 PM"
             },
             {
-              "time": "12:52 PM",
-              "isNew": true
+              "time": "12:52 PM"
+            }
+          ]
+        },
+        {
+          "date": "2026-11-21",
+          "slots": [
+            {
+              "time": "1:08 PM"
+            },
+            {
+              "time": "1:16 PM"
             }
           ]
         }
@@ -49,43 +52,66 @@
       "id": "normandy-shores",
       "days": [
         {
-          "date": "2026-11-15",
-          "slots": []
-        },
-        {
           "date": "2026-11-20",
           "slots": [
             {
-              "time": "8:52 AM",
-              "isNew": true
+              "time": "8:52 AM"
             },
             {
-              "time": "9:24 AM",
-              "isNew": true
+              "time": "9:24 AM"
             },
             {
-              "time": "9:56 AM",
-              "isNew": true
+              "time": "9:56 AM"
             },
             {
-              "time": "10:04 AM",
-              "isNew": true
+              "time": "10:04 AM"
             },
             {
-              "time": "10:12 AM",
-              "isNew": true
+              "time": "10:12 AM"
             },
             {
-              "time": "10:28 AM",
-              "isNew": true
+              "time": "10:28 AM"
             },
             {
-              "time": "10:44 AM",
-              "isNew": true
+              "time": "10:44 AM"
             },
             {
-              "time": "10:52 AM",
-              "isNew": true
+              "time": "10:52 AM"
+            }
+          ]
+        },
+        {
+          "date": "2026-11-21",
+          "slots": [
+            {
+              "time": "10:44 AM"
+            },
+            {
+              "time": "12:04 PM"
+            },
+            {
+              "time": "12:12 PM"
+            },
+            {
+              "time": "12:20 PM"
+            },
+            {
+              "time": "12:28 PM"
+            },
+            {
+              "time": "12:36 PM"
+            },
+            {
+              "time": "12:52 PM"
+            },
+            {
+              "time": "1:00 PM"
+            },
+            {
+              "time": "1:08 PM"
+            },
+            {
+              "time": "1:16 PM"
             }
           ]
         }
@@ -95,11 +121,11 @@
       "id": "miami-shores",
       "days": [
         {
-          "date": "2026-11-15",
+          "date": "2026-11-20",
           "slots": []
         },
         {
-          "date": "2026-11-20",
+          "date": "2026-11-21",
           "slots": []
         }
       ]
@@ -107,10 +133,6 @@
     {
       "id": "plantation-preserve",
       "days": [
-        {
-          "date": "2026-11-15",
-          "slots": []
-        },
         {
           "date": "2026-11-20",
           "slots": [
@@ -183,6 +205,10 @@
               "holes": 18
             }
           ]
+        },
+        {
+          "date": "2026-11-21",
+          "slots": []
         }
       ]
     }
