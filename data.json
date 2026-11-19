@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-19T15:11:37.459102-05:00",
+  "generatedAt": "2026-11-19T15:21:47.636097-05:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -9,8 +9,7 @@
           "date": "2026-11-20",
           "slots": [
             {
-              "time": "11:00 AM",
-              "isNew": true
+              "time": "11:00 AM"
             }
           ]
         },
@@ -78,8 +77,7 @@
           "date": "2026-11-21",
           "slots": [
             {
-              "time": "1:16 PM",
-              "isNew": true
+              "time": "1:16 PM"
             }
           ]
         },
@@ -111,11 +109,118 @@
         },
         {
           "date": "2026-11-21",
-          "slots": []
+          "slots": [
+            {
+              "time": "10:24 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:33 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:42 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:51 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:03 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:12 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:48 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:57 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:06 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:15 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         },
         {
           "date": "2026-11-22",
-          "slots": []
+          "slots": [
+            {
+              "time": "10:06 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:15 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:24 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:33 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:42 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "10:51 AM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:39 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:48 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "12:57 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:06 PM",
+              "holes": 18,
+              "isNew": true
+            },
+            {
+              "time": "1:15 PM",
+              "holes": 18,
+              "isNew": true
+            }
+          ]
         }
       ]
     },
