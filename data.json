@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedAt": "2026-11-27T16:31:10.974072-05:00",
+  "generatedAt": "2026-11-27T16:41:52.313740-05:00",
   "courses": [
     {
       "id": "miami-lakes",
@@ -11,22 +11,11 @@
         },
         {
           "date": "2026-11-28",
-          "slots": [
-            {
-              "time": "11:10 AM"
-            }
-          ]
+          "slots": []
         },
         {
           "date": "2026-11-29",
-          "slots": [
-            {
-              "time": "10:50 AM"
-            },
-            {
-              "time": "12:50 PM"
-            }
-          ]
+          "slots": []
         }
       ]
     },
@@ -43,17 +32,7 @@
         },
         {
           "date": "2026-11-29",
-          "slots": [
-            {
-              "time": "12:44 PM"
-            },
-            {
-              "time": "12:52 PM"
-            },
-            {
-              "time": "1:16 PM"
-            }
-          ]
+          "slots": []
         }
       ]
     },
@@ -70,32 +49,7 @@
         },
         {
           "date": "2026-11-29",
-          "slots": [
-            {
-              "time": "8:04 AM"
-            },
-            {
-              "time": "8:12 AM"
-            },
-            {
-              "time": "10:20 AM"
-            },
-            {
-              "time": "12:20 PM"
-            },
-            {
-              "time": "12:28 PM"
-            },
-            {
-              "time": "1:00 PM"
-            },
-            {
-              "time": "1:08 PM"
-            },
-            {
-              "time": "1:16 PM"
-            }
-          ]
+          "slots": []
         }
       ]
     },
@@ -108,83 +62,11 @@
         },
         {
           "date": "2026-11-28",
-          "slots": [
-            {
-              "time": "9:03 AM",
-              "holes": 18,
-              "isNew": true
-            }
-          ]
+          "slots": []
         },
         {
           "date": "2026-11-29",
-          "slots": [
-            {
-              "time": "8:27 AM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "11:18 AM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "11:27 AM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "11:36 AM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "11:45 AM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "11:54 AM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "12:03 PM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "12:12 PM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "12:21 PM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "12:39 PM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "12:48 PM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "12:57 PM",
-              "holes": 18,
-              "isNew": true
-            },
-            {
-              "time": "1:15 PM",
-              "holes": 18,
-              "isNew": true
-            }
-          ]
+          "slots": []
         }
       ]
     },
